@@ -1,0 +1,21 @@
+{
+  "name": "salesforce-delivery-tool",
+  "description": "The best Deploy Tool for Salesforce",
+  "version": "0.1.0",
+  "private": false,
+  "dependencies": {},
+  "keywords": [],
+  "author": "Xiaoan Lin<admin@xgeek.net>",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron ./src",
+    "build-macOS": "electron-packager ./src --out ./build SalesforceDeliveryTool --platform=darwin --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
+    "build-windows": "electron-packager ./src --out ./build SalesforceDeliveryTool --platform=win32 --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
+    "build": "electron-packager ./src SalesforceDeliveryTool --all --out ./build --overwrite --icon=./src/img/app-icon.icns"
+  },
+  "devDependencies": {
+    "electron": "^2.0.0",
+    "electron-packager": "^12.0.2",
+    "electron-prebuilt": "^1.4.13"
+  }
+}

@@ -1,0 +1,36 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salesforce Delivery Tool</title>
+  <link rel="stylesheet" href="../components/salesforce-lightning-design-system/assets/styles/salesforce-lightning-design-system.min.css">
+  <link rel="stylesheet" href="../components/font-awesome/web-fonts-with-css/css/fontawesome-all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <div id="app">
+    <div class="loading" v-if="loading">
+      <div id="preloader"><span></span><span></span><span></span><span></span></div>
+    </div>  
+    <app-sidebar v-bind:menu="menu"></app-sidebar>
+    <main id="main" class="slds-grid slds-wrap" v-if="status=='mounted'">
+      <header class="masthead slds-size_2-of-2">
+        <h1 class="">{{ pageHeader }}</h1>
+      </header>
+      <div class="container slds-size_2-of-2 slds-m-around_small slds-m-top_medium">
+        <app-newpipeline v-if="menu=='newpipeline'"></app-newpipeline>
+        <app-connections v-bind:connections="connections" v-if="menu=='connections'"></app-connections>
+        <app-pipelines v-bind:pipelines="pipelines" v-if="menu=='pipelines'"></app-pipelines>
+      </div><!-- .container -->
+    </main><!-- #main -->
+  </div><!-- #app -->
+  
+  <script type="text/javascript" src="../components/vue/dist/vue.min.js"></script>
+  <script type="text/javascript" src="../js/vue-components/app-sidebar.js"></script>
+  <script type="text/javascript" src="../js/vue-components/app-newpipeline.js"></script>
+  <script type="text/javascript" src="../js/vue-components/app-connections.js"></script>
+  <script type="text/javascript" src="../js/vue-components/app-pipelines.js"></script>
+  <script type="text/javascript" src="../js/app.js"></script>
+</body>
+</html>
