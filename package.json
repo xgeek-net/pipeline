@@ -3,7 +3,13 @@
   "description": "The best Deploy Tool for Salesforce",
   "version": "0.1.0",
   "private": false,
-  "dependencies": {},
+  "dependencies": {
+    "github-api": "^3.0.0",
+    "querystring": "^0.2.0",
+    "request": "^2.87.0",
+    "url": "^0.11.0",
+    "uuid": "^3.2.1"
+  },
   "keywords": [],
   "author": "Xiaoan Lin<admin@xgeek.net>",
   "license": "MIT",

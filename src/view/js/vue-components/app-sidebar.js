@@ -18,25 +18,25 @@ Vue.component('app-sidebar', {
           <a href="javascript:void(0);" v-on:click="newPipeline" class="menu-button button-round">
             <span class="slds-icon_container slds-icon-utility-add slds-m-around_x-small">
               <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#add"></use>
+                <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#add"></use>
               </svg>
             </span>
           </a>
         </li>
         <li class="menu">
-          <a href="javascript:void(0);" v-on:click="openConnections"  class="menu-button button-bound" v-bind:class="{active:(menu=='connections')}">
+          <a href="javascript:void(0);" v-on:click="openConnections"  class="menu-button button-bound" @class="{active:(menu=='connections')}">
             <span class="slds-icon_container slds-icon-utility-salesforce1 slds-m-around_x-small">
               <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
+                <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
               </svg>
             </span>
           </a>
         </li>
         <li class="menu">
-          <a href="javascript:void(0);" v-on:click="openPipelines"  class="menu-button button-bound" v-bind:class="{active:(menu=='pipelines')}">
+          <a href="javascript:void(0);" v-on:click="openPipelines"  class="menu-button button-bound" @class="{active:(menu=='pipelines')}">
             <span class="slds-icon_container slds-icon-utility-feed slds-m-around_x-small">
               <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#feed"></use>
+                <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#feed"></use>
               </svg>
             </span>
           </a>

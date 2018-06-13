@@ -1,4 +1,3 @@
-// アプリケーション作成用のモジュールを読み込み
 const electron = require('electron');
 const app = electron.app;
 const ipc = electron.ipcMain;
@@ -6,32 +5,38 @@ const BrowserWindow = electron.BrowserWindow;
 
 const path = require('path');
 const url = require('url');
+// Classes
+const Utils = require('./class/Utils.js');
+const Setting = require('./class/Setting.js');
+const Connect = require('./class/Connect.js');
+const utils = new Utils();
+const setting = new Setting();
+const connect = new Connect();
 
 // メインウィンドウ
 let mainWindow;
 
 function createWindow() {
-  // メインウィンドウを作成します
-  mainWindow = new BrowserWindow({width: 800, height: 600});
-
-  // メインウィンドウに表示するURLを指定します
-  // （今回はmain.jsと同じディレクトリのindex.html）
+  const bounds = utils.getAppWinBounds();
+  mainWindow = new BrowserWindow(bounds);
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'view/index.html'),
     protocol: 'file:',
     slashes: true
   }));
-
-  // デベロッパーツールの起動
+  // Debug Mode
   mainWindow.webContents.openDevTools();
 
-  // メインウィンドウが閉じられたときの処理
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  mainWindow.on('resize', () => {
+    let { width, height } = mainWindow.getBounds();
+    setting.set('windowBounds', { width, height });
+  });
 }
 
-//  初期化が完了した時の処理
 app.on('ready', createWindow);
 
 // 全てのウィンドウが閉じたときの処理
@@ -49,17 +54,12 @@ app.on('activate', () => {
   }
 });
 
-// 同期メッセージの受信
-ipc.on('mul-sync', (event, arg) => {
-    console.log(arg);
-    // レンダラープロセスへ返信
-    event.returnValue = arg.a * arg.b;
+ipc.on('oauth-login', (event, arg) => {
+  connect.authLogin(event, arg);
 });
- 
-// 非同期メッセージの受信
-ipc.on('mul-async', (event, arg) => {
-    console.log(arg);
-    // レンダラープロセスへ返信
-    var result = arg.a * arg.b;
-    event.sender.send('mul-async-reply',result);
+ipc.on('data-new-connection', (event, arg) => {
+  connect.newConnect(event, arg);
+});
+ipc.on('data-connections', (event, arg) => {
+  connect.getConnections(event, arg);
 });

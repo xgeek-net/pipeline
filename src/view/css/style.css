@@ -1,8 +1,13 @@
 /**
  * Common
  */
-
-
+#app{
+  height: auto;
+  overflow: hidden;
+}
+.container {
+  min-height: 24rem;
+}
 
 /**
  * #sidebar
@@ -117,6 +122,33 @@
 #main .app-table .pipeline-status.error{
   color: #c23934;
 }
+/**
+ * Connections
+ */
+.connect-new-types .type-icon-medium{
+  font-size: 1.1rem;
+}
+.slds-dropdown_actions.connect-new-types a {
+  font-size: 0.75rem;
+}
+.connect-new-types .slds-icon.slds-icon_xx_small{
+  width: 1.1rem;
+  height: 1.1rem;
+  font-size: 1.1rem;
+  fill: #0070d2;
+}
+.slds-dropdown_actions.connect-new-types a small {
+  color: #706e6b;
+}
+
+/**
+ * Modal
+ */
+.slds-modal__content{
+  min-height: 150px;
+}
+
+
 /**
  * Loading
  */

@@ -1,9 +1,5 @@
-Vue.component('app-connections', {
-  props: ['connections'],
-  data : function () {
-    return {
-    }
-  },
+Vue.component('app-pipelines', {
+  props: ['pipelines'],
   methods: {
     
   },
@@ -12,16 +8,16 @@ Vue.component('app-connections', {
       <div class="slds-card__header slds-grid">
         <header class="slds-media slds-media_center slds-has-flexi-truncate">
           <div class="slds-media__figure">
-            <span class="slds-icon_container slds-icon-standard-avatar" title="contact">
+            <span class="slds-icon_container slds-icon-standard-feed" title="contact">
               <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/standard-sprite/svg/symbols.svg#avatar"></use>
+                <use xlink:href="components/salesforce-lightning-design-system/assets/icons/standard-sprite/svg/symbols.svg#feed"></use>
               </svg>
             </span>
           </div>
           <div class="slds-media__body">
             <h2 class="slds-card__header-title">
               <a href="javascript:void(0);" class="slds-card__header-link slds-truncate">
-                <span class="slds-text-heading_small">Connections ({{ connections.length }})</span>
+                <span class="slds-text-heading_small">Pipelines ({{ pipelines.length }})</span>
               </a>
             </h2>
           </div>
@@ -38,16 +34,16 @@ Vue.component('app-connections', {
                 <div class="slds-truncate" title="NO">#</div>
               </th>
               <th scope="col">
-                <div class="slds-truncate" title="Type">Type</div>
+                <div class="slds-truncate" title="Type">Pipeline</div>
               </th>
               <th scope="col">
-                <div class="slds-truncate" title="Name">Name</div>
+                <div class="slds-truncate" title="Name">Status</div>
               </th>
               <th scope="col">
-                <div class="slds-truncate" title="Username">Username</div>
+                <div class="slds-truncate" title="Username">Started</div>
               </th>
               <th scope="col">
-                <div class="slds-truncate" title="Status">Status</div>
+                <div class="slds-truncate" title="Status">Duration</div>
               </th>
               <th scope="col" style="width: 6.75rem;">
                 <div class="slds-truncate" title="Status">Actions</div>
@@ -55,39 +51,37 @@ Vue.component('app-connections', {
             </tr>
           </thead>
           <tbody>
-            <tr class="slds-hint-parent" v-for="(row, index) in connections">
+            <tr class="slds-hint-parent" v-for="(row, index) in pipelines">
               <th scope="row">
                 <div class="slds-truncate">{{ index+1 }}</div>
               </th>
               <td>
                 <div class="slds-truncate">
-                <i class="fab fa-github type-icon-medium" v-if="row.type.toLowerCase()=='github'"></i>
-                <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="row.type.toLowerCase()=='sandbox'"> 
-                  <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                    <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
-                  </svg>
-                </span>
-                &nbsp;&nbsp;{{ row.type }}</div>
+                  <a href="javascript:void(0);">{{ row.name }}</a>
+                </div>
               </td>
               <td>
-                <div class="slds-truncate"><a href="javascript:void(0);">{{ row.name }}</a></div>
+                <div class="slds-truncate pipeline-status" v-bind:class="{ 'success': row.status.toLowerCase()=='successful', 'warning': row.status.toLowerCase()=='pending', 'error': row.status.toLowerCase()=='failed' }">
+                  <i class="fas" v-bind:class="{ 'fa-check-circle': row.status.toLowerCase()=='successful', 'fa-spinner fa-spin': row.status.toLowerCase()=='pending', 'fa-exclamation-circle': row.status.toLowerCase()=='failed' }"></i>
+                  {{ row.status }}
+                </div>
               </td>
               <td>
-                <div class="slds-truncate">{{ row.username }}</div>
+                <div class="slds-truncate">{{ row.started }}</div>
               </td>
               <td>
-                <div class="slds-truncate"><span class="slds-badge" v-bind:class="{ 'success': row.status.toLowerCase()=='actived', 'error': row.status.toLowerCase()=='error' }">{{ row.status }}</span></div>
+                <div class="slds-truncate">{{ row.duration }}</div>
               </td>
               <td>
                 <div class="slds-truncate">
                   <button class="slds-button slds-button_icon slds-button_icon-border-filled">
                     <svg class="slds-button__icon" aria-hidden="true">
-                      <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#refresh"></use>
+                      <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#redo"></use>
                     </svg>
                   </button>
                   <button class="slds-button slds-button_icon slds-button_icon-border-filled">
                     <svg class="slds-button__icon" aria-hidden="true">
-                      <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#delete"></use>
+                      <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#layers"></use>
                     </svg>
                   </button>
                 </div>

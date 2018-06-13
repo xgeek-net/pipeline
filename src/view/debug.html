@@ -1,0 +1,66 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salesforce Delivery Tool</title>
+  <link rel="stylesheet" href="../components/salesforce-lightning-design-system/assets/styles/salesforce-lightning-design-system.min.css">
+</head>
+
+<body>
+  <h1>初めてのElectron</h1>
+  <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_info" role="alert">
+  <span class="slds-assistive-text">info</span>
+  <span class="slds-icon_container slds-icon-utility-user slds-m-right_x-small" title="Description of icon when needed">
+    <svg class="slds-icon slds-icon_x-small" aria-hidden="true">
+      <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#user"></use>
+    </svg>
+  </span>
+  <h2>Logged in as John Smith (johnsmith@acme.com).
+    <a href="javascript:void(0);">Log out</a>
+  </h2>
+  <button class="slds-button slds-button_icon slds-notify__close slds-button_icon-inverse" title="Close">
+    <svg class="slds-button__icon" aria-hidden="true">
+      <use xlink:href="../components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+    </svg>
+    <span class="slds-assistive-text">Close</span>
+  </button>
+</div>
+  We are using node <script>document.write(process.versions.node)</script>,
+  Chrome <script>document.write(process.versions.chrome)</script>,
+  and Electron <script>document.write(process.versions.electron)</script>.
+  <p id="info"></p>
+  <script>
+        // modules
+        const {ipcRenderer} = require('electron');
+        var info;
+ 
+        window.onload = function () {
+            info = document.getElementById('info');
+            testSync();
+            testAsync();
+        };
+ 
+        function testSync(){
+            console.log("test sync");
+            // メインプロセスに引数を送信して回答を得る
+            var res = ipcRenderer.sendSync('mul-sync', {a: 30, b: 2});
+            msg("sync result = " + res);
+        }
+ 
+        function testAsync(){
+            ipcRenderer.send('mul-async', {a: 30, b: 2});
+ 
+            // 非同期通信の結果を受けた時
+            ipcRenderer.on('mul-async-reply', (event, arg) => {
+                msg("async result = " + arg);
+            });
+        }
+ 
+        function msg(msg){
+            var info = document.getElementById("info");
+                info.innerHTML += msg + "";
+        }
+        // };
+    </script>
+</body>
+</html>
