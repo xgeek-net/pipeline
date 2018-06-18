@@ -10,7 +10,7 @@ Vue.component('app-connections', {
       this.connDropdownOpen = false;
       app.showModal({ title : 'Github' });
       app.request('oauth-login', 
-        {type : 'github', name : 'github-new-name'},
+        {type : 'github'},
         function(err, result) {
           app.showModal({ loading : false, data : result });
         }
@@ -18,6 +18,14 @@ Vue.component('app-connections', {
     },
     newBitbucketConnect : function(ev) {
       this.connDropdownOpen = false;
+      app.showModal({ title : 'Bitbucket' });
+      app.request('oauth-login', 
+        {type : 'bitbucket'},
+        function(err, result) {
+          console.log('>>> bitbucket callback ', result);
+          app.showModal({ loading : false, data : result });
+        }
+      );
     },
     newSfdcConnect : function(orgType) {
       this.connDropdownOpen = false;
@@ -137,19 +145,20 @@ Vue.component('app-connections', {
               <td>
                 <div class="slds-truncate">
                 <i class="fab fa-github type-icon-medium" v-if="row.type=='github'"></i>
+                <i class="fab fa-bitbucket type-icon-medium" v-if="row.type=='bitbucket'"></i>
                 <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="row.type=='sandbox'"> 
                   <svg class="slds-icon slds-icon_small" aria-hidden="true">
                     <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
                   </svg>
                 </span>
-                &nbsp;{{ (row.type=='github') ? row.repos.full_name : row.type }}</div>
+                &nbsp;{{ (row.type=='github'||row.type=='bitbucket') ? row.repos.full_name : row.type }}</div>
               </td>
               <td>
                 <div class="slds-truncate">{{ row.name }}</div>
               </td>
               <td>
                 <div class="slds-truncate">
-                  <span class="slds-avatar slds-avatar_small slds-avatar_circle slds-m-right_x-small" v-if="row.type=='github'">
+                  <span class="slds-avatar slds-avatar_small slds-avatar_circle slds-m-right_x-small" v-if="row.type=='github'||row.type=='bitbucket'">
                     <span class="slds-icon_container slds-icon-standard-user">
                       <img v-bind:src='row.avatar' />
                     </span>

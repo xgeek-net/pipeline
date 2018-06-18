@@ -90,6 +90,10 @@
   font-size: 1.25rem;
   margin-right: 4px;
 }
+#main .app-table .fa-bitbucket.type-icon-medium{
+  color: #1589ee;
+}
+
 #main .app-table .type-icon .slds-icon{
   fill: #1589ee;
 }
