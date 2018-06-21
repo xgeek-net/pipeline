@@ -1,12 +1,6 @@
-const GITHUB_END_POINT = 'https://github.com/login/oauth';
-const GITHUB_CALLBACK_URL = 'http://localhost/oauth/callback?type=github';
-const GITHUB_CLIENT_ID = 'b57bd2d5bacc2883d339';
-const GITHUB_CLIENT_SECRET = '5597f114d554106705bfe8c001958b1b2ea2fb72';
-const GITHUB_STATE = 'salesforcedeliverytool';
-
 const GitHub = require('github-api');
 const request = require('request');
-
+const CLIENT = require('../config/client');
 
 class GithubApi {
   constructor(opts) {
@@ -18,11 +12,11 @@ class GithubApi {
   }
 
   getAuthUrl() {
-    const url = GITHUB_END_POINT + '/authorize'
-        + '?client_id=' + GITHUB_CLIENT_ID
+    const url = CLIENT.GITHUB_END_POINT + '/authorize'
+        + '?client_id=' + CLIENT.GITHUB_CLIENT_ID
         + '&scope=user%20repo'
-        + '&redirect_uri=' + encodeURIComponent(GITHUB_CALLBACK_URL)
-        + '&state=' + GITHUB_STATE;
+        + '&redirect_uri=' + encodeURIComponent(CLIENT.GITHUB_CALLBACK_URL)
+        + '&state=' + CLIENT.GITHUB_STATE;
     return url;
   }
 
@@ -34,11 +28,11 @@ class GithubApi {
   authorize(code, callback) {
     let resp = {};
     const self = this;
-    const tokenUrl = GITHUB_END_POINT + '/access_token'
-      + '?client_id=' + GITHUB_CLIENT_ID
-      + '&client_secret=' + GITHUB_CLIENT_SECRET
+    const tokenUrl = CLIENT.GITHUB_END_POINT + '/access_token'
+      + '?client_id=' + CLIENT.GITHUB_CLIENT_ID
+      + '&client_secret=' + CLIENT.GITHUB_CLIENT_SECRET
       + '&code=' + code
-      + '&state=' + GITHUB_STATE;
+      + '&state=' + CLIENT.GITHUB_STATE;
     request.get({url:tokenUrl, json: true}, function (err, body, token) {
       //console.log('>>>> request result ', err, token);
       if(err) return callback(err);

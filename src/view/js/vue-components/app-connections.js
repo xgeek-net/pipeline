@@ -29,7 +29,13 @@ Vue.component('app-connections', {
     },
     newSfdcConnect : function(orgType) {
       this.connDropdownOpen = false;
-      console.log('>>>> orgType', orgType);
+      app.showModal({ title : 'Salesforce' });
+      app.request('oauth-login', 
+        {type : 'sfdc', orgType : orgType},
+        function(err, result) {
+          app.showModal({ loading : false, data : result });
+        }
+      );
     },
     taggleConnDropdown : function(ev) {
       if(this.connDropdownOpen) {
@@ -84,7 +90,7 @@ Vue.component('app-connections', {
                     </a>
                   </li>
                   <li class="slds-dropdown__item" role="presentation">
-                    <a href="javascript:void(0);" role="menuitem" tabindex="2" v-on:click="newSfdcConnect('prod')">
+                    <a href="javascript:void(0);" role="menuitem" tabindex="2" v-on:click="newSfdcConnect('production')">
                       <span class="slds-truncate">
                         <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon-medium slds-m-right_x-small">
                           <svg class="slds-icon slds-icon_xx_small" aria-hidden="true">
@@ -96,7 +102,7 @@ Vue.component('app-connections', {
                     </a>
                   </li>
                   <li class="slds-dropdown__item" role="presentation">
-                    <a href="javascript:void(0);" role="menuitem" tabindex="3" v-on:click="newSfdcConnect('sand')">
+                    <a href="javascript:void(0);" role="menuitem" tabindex="3" v-on:click="newSfdcConnect('sandbox')">
                       <span class="slds-truncate">
                         <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon-medium slds-m-right_x-small">
                           <svg class="slds-icon slds-icon_xx_small" aria-hidden="true">
@@ -146,19 +152,19 @@ Vue.component('app-connections', {
                 <div class="slds-truncate">
                 <i class="fab fa-github type-icon-medium" v-if="row.type=='github'"></i>
                 <i class="fab fa-bitbucket type-icon-medium" v-if="row.type=='bitbucket'"></i>
-                <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="row.type=='sandbox'"> 
+                <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="row.type=='sfdc'"> 
                   <svg class="slds-icon slds-icon_small" aria-hidden="true">
                     <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
                   </svg>
                 </span>
-                &nbsp;{{ (row.type=='github'||row.type=='bitbucket') ? row.repos.full_name : row.type }}</div>
+                &nbsp;{{ (row.type=='github'||row.type=='bitbucket') ? row.repos.full_name : row.orgType }}</div>
               </td>
               <td>
                 <div class="slds-truncate">{{ row.name }}</div>
               </td>
               <td>
                 <div class="slds-truncate">
-                  <span class="slds-avatar slds-avatar_small slds-avatar_circle slds-m-right_x-small" v-if="row.type=='github'||row.type=='bitbucket'">
+                  <span class="slds-avatar slds-avatar_small slds-avatar_circle slds-m-right_x-small">
                     <span class="slds-icon_container slds-icon-standard-user">
                       <img v-bind:src='row.avatar' />
                     </span>

@@ -15,30 +15,43 @@ Vue.component('app-modal-connect', {
     saveData : function(ev) {
       // TODO Validation
       const data = Object.assign(this.modal.data, this.form);
-      let repos;
-      for(rep of data.repos) {
-        if(rep.id == this.form.reposId) {
-          repos = {
-            id : rep.id,
-            name : rep.name,
-            full_name : rep.full_name,
-            private : rep.private
-          };
-          break;
-        }
-      }
       const now = new Date();
       let params = {
         type : data.type,
         name : this.form.name,
-        access_token : data.access_token,
         username : data.username,
         avatar : data.avatar || '',
-        repos : repos,
         status : 'actived',
         created_time : now.toISOString(),
         updated_time : now.toISOString()
       };
+      if(data.type == 'sfdc') {
+        params['accessToken'] = data.accessToken;
+        params['refreshToken'] = data.refreshToken;
+        params['instanceUrl'] = data.instanceUrl;
+        params['loginUrl'] = data.loginUrl;
+        params['fullname'] = data.fullname;
+        params['orgType'] = data.orgType;
+        params['orgId'] = data.orgId;
+        params['userId'] = data.userId;
+      } else {
+        // Github or Bitbucket
+        let repos;
+        for(rep of data.repos) {
+          if(rep.id == this.form.reposId) {
+            repos = {
+              id : rep.id,
+              name : rep.name,
+              full_name : rep.full_name,
+              private : rep.private
+            };
+            break;
+          }
+        }
+        params['repos'] = repos;
+        params['access_token'] = data.access_token;
+      }
+
       app.saveConnect(params);
     },
   },
@@ -66,11 +79,11 @@ Vue.component('app-modal-connect', {
                   <img v-bind:src='modal.data.avatar' />
                 </span>
               </span>
-              {{ modal.data.username }}
+              {{ (modal.data.type=='sfdc') ? modal.data.fullname : modal.data.username }}
             </div><!-- .slds-m-around_x-small -->
           </div><!-- .slds-size_2-of-2 -->
 
-          <div class="slds-size_2-of-2">
+          <div class="slds-size_2-of-2" v-if="modal.data.type!='sfdc'">
             <div class="slds-m-around_x-small">
               <div class="slds-form-element">
                 <label class="slds-form-element__label">Repositories</label>

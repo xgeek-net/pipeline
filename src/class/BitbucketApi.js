@@ -1,14 +1,6 @@
 //https://bitbucket.org/account/user/dawn8898/api
-const BITBUCKET_API = 'https://api.bitbucket.org/2.0';
-const BITBUCKET_END_POINT = 'https://bitbucket.org/site/oauth2';
-const BITBUCKET_CALLBACK_URL = 'http://localhost/oauth/callback?type=bitbucket';
-const BITBUCKET_CLIENT_ID = 'yd4yEH74WD8Px4xyve';
-const BITBUCKET_CLIENT_SECRET = '5q55cA2TS7PbZbEDZ4tWEjRu37bAeLXV';
-const BITBUCKET_STATE = 'salesforcedeliverytool';
-
-//const { createBitbucketAPI } = require('bitbucket-api-v2/dist/bitbucketAPI');
 const request = require('request');
-
+const CLIENT = require('../config/client');
 
 class BitbucketApi {
   constructor(opts) {
@@ -21,8 +13,8 @@ class BitbucketApi {
   }
 
   getAuthUrl() {
-    const url = BITBUCKET_END_POINT + '/authorize'
-        + '?client_id=' + BITBUCKET_CLIENT_ID
+    const url = CLIENT.BITBUCKET_END_POINT + '/authorize'
+        + '?client_id=' + CLIENT.BITBUCKET_CLIENT_ID
         + '&response_type=token';
     //console.log('>>>> getAuthUrl ', url);
     return url;
@@ -71,7 +63,7 @@ class BitbucketApi {
         Authorization: ' Bearer ' + this.access_token
       },
       qs: opts,
-      url: BITBUCKET_API + '/' + apiName,
+      url: CLIENT.BITBUCKET_API + '/' + apiName,
       json: true,
     };
     request.get(params, function(err, body, res) {

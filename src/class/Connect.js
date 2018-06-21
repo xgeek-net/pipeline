@@ -10,6 +10,7 @@ const Utils = require('./Utils.js');
 const Storage = require('./Storage.js');
 const GithubApi = require('./GithubApi.js');
 const BitbucketApi = require('./BitbucketApi.js');
+const SfdcApi = require('./SfdcApi.js');
 const utils = new Utils();
 
 class Connect {
@@ -19,6 +20,7 @@ class Connect {
     });
     this.github = new GithubApi();
     this.bitbucket = new BitbucketApi();
+    this.sfdc = new SfdcApi();
   }
 
   newConnect(ev, arg) {
@@ -47,10 +49,13 @@ class Connect {
       uri = self.github.getAuthUrl();
     } else if(arg.type == 'bitbucket') {
       uri = self.bitbucket.getAuthUrl();
+    } else if(arg.type == 'sfdc') {
+      uri = self.sfdc.getAuthUrl(arg.orgType);
     }
     const bounds = utils.getPopWinBounds();
     const loginWindow = new BrowserWindow(bounds);
     // DEBUG
+    //console.log('>>>> open url', uri);
     loginWindow.webContents.session.clearStorageData();
     loginWindow.setTitle(arg.type.toUpperCase());
     loginWindow.webContents.on('will-navigate', (event, uri) => {
@@ -86,7 +91,10 @@ class Connect {
           //console.log('>>>> callback ', uri, urlObj, params, token)
           return self.bitbucket.authorize(token, authCallback);
         }
-        // TODO Bitbucket
+        console.log('>>> params', params);
+        if(params.type == 'sfdc' && params.code) {
+          return self.sfdc.authorize(params.code, authCallback);
+        }
       }
     });
     loginWindow.loadURL(uri);
