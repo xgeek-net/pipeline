@@ -10,18 +10,28 @@ class Storage {
     // We'll use the `configName` property to set the file name and path.join to bring it all together as a string
     this.path = path.join(userDataPath, opts.configName + '.json');
     this.data = parseDataFile(this.path, opts.defaults);
+    this.keymap = convertArrayToMap(this.data);
   }
   
-  getAll() {
+  getAll(opt) {
+    opt = opt || {};
+    if(opt.cache === false) {
+      this.data = parseDataFile(this.path);
+      this.keymap = convertArrayToMap(this.data);
+    }
     return this.data;
   }
 
   setAll(data) {
     this.data = data;
+    this.keymap = convertArrayToMap(this.data);
     fs.writeFileSync(this.path, JSON.stringify(data));
   }
 
   get(key) {
+    if(Array.isArray(this.data)) {
+      return this.keymap[key];
+    }
     return this.data[key];
   }
   
@@ -45,6 +55,16 @@ function parseDataFile(filePath, defaults) {
     // if there was some kind of error, return the passed in defaults instead.
     return defaults;
   }
+}
+
+function convertArrayToMap(data) {
+  if(!Array.isArray(data)) return data;
+  let keymap = {};
+  for(let row of data) {
+    if(!row.id) continue;
+    keymap[row.id] = row;
+  }
+  return keymap;
 }
 
 // expose the class

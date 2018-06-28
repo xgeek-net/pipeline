@@ -3,15 +3,21 @@ const app = electron.app;
 const ipc = electron.ipcMain;
 const BrowserWindow = electron.BrowserWindow;
 
+const events = require('events');
+const eventEmitter = new events.EventEmitter();
+eventEmitter.setMaxListeners(25);
+console.log('>>>> eventEmitter ', eventEmitter.getMaxListeners());
+
 const path = require('path');
 const url = require('url');
 // Classes
-const Utils = require('./class/Utils.js');
 const Setting = require('./class/Setting.js');
 const Connect = require('./class/Connect.js');
-const utils = new Utils();
+const Pipeline = require('./class/Pipeline.js');
+const utils = require('./class/Utils.js');
 const setting = new Setting();
 const connect = new Connect();
+const pipeline = new Pipeline();
 
 // メインウィンドウ
 let mainWindow;
@@ -57,9 +63,30 @@ app.on('activate', () => {
 ipc.on('oauth-login', (event, arg) => {
   connect.authLogin(event, arg);
 });
+ipc.on('git-pullrequests', (event, arg) => {
+  connect.getPullRequests(event, arg);
+});
+ipc.on('git-branches', (event, arg) => {
+  connect.getBranches(event, arg);
+});
+ipc.on('git-branch-commits', (event, arg) => {
+  connect.getCommits(event, arg);
+});
 ipc.on('data-new-connection', (event, arg) => {
   connect.newConnect(event, arg);
 });
 ipc.on('data-connections', (event, arg) => {
   connect.getConnections(event, arg);
+});
+ipc.on('data-new-pipeline', (event, arg) => {
+  pipeline.newPipeline(event, arg);
+});
+ipc.on('data-pipelines', (event, arg) => {
+  pipeline.getPipelines(event, arg);
+});
+ipc.on('data-pipeline-log', (event, arg) => {
+  pipeline.getPipelineLog(event, arg);
+});
+ipc.on('pipeline-run', (event, arg) => {
+  pipeline.runPipeline(event, arg);
 });

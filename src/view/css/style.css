@@ -8,7 +8,12 @@
 .container {
   min-height: 24rem;
 }
-
+.mt1{
+  margin-top: 1rem;
+}
+.mt2{
+  margin-top: 2rem;
+}
 /**
  * #sidebar
  */
@@ -69,6 +74,9 @@
   flex-direction: row;
   width: calc(100% - 64px);
   margin-left: 64px;
+}
+#main .page-loading-mockup{
+  background: rgba(255, 255, 255, 0.1);
 }
 #main header.masthead {
   padding: 0.5rem 1.0rem;
@@ -152,6 +160,118 @@
   min-height: 150px;
 }
 
+/**
+ * Pipeline
+ */
+.pipeline-from-icon{
+  font-size: 2.0rem;
+  color: #f3f2f2;
+}
+.pr-to-icon {
+  color: #e0e5ee;
+  font-size: 0.9rem;
+}
+#main .new-pipeline-detail .slds-badge.pr-to-tag{
+  background-color: #e0e5ee;
+  line-height: 1.0;
+  padding: 0.1rem 0.5rem;
+  color: #706e6b;
+}
+
+#main .slds-card.only-show-main{
+  max-width: 400px;
+}
+#main .slds-card.only-show-main .sub-col{
+  display: none;
+}
+
+.new-pipeline-connect .slds-icon{
+  fill: #0070d2;
+}
+.new-pipeline-connect .slds-card__header-title{
+  font-size: 1rem;
+}
+.new-pipeline-detail .slds-form_horizontal .slds-form-element+.slds-form-element {
+  margin-top: 0.8rem;
+}
+.new-pipeline-detail .slds-visual-picker_medium{
+  margin-right: 1.5rem;
+}
+.new-pipeline-detail .slds-visual-picker_medium .slds-visual-picker__figure {
+  width: 7rem;
+  height: 7rem;
+}
+.new-pipeline-detail .slds-visual-picker__figure .slds-text-heading_large{
+  margin-bottom: 0.5rem;
+}
+.new-pipeline-detail .slds-visual-picker__figure .slds-icon{
+  fill: #706e6b;
+}
+.new-pipeline-detail .slds-form_horizontal .slds-form-element__label{
+  padding-right: 0.5rem;
+}
+.new-pipeline-detail .input-small{
+  max-width: 366px;
+}
+.new-pipeline-detail .remark{
+  color: #706e6b;
+}
+.new-pipeline-detail .pr-table{
+  border-top: none;
+}
+.new-pipeline-detail .pr-table .slds-avatar {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+/**
+ * pipeline-detail
+ */
+.pipeline-detail{
+  width: calc(100% - 485px);
+  height: 100%;
+  position: fixed;
+  top: 0;
+  right: 0;
+  color: #dce5f5;
+  background-color: #172b4d;
+}
+.pipeline-detail .detail-header{
+  padding: 0.5rem 1.0rem;
+  border-bottom: 1px solid #F4F6F9;
+  border-color: #d8dde6;
+}
+.pipeline-detail .detail-header h2 {
+  display: inline-block;
+  font-size: 1.2rem;
+  line-height: 2rem;
+  width: 100%;
+  text-align: center;
+}
+.pipeline-detail .detail-header .detail-buttons{
+  position: absolute;
+  left: 1rem;
+  top: 0.7rem;
+}
+.pipeline-detail .detail-header .status{
+  display: block;
+  float: right;
+  font-size: 0.9rem;
+}
+.pipeline-detail .detail-header .status .duration{
+  margin-right: 0.5rem;
+}
+.pipeline-detail .detail-body{
+  display: block;
+  height: calc(100% - 50px);
+  padding: 0.5rem 1rem;
+  line-height: 1.25rem;
+  overflow-y: scroll;
+}
+.pipeline-detail .detail-body p{
+  word-wrap: break-word;
+  word-break: break-all;
+}
 
 /**
  * Loading

@@ -22,8 +22,8 @@ Vue.component('app-modal-connect', {
         username : data.username,
         avatar : data.avatar || '',
         status : 'actived',
-        created_time : now.toISOString(),
-        updated_time : now.toISOString()
+        created_at : now.toISOString(),
+        updated_at : now.toISOString()
       };
       if(data.type == 'sfdc') {
         params['accessToken'] = data.accessToken;
@@ -48,8 +48,10 @@ Vue.component('app-modal-connect', {
             break;
           }
         }
+
         params['repos'] = repos;
         params['access_token'] = data.access_token;
+        params['loginname'] = data.loginname || '';
       }
 
       app.saveConnect(params);

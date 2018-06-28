@@ -6,9 +6,15 @@ class SfdcApi {
     opts = opts || {};
     this.orgType = 'sandbox';
     this.conn = null;
-    if(opts.access_token) {
-      //this.api = createBitbucketAPI()
-      //this.api.authenticateOAuth2(opts.access_token);
+    if(opts.accessToken && opts.instanceUrl && opts.orgType) {
+      this.orgType = opts.orgType;
+      const oauth2 = this.getOAuthClient(opts.orgType);
+      this.conn = new jsforce.Connection({
+        oauth2 : oauth2,
+        instanceUrl : opts.instanceUrl,
+        accessToken : opts.accessToken,
+        refreshToken : opts.refreshToken
+      });
     }
   }
 
@@ -17,6 +23,33 @@ class SfdcApi {
     var oauth2 = this.getOAuthClient(orgType);
     var url = oauth2.getAuthorizationUrl({ scope : 'api id refresh_token' });
     return url;
+  }
+
+  checkConnect() {
+    const self = this;
+    return new Promise(function(resolve, reject) {
+      if(!self.conn) return reject(new Error('SFDC Connect ERROR!'));
+      self.conn.identity(function(err, res) {
+        //console.log('>>> identity ', err, res);
+        if (err) {
+          if(err.errorCode.indexOf('INVALID_SESSION_ID') >= 0 ||
+            err.errorCode.indexOf('INVALID_LOGIN') >= 0 || 
+            err.errorCode.indexOf('INVALID_OPERATION_WITH_EXPIRED_PASSWORD') >= 0 || 
+            err.name.indexOf('invalid_grant') >= 0
+          ) {
+            //console.log('Refresh Token', self.conn.refreshToken);
+            self.conn.oauth2.refreshToken(self.conn.refreshToken, function(err, ret) {
+              if (err) return reject(new Error('SFDC Connect ERROR!'));
+              //console.log('Refresh Token res', res);
+              return resolve({ accessToken :  ret.access_token});
+            });
+          }
+        } else {
+          return resolve(true);
+        }
+      });
+    });
+    
   }
 
   /**
@@ -67,6 +100,11 @@ class SfdcApi {
     });
     return oauth2;
   }
+
+  deployMetadata(zipStream, opts, callback) {
+    return this.conn.metadata.deploy(zipStream, opts).complete(callback);
+  }
+
 }
 
 module.exports = SfdcApi;

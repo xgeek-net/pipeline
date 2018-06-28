@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Salesforce Delivery Tool</title>
+  <title>Salesforce Pipeline</title>
   <link rel="stylesheet" href="components/salesforce-lightning-design-system/assets/styles/salesforce-lightning-design-system.min.css">
   <link rel="stylesheet" href="components/font-awesome/web-fonts-with-css/css/fontawesome-all.min.css">
   <link rel="stylesheet" href="css/style.css">
@@ -16,13 +16,21 @@
 
     <app-sidebar v-bind:menu="page.menu" v-if="(page.status=='mounted')"></app-sidebar>
     <main id="main" class="slds-grid slds-wrap" v-if="(page.status=='mounted')">
+      <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand" v-if="page.loading">
+        <span class="slds-assistive-text">Loading</span>
+        <div class="slds-spinner__dot-a"></div>
+        <div class="slds-spinner__dot-b"></div>
+      </div><!-- .slds-spinner -->
+      <div class="slds-backdrop slds-backdrop_open page-loading-mockup" v-if="page.loading"></div>
+
       <header class="masthead slds-size_2-of-2">
         <h1 class="">{{ page.title }}</h1>
       </header>
       <div class="container slds-size_2-of-2 slds-m-around_small slds-m-top_medium">
-        <app-newpipeline v-if="page.menu=='newpipeline'"></app-newpipeline>
+        <app-newpipeline v-bind:connections="connections" v-if="page.menu=='newpipeline'"></app-newpipeline>
         <app-connections v-bind:connections="connections" v-if="page.menu=='connections'"></app-connections>
-        <app-pipelines v-bind:pipelines="pipelines" v-if="page.menu=='pipelines'"></app-pipelines>
+        <app-pipelines v-bind:pipelines="pipelines" v-bind:detail="pipeline" v-if="page.menu=='pipelines'"></app-pipelines>
+        <pipeline-detail v-bind:pipeline="pipeline" v-if="page.menu=='pipelines' && pipeline!=null"></pipeline-detail>
       </div><!-- .container -->
     </main><!-- #main -->
 
@@ -34,10 +42,13 @@
   </div><!-- #app -->
 
   <script type="text/javascript" src="components/vue/dist/vue.min.js"></script>
+  <script type="text/javascript" src="components/moment/min/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="js/include/master.js"></script>
   <script type="text/javascript" src="js/vue-components/app-sidebar.js"></script>
+  <script type="text/javascript" src="js/vue-components/app-newpipeline-detail-git.js"></script>
   <script type="text/javascript" src="js/vue-components/app-newpipeline.js"></script>
   <script type="text/javascript" src="js/vue-components/app-connections.js"></script>
+  <script type="text/javascript" src="js/vue-components/app-pipeline-detail.js"></script>
   <script type="text/javascript" src="js/vue-components/app-pipelines.js"></script>
   <script type="text/javascript" src="js/vue-components/app-modal-connect.js"></script>
   <script type="text/javascript" src="js/app.js"></script>
