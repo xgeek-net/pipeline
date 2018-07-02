@@ -27,7 +27,7 @@
         <h1 class="">{{ page.title }}</h1>
       </header>
       <div class="container slds-size_2-of-2 slds-m-around_small slds-m-top_medium">
-        <app-newpipeline v-bind:connections="connections" v-if="page.menu=='newpipeline'"></app-newpipeline>
+        <app-newpipeline v-bind:connections="connections" v-bind:record="pipeline" v-if="page.menu=='newpipeline'"></app-newpipeline>
         <app-connections v-bind:connections="connections" v-if="page.menu=='connections'"></app-connections>
         <app-pipelines v-bind:pipelines="pipelines" v-bind:detail="pipeline" v-if="page.menu=='pipelines'"></app-pipelines>
         <pipeline-detail v-bind:pipeline="pipeline" v-if="page.menu=='pipelines' && pipeline!=null"></pipeline-detail>

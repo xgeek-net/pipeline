@@ -155,7 +155,7 @@ class Pipeline {
         return callback(null);
       }
       fs.readFile(logPath, 'utf-8', function(err, data) {
-        console.log('>>> getPipelineLog' + index, (new Date()));
+        //console.log('>>> getPipelineLog' + index, (new Date()));
         index++;
         if(err) return callback(err);
         const result = data;
@@ -234,7 +234,9 @@ class Pipeline {
       })
       .then(function(zipPath) {
         // Do Deploy
-        return metadata.deploy(toConn, zipPath);
+        return metadata.deploy(toConn, zipPath, {}, function(deployResult) {
+          self.outputDeployProcessLog(pipelineLog, deployResult);
+        });
       })
       .then(function(deployResult) {
         // Save deploy result
@@ -279,6 +281,21 @@ class Pipeline {
     }
 
   }
+
+  /**
+   * Output metadata deploy process log
+   * @param {Function} pipelineLog 
+   * @param {Object} deployResult 
+   */
+  outputDeployProcessLog(pipelineLog, deployResult) {
+    if(!deployResult.details) {
+      pipelineLog('[Metadata] Deploy submitted : ' + deployResult.id);
+    } else {
+      pipelineLog('[Metadata] Request Status: ' + deployResult.status);
+      pipelineLog('           Components Deployed: ' + deployResult.details.componentSuccesses.length);
+    }
+  }
+
   /**
    * Output metadata deploy result log
    * @param {Function} pipelineLog 

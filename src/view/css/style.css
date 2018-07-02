@@ -137,11 +137,14 @@
 #main .app-table .actions-col{
   overflow: visible;
 }
+#main .app-table .actions-col .popover-col{
+  position: relative;
+}
 #main .app-table .actions-col .popover-col .slds-popover {
   min-width: 50px;
   position: absolute;
-  bottom: calc(100% + 5px);
-  right: calc(50% + 20px);
+  bottom: calc(100% + 10px);
+  right: -8px;
   display: none;
 }
 #main .app-table .actions-col .popover-col:hover .slds-popover{

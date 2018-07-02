@@ -147,6 +147,11 @@ var app = new Vue({
         }
       }
     },
+    editPipeline : function(id) {
+      const self = this;
+      self.pipeline = self.getPipeline(id);
+      self.newPipeline();
+    },
     clonePipeline : function(id, callback) {
       const self = this;
       self.request('data-clone-pipeline', {id : id}, function(err, result){

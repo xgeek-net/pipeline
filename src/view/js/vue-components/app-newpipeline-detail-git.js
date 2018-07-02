@@ -1,5 +1,5 @@
 Vue.component('app-newpipeline-detail-git', {
-  props: ['connection'],
+  props: ['connection', 'record'],
   data : function () {
     return {
       pipeline : {
@@ -14,6 +14,12 @@ Vue.component('app-newpipeline-detail-git', {
       commits : null
     }
   },
+  mounted: function () {
+    const self = this;
+    if(self.record) {
+      self.setPipeline(self.record);
+    }
+  },
   methods: {
     /**
      * Reload component when connection changed
@@ -23,6 +29,16 @@ Vue.component('app-newpipeline-detail-git', {
       const self = this;
       self.pipeline = { type : null, name : '', prs : [], branch : '', commits : [] };
       self.pullrequests = null;
+    },
+    // Edit pipeline data
+    setPipeline : function(pipeline) {
+      const self = this;
+      self.pipeline = pipeline;
+      // Fire self.listPullRequests(); OR self.listBranches(); OR self.listCommits();
+      const typeEle = document.getElementById('visual-picker-source-type-' + self.pipeline.type);
+      if(typeEle) {
+        typeEle.click();
+      }
     },
     getPipeline : function(){
       return this.pipeline;
@@ -129,8 +145,8 @@ Vue.component('app-newpipeline-detail-git', {
             <label class="slds-form-element__label">Source Type</label>
             <div class="slds-form-element__control">
               <div class="slds-visual-picker slds-visual-picker_medium">
-                <input type="radio" id="visual-picker-source-type-1" value="1" name="sourcetype" v-on:click="listPullRequests()" />
-                <label for="visual-picker-source-type-1">
+                <input type="radio" id="visual-picker-source-type-pr" value="1" name="sourcetype" v-on:click="listPullRequests()" />
+                <label for="visual-picker-source-type-pr">
                   <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
                     <span>
                       <span class="slds-text-heading_large">
@@ -151,8 +167,8 @@ Vue.component('app-newpipeline-detail-git', {
                 </label>
               </div><!-- .slds-visual-picker -->
               <div class="slds-visual-picker slds-visual-picker_medium">
-                <input type="radio" id="visual-picker-source-type-2" value="1" name="sourcetype" v-on:click="listBranches()" />
-                <label for="visual-picker-source-type-2">
+                <input type="radio" id="visual-picker-source-type-branch" value="1" name="sourcetype" v-on:click="listBranches()" />
+                <label for="visual-picker-source-type-branch">
                   <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
                     <span>
                       <span class="slds-text-heading_large">
@@ -171,8 +187,8 @@ Vue.component('app-newpipeline-detail-git', {
                 </label>
               </div><!-- .slds-visual-picker -->
               <div class="slds-visual-picker slds-visual-picker_medium">
-                <input type="radio" id="visual-picker-source-type-3" value="1" name="sourcetype" v-on:click="listCommits()" />
-                <label for="visual-picker-source-type-3">
+                <input type="radio" id="visual-picker-source-type-commit" value="1" name="sourcetype" v-on:click="listCommits()" />
+                <label for="visual-picker-source-type-commit">
                   <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
                     <span>
                       <span class="slds-text-heading_large">

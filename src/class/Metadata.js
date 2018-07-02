@@ -164,18 +164,26 @@ class Metadata {
    * @param {Object} connection - sfdc connection object
    * @param {String} zipFilePath - zipped package file path
    * @param {Object} opts - { runTests: [ 'MyApexTriggerTest' ] }
+   * @param {Function} processing - processing report
    * @return {Promise} 
    */
-  deploy(connection, zipFilePath, opts) {
+  deploy(connection, zipFilePath, opts, processing) {
     opts = opts || {};
     return new Promise(function(resolve, reject) {
       //console.log('>>> connection ', connection, zipFilePath);
       const sfdcApi = new SfdcApi(connection);
       let zipStream = fs.createReadStream(zipFilePath);
-      sfdcApi.deployMetadata(zipStream, opts, function(err, result) {
-        if (err) { return reject(err); }
-        return resolve(result);
-      });
+      sfdcApi.deployMetadata(zipStream, opts, 
+        // Processing
+        function(err, result) {
+          if (err) { return reject(err); }
+          processing(result);
+        },
+        // Complete
+        function(err, result) {
+          if (err) { return reject(err); }
+          return resolve(result);
+        });
     });
     /*
     { checkOnly: false,

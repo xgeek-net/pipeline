@@ -100,9 +100,36 @@ class SfdcApi {
     });
     return oauth2;
   }
-
-  deployMetadata(zipStream, opts, callback) {
-    return this.conn.metadata.deploy(zipStream, opts).complete(callback);
+  /**
+   * 
+   * @param {Object} zipStream 
+   * @param {Object} opts 
+   * @param {Function} processing 
+   * @param {Function} completion 
+   */
+  deployMetadata(zipStream, opts, processing, completion) {
+    // @see https://github.com/jsforce/jsforce/issues/289  polling timeout error
+    /*return this.conn.metadata.deploy(zipStream, opts).complete(completion);*/
+    const self = this;
+    let refIntervalId;
+    self.conn.metadata.deploy(zipStream, opts, function(err, res) {
+      if(err) return completion(err);
+      // Block twice fired
+      if(refIntervalId) return;
+      // Processing
+      processing(null, res);
+      refIntervalId = setInterval(function() {
+        self.conn.metadata.checkDeployStatus(res.id, true, function(err, deployResult){
+          if(err) return completion(err);
+          if(deployResult.done) {
+            clearInterval(refIntervalId);
+            return completion(null, deployResult);
+          } else {
+            processing(null, deployResult);
+          }
+        });
+      }, 5000);
+    });
   }
 
 }

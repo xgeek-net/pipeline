@@ -16,6 +16,9 @@ Vue.component('app-pipelines', {
       ev.target.setAttribute('disabled','disabled');
       app.runPipeline(pid);
     },
+    editPipeline : function(pid, ev) {
+      app.editPipeline(pid);
+    },
     clonePipeline : function(pid, ev) {
       ev.target.setAttribute('disabled','disabled');
       app.clonePipeline(pid, function() {
@@ -29,8 +32,13 @@ Vue.component('app-pipelines', {
       });
     },
     taggleMenuDropdown : function(pid, ev) {
+      if(this.menu[pid]) {
+        this.menu = {};
+      } else {
+        this.menu = {};
+        this.menu[pid] = true;
+      }
       ev.stopPropagation();
-      this.menu[pid] = true;
     },
     hideAllMenu : function() {
       this.menu = {};
@@ -41,7 +49,7 @@ Vue.component('app-pipelines', {
     }
   },
   template: `
-    <article class="slds-card" v-bind:class="{ 'only-show-main': detail!=null}">
+    <article class="slds-card" v-bind:class="{ 'only-show-main': detail!=null}" v-on:click="hideAllMenu">
       <div class="slds-card__header slds-grid">
         <header class="slds-media slds-media_center slds-has-flexi-truncate">
           <div class="slds-media__figure">
@@ -138,11 +146,14 @@ Vue.component('app-pipelines', {
                       </div>
                     </li>
                     <li class="popover-col slds-button_middle">
-                      <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-on:click="clonePipeline(row.id, $event)">
+                      <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-on:click="editPipeline(row.id, $event)">
                         <svg class="slds-button__icon" aria-hidden="true">
-                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#layers"></use>
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#edit"></use>
                         </svg>
                       </button>
+                      <div class="slds-popover slds-popover--tooltip slds-nubbin_bottom-right">
+                        <div class="slds-popover__body">Edit</div>
+                      </div>
                     </li>
                     <li class="">
                       <!--<button class="slds-button slds-button_icon slds-button_icon-border-filled" v-if="row.status!='processing'" v-on:click="removePipeline(row.id, $event)">
@@ -150,7 +161,7 @@ Vue.component('app-pipelines', {
                           <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
                         </svg>
                       </button>-->
-                      <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last" v-bind:class="{ 'slds-is-open': menu[row.id]==true }">
+                      <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last" v-bind:class="{'slds-is-open':menu[row.id]}">
                         <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-on:click="taggleMenuDropdown(row.id, $event)">
                           <svg class="slds-button__icon slds-button__icon_small" aria-hidden="true">
                             <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#down"></use>
@@ -159,12 +170,12 @@ Vue.component('app-pipelines', {
                         <div class="slds-dropdown slds-dropdown_right slds-dropdown_actions actions-more-dropdown">
                           <ul class="slds-dropdown__list" role="menu">
                             <li class="slds-dropdown__item" role="presentation">
-                              <a href="javascript:void(0);" role="menuitem" tabindex="0">
+                              <a href="javascript:void(0);" role="menuitem" tabindex="0" v-on:click="clonePipeline(row.id, $event)">
                                 <span class="slds-truncate" title="Clone">Clone</span>
                               </a>
                             </li>
                             <li class="slds-dropdown__item" role="presentation" v-if="row.status!='processing'" v-on:click="removePipeline(row.id, $event)">
-                              <a href="javascript:void(0);" class="color-text-error" role="menuitem" tabindex="1">
+                              <a href="javascript:void(0);" class="color-text-error" role="menuitem" tabindex="1" v-on:click="removePipeline(row.id, $event)">
                                 <span class="slds-truncate" title="Remove">Remove</span>
                               </a>
                             </li>

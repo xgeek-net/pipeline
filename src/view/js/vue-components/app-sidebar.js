@@ -5,9 +5,15 @@ Vue.component('app-sidebar', {
       app.newPipeline(ev);
     },
     openConnections: function (ev) {
+      if(app.connection) {
+        app.connection = null;
+      }
       app.activeMenu('connections', 'CONNECTIONS');
     },
     openPipelines: function (ev) {
+      if(app.pipeline) {
+        app.pipeline = null;
+      }
       app.activeMenu('pipelines', 'PIPELINES');
     }
   },

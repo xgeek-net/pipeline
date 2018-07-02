@@ -1,5 +1,5 @@
 Vue.component('app-newpipeline', {
-    props: ['connections'],
+    props: ['connections', 'record'],
     data : function () {
       return {
         pipeline : {
@@ -8,6 +8,21 @@ Vue.component('app-newpipeline', {
         },
         validate : false,
         connection : null,
+      }
+    },
+    mounted: function () {
+      const self = this;
+      // Edit pipeline data
+      if(self.record) {
+        self.pipeline = self.record;
+        for(let i in self.connections) {
+          const conn = self.connections[i];
+          if(conn.id == self.pipeline.from) {
+            self.connection = conn;
+            break;
+          }
+        }
+        self.validate = true;
       }
     },
     methods: {
@@ -47,7 +62,7 @@ Vue.component('app-newpipeline', {
         app.request('data-new-pipeline', 
           { pipeline : pipeline },
           function(err, result) {
-            console.log('>>>> result ', result);
+            //console.log('>>>> result ', result);
             app.hideLoading();
             if(err) return app.handleError(err);
             app.runPipeline(result.id);
@@ -133,7 +148,7 @@ Vue.component('app-newpipeline', {
         </div><!-- .slds-size_5-of-12 -->
 
         <div class="slds-size_11-of-12 mt1">
-          <app-newpipeline-detail-git v-bind:connection="connection" v-if="connection!=null" ref="detail"></app-newpipeline-detail-git>
+          <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="connection!=null" ref="detail"></app-newpipeline-detail-git>
         </div><!-- .slds-size_11-of-12 -->
 
         <div class="slds-size_11-of-12 mt1" v-if="validate">
