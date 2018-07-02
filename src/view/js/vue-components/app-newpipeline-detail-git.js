@@ -75,6 +75,9 @@ Vue.component('app-newpipeline-detail-git', {
         }
       );
     },
+    /**
+     * Click commit type button event
+     */
     listCommits : function(ev) {
       const self = this;
       self.pipeline.type = 'commit';
@@ -88,6 +91,10 @@ Vue.component('app-newpipeline-detail-git', {
           if(err) return app.handleError(err);
           //console.log('>>> git-commits callback ',err, branches);
           self.branches = branches;
+          if(self.pipeline.branch) {
+            // Reload commit list
+            self.selectBranch();
+          }
         }
       );
     },
@@ -113,7 +120,7 @@ Vue.component('app-newpipeline-detail-git', {
         function(err, commits) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          console.log('>>> git-pullrequests callback ',err, commits);
+          //console.log('>>> git-pullrequests callback ',err, commits);
           self.commits = commits;
         }
       );
@@ -271,7 +278,7 @@ Vue.component('app-newpipeline-detail-git', {
             </div><!-- .slds-form-element__control -->
           </div><!-- .slds-form-element -->
 
-          <div class="slds-form-element pipeline-prs" v-if="pipeline.type=='branch' && commits!=null">
+          <div class="slds-form-element pipeline-prs" v-if="pipeline.type=='commit' && commits!=null">
             <label class="slds-form-element__label">Commits</label>
             <div class="slds-form-element__control">
               <table class="slds-table slds-table_fixed-layout slds-table_bordered slds-no-row-hover slds-table_cell-buffer pr-table">

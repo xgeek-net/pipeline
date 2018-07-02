@@ -77,8 +77,8 @@ ipc.on('data-new-connection', (event, arg) => {
 ipc.on('data-connections', (event, arg) => {
   connect.getConnections(event, arg);
 });
-ipc.on('data-new-pipeline', (event, arg) => {
-  pipeline.newPipeline(event, arg);
+ipc.on('data-save-pipeline', (event, arg) => {
+  pipeline.savePipeline(event, arg);
 });
 ipc.on('data-clone-pipeline', (event, arg) => {
   pipeline.clonePipeline(event, arg);

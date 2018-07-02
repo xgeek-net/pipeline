@@ -156,11 +156,6 @@ Vue.component('app-pipelines', {
                       </div>
                     </li>
                     <li class="">
-                      <!--<button class="slds-button slds-button_icon slds-button_icon-border-filled" v-if="row.status!='processing'" v-on:click="removePipeline(row.id, $event)">
-                        <svg class="slds-button__icon" aria-hidden="true">
-                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
-                        </svg>
-                      </button>-->
                       <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last" v-bind:class="{'slds-is-open':menu[row.id]}">
                         <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-on:click="taggleMenuDropdown(row.id, $event)">
                           <svg class="slds-button__icon slds-button__icon_small" aria-hidden="true">
@@ -174,20 +169,17 @@ Vue.component('app-pipelines', {
                                 <span class="slds-truncate" title="Clone">Clone</span>
                               </a>
                             </li>
-                            <li class="slds-dropdown__item" role="presentation" v-if="row.status!='processing'" v-on:click="removePipeline(row.id, $event)">
-                              <a href="javascript:void(0);" class="color-text-error" role="menuitem" tabindex="1" v-on:click="removePipeline(row.id, $event)">
+                            <li class="slds-dropdown__item" role="presentation" v-if="row.status!='processing' || (row.started_at && moment().diff(moment(row.started_at), 'minutes') > 30)">
+                              <a href="javascript:void(0);" class="slds-color-text-error" role="menuitem" tabindex="1" v-on:click="removePipeline(row.id, $event)">
                                 <span class="slds-truncate" title="Remove">Remove</span>
                               </a>
                             </li>
-                          </ul>
+                          </ul><!-- .slds-dropdown__list -->
                         </div><!-- .slds-dropdown_actions -->
                       </div>
                     </li>
                     
-                  </ul>
-                  
-                  
-                  
+                  </ul><!-- .slds-button-group -->
                   
                 </div>
               </td>

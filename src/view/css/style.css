@@ -7,6 +7,7 @@
 }
 .container {
   min-height: 24rem;
+  margin-bottom: 4rem;
 }
 .mt1{
   margin-top: 1rem;
@@ -14,6 +15,10 @@
 .mt2{
   margin-top: 2rem;
 }
+.slds-color-text-error{
+  color: #c23934;
+}
+
 /**
  * #sidebar
  */
@@ -156,6 +161,7 @@
   border-right: none;
 }
 
+
 /**
  * Connections
  */
@@ -251,6 +257,12 @@
   width: 1.8rem;
   height: 1.8rem;
 }
+.slds-dropdown--actions a.slds-color-text-error, 
+.slds-dropdown_actions a.slds-color-text-error,
+.slds-dropdown--actions a.slds-color-text-error:hover, 
+.slds-dropdown_actions a.slds-color-text-error:hover {
+  color: #c23934;
+}
 
 /**
  * pipeline-detail
@@ -306,6 +318,7 @@
 #main .pipeline-detail .pipeline-status.error{
   color: #d4504c;
 }
+
 /**
  * Loading
  */

@@ -11,20 +11,20 @@ Vue.component('pipeline-detail', {
   created: function () {
     const self = this;
     self.refPipeline = self.pipeline;
-    //console.log('>>>> loadBody created', (new Date()));
+    console.log('>>>> loadBody created', (new Date()));
     this.loadBody();
   },
   updated: function () {
     const self = this;
     if(self.refPipeline.id != self.pipeline.id) {
-      //console.log('>>>> loadBody updated', (new Date()));
+      console.log('>>>> loadBody updated', (new Date()));
       this.loadBody();
     }
   },
   destroyed: function () {
     const self = this;
     if(self.refIntervalId) {
-      //console.log('>>>> clearInterval ', self.refIntervalId);
+      console.log('>>>> clearInterval destroyed ', self.refIntervalId);
       clearInterval(self.refIntervalId);
       self.refIntervalId = null;
     }
@@ -40,7 +40,7 @@ Vue.component('pipeline-detail', {
     loadBody : function() {
       const self = this;
       if(self.refIntervalId) {
-        //console.log('>>>> clearInterval ', self.refIntervalId);
+        console.log('>>>> clearInterval loadBody ', self.refIntervalId);
         clearInterval(self.refIntervalId);
         self.refIntervalId = null;
       }
@@ -57,7 +57,7 @@ Vue.component('pipeline-detail', {
     },
     requestPipelineLog : function() {
       const self = this;
-      //console.log('>>>> loadBody request', (new Date()));
+      //console.log('>>>> loadBody request ' + self.pipeline.id, self.pipeline.completed_at, self.refIntervalId, (new Date()));
       app.request('data-pipeline-log', {id : self.pipeline.id}, function(err, result){
         if(err) app.handleError(err);
         //console.log('>>>> loadBody Callback', self.pipeline.id, (new Date()));

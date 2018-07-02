@@ -17,19 +17,35 @@ class Pipeline {
     });
   }
 
-  newPipeline(ev, arg) {
+  savePipeline(ev, arg) {
     const callback = function(err, result) {
-      ev.sender.send('data-new-pipeline-callback',err, result);
+      ev.sender.send('data-save-pipeline-callback',err, result);
     }
     try{
-      let pipelines = this.storage.getAll({ cache : false }); 
-      if(!pipelines) pipelines = [];
+      const self = this;
       let pipeline = arg.pipeline;
+      if(pipeline.id) {
+        const metadata = new Metadata();
+        metadata.rmPipelineCache(pipeline.id, function() {
+          // Edit pipeline
+          pipeline['started_at'] = '';
+          pipeline['completed_at'] = '';
+          pipeline['duration'] = '';
+          //console.log('>>>> set pipeline', pipeline);
+          self.setPipeline(pipeline.id, pipeline);
+          return callback(null, {id : pipeline.id});
+        });
+        return;
+      }
+      // New pipeline
+      let pipelines = self.storage.getAll({ cache : false }); 
+      if(!pipelines) pipelines = [];
       pipeline['id'] = uuidv4();
-      pipelines.push(arg.pipeline);
-      this.storage.setAll(pipelines);
+      pipelines.push(pipeline);
+      self.storage.setAll(pipelines);
       return callback(null, {id : pipeline.id});
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
   }
@@ -60,6 +76,7 @@ class Pipeline {
       this.storage.setAll(pipelines);
       return callback(null, {id : newPipeline.id});
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
   }
@@ -119,6 +136,7 @@ class Pipeline {
       this.storage.setAll(pipelines);
       return true;
     }catch(err) {
+      console.error('[ERROR]', err);
       return false;
     }
   }
@@ -132,6 +150,7 @@ class Pipeline {
       //console.log('>>>> getPipelines ', result);
       return callback(null, result);
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
   }
@@ -162,6 +181,7 @@ class Pipeline {
         return callback(null, result);
       });
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
   }
@@ -303,7 +323,7 @@ class Pipeline {
    */
   outputDeployLog(pipelineLog, deployResult) {
     pipelineLog('[Metadata] Deploy Done : ');
-    pipelineLog('           Id: ' + deployResult.id);
+    //pipelineLog('           Id: ' + deployResult.id);
     pipelineLog('           Success: ' + deployResult.success);
     pipelineLog('           Components Total: ' + deployResult.numberComponentsTotal);
     pipelineLog('           Components Error: ' + deployResult.numberComponentErrors);

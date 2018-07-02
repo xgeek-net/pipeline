@@ -182,7 +182,7 @@ class GithubApi {
             com['author']['loginname'] = c.author.login;
             com['author']['avatar'] = c.author.avatar_url;
             commits.push(com);
-            console.log('>>> listCommits com', com);
+            //console.log('>>> listCommits com', com);
           }
           return resolve(commits);
         });
@@ -217,7 +217,7 @@ class GithubApi {
         if(pipeline.type == 'pr') {
           return self.getFilesFromPRs(repos, pipeline.prs);
         } else if(pipeline.type == 'commit') {
-          return self.getFilesFromCommits(repos, pipeline.branch, pipeline.commits);
+          return self.getFilesFromCommits(repos, pipeline.commits);
         } else if(pipeline.type == 'branch') {
           // From Branch
           return self.getFilesFromBranch(repos, pipeline.branch);
@@ -337,7 +337,7 @@ class GithubApi {
   getFilesFromCommits(repos, commits) {
     const self = this;
     return new Promise(function(resolve, reject) {
-      //console.log('>>>> commits ', branchName, commits);
+      //console.log('>>>> commits ', commits);
       async.eachSeries(commits, function(shaOfCommit, callback) {
 
         self.logger('[Github] Pull files from commit: ' + shaOfCommit);

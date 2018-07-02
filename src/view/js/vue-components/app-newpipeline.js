@@ -45,7 +45,10 @@ Vue.component('app-newpipeline', {
         }
         self.validate = true;
       },
-      runPipeline : function(ev){
+      /**
+       * Save pipeline
+       */
+      savePipeline : function(ev, callback){
         const self = this;
         ev.target.setAttribute('disabled','disabled');
         let depipelinetail = null;
@@ -59,18 +62,36 @@ Vue.component('app-newpipeline', {
           pipeline['updated_at'] = now.toISOString();
         }
         app.showLoading();
-        app.request('data-new-pipeline', 
+        app.request('data-save-pipeline', 
           { pipeline : pipeline },
           function(err, result) {
-            //console.log('>>>> result ', result);
-            app.hideLoading();
-            if(err) return app.handleError(err);
-            app.runPipeline(result.id);
-            app.activeMenu('pipelines', CONST.titles.pipelines);
-            app.openPipelineDetail(result.id);
-            if(ev) ev.target.removeAttribute('disabled');
+            app.reloadPipelines({ 
+              callback : function() {
+                app.hideLoading();
+                if(ev) ev.target.removeAttribute('disabled');
+                if(err) return app.handleError(err);
+                app.activeMenu('pipelines', CONST.titles.pipelines);
+                if(callback) {
+                  // Run pipeline 
+                  return callback(result);
+                } else if(app.pipeline) {
+                   // Unselect detail
+                   app.pipeline = null;
+                }
+              }  // .callback
+            }); // .reloadPipelines
           }
         );
+      },
+      /**
+       * Save and run pipeline
+       */
+      runPipeline : function(ev){
+        const self = this;
+        self.savePipeline(ev, function(result) {
+          app.runPipeline(result.id);
+          app.openPipelineDetail(result.id);
+        })
       }
     },
     template: `
@@ -153,7 +174,8 @@ Vue.component('app-newpipeline', {
 
         <div class="slds-size_11-of-12 mt1" v-if="validate">
           <div class="slds-wrap slds-text-align_right">
-          <button class="slds-button slds-button_brand" v-on:click="runPipeline">Run Pipeline</button>
+            <button class="slds-button slds-button_neutral" v-on:click="savePipeline">Save</button>
+            <button class="slds-button slds-button_brand" v-on:click="runPipeline">Run Pipeline</button>
           </div>
         </div><!-- .slds-size_11-of-12 -->
       </div><!-- #pipeline-new -->
