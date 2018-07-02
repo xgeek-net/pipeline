@@ -19,7 +19,11 @@ class Metadata {
     const pipelinePath = path.join(userDataPath, 'pipeline');
     return pipelinePath;
   }
-
+  /**
+   * Mkdir pipeline cache folder : /pipeline/{pid}/metadata
+   * @param {String} pid - pipeline id
+   * @returns {String} - pipeline folder : /pipeline/{pid}
+   */
   mkdirPipelineFolder(pid) {
     const pipelinePath = this.getPipelineFolder();
     if(!fs.existsSync(pipelinePath)) {
@@ -37,6 +41,21 @@ class Metadata {
       fs.mkdirSync(path.join(pPath, 'metadata'), '0777');
     }
     return pPath;
+  }
+
+  /**
+   * Remove pipeline cache folder
+   * @param {String} pid - pipeline id 
+   * @param {Function} callback
+   */
+  rmPipelineCache(pid, callback) {
+    const pPath = this.getPipelineFolder();
+    const pipelinePath = path.join(pPath, pid);
+    if(fs.existsSync(pipelinePath)) {
+      rimraf(pipelinePath, callback);
+    } else {
+      return callback(null, true);
+    }
   }
 
   /**

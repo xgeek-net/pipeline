@@ -52,10 +52,22 @@ var app = new Vue({
     closeModal : function() {
       this.modal = {show : false, loading : false};
     },
-    request : function(apiName, params, callback) {
+    request : function(apiName, params, callback, opts) {
+      const self = this;
+      opts = opts || {};
+      if(opts.once === false) {
+        self.ipc.send(apiName, params);
+        self.ipc.on(apiName + '-callback', function(ev, err, result) {
+          callback(err, result);
+        });
+      } else {
+        return self.requestOnce(apiName, params, callback);
+      }
+    },
+    requestOnce : function(apiName, params, callback) {
       const self = this;
       self.ipc.send(apiName, params);
-      self.ipc.on(apiName + '-callback', (ev, err, result) => {
+      self.ipc.once(apiName + '-callback', function(ev, err, result) {
         callback(err, result);
       });
     },
@@ -89,14 +101,22 @@ var app = new Vue({
         self.closeModal();
       });
     },
-    /** Reload pipeline list from local storage */
-    reloadPipelines: function (opt) {
-      opt = opt || {};
+    /**
+     * Reload pipeline list from local storage
+     * @param {Object} opts - { callback : function }
+     */
+    reloadPipelines: function (opts) {
+      opts = opts || {};
       const self = this;
       self.request('data-pipelines', {}, function(err, result){
         if(err) self.handleError(err);
-        console.log('>>>>data-pipelines', result);
+        //console.log('>>>>data-pipelines', result);
         self.pipelines = result;
+        if(self.pipeline) {
+          //console.log('>>>>reload pipeline', self.pipeline.id);
+          self.pipeline = self.getPipeline(self.pipeline.id);
+        }
+        if(opts.callback) opts.callback();
       });
     },
     // Open new pipeline page
@@ -104,13 +124,20 @@ var app = new Vue({
       this.page.title = 'New Pipeline';
       this.page.menu = 'newpipeline';
     },
-    runPipeline : function(id) {
-      console.log('>>>>run pipeline', id);
+    runPipeline : function(id, callback) {
+      //console.log('>>>>run pipeline', id);
       var self = this;
       self.request('pipeline-run', {id : id}, function(err, result){
+        // Will fire multiple time
         if(err) self.handleError(err);
         self.reloadPipelines();
-      });
+        if(result.type != 'process') {
+          // Remove Listener
+          self.ipc.removeListener('pipeline-run-callback', function(){});
+        }
+        if(callback) callback(true);
+      },
+      { once : false });
     },
     getPipeline : function(id){
       const self = this;
@@ -119,6 +146,22 @@ var app = new Vue({
           return pipe;
         }
       }
+    },
+    clonePipeline : function(id, callback) {
+      const self = this;
+      self.request('data-clone-pipeline', {id : id}, function(err, result){
+        if(err) return self.handleError(err);
+        self.reloadPipelines();
+        if(callback) callback(true);
+      });
+    },
+    removePipeline : function(id, callback) {
+      const self = this;
+      self.request('data-remove-pipeline', {id : id}, function(err, result){
+        if(err) return self.handleError(err);
+        self.reloadPipelines();
+        if(callback) callback(true);
+      });
     },
     openPipelineDetail : function(id) {
       const self = this;

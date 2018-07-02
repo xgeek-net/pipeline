@@ -5,8 +5,7 @@ const BrowserWindow = electron.BrowserWindow;
 
 const events = require('events');
 const eventEmitter = new events.EventEmitter();
-eventEmitter.setMaxListeners(25);
-console.log('>>>> eventEmitter ', eventEmitter.getMaxListeners());
+eventEmitter.setMaxListeners(15);
 
 const path = require('path');
 const url = require('url');
@@ -80,6 +79,12 @@ ipc.on('data-connections', (event, arg) => {
 });
 ipc.on('data-new-pipeline', (event, arg) => {
   pipeline.newPipeline(event, arg);
+});
+ipc.on('data-clone-pipeline', (event, arg) => {
+  pipeline.clonePipeline(event, arg);
+});
+ipc.on('data-remove-pipeline', (event, arg) => {
+  pipeline.removePipeline(event, arg);
 });
 ipc.on('data-pipelines', (event, arg) => {
   pipeline.getPipelines(event, arg);

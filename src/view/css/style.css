@@ -134,6 +134,25 @@
 #main .app-table .pipeline-status.error{
   color: #c23934;
 }
+#main .app-table .actions-col{
+  overflow: visible;
+}
+#main .app-table .actions-col .popover-col .slds-popover {
+  min-width: 50px;
+  position: absolute;
+  bottom: calc(100% + 5px);
+  right: calc(50% + 20px);
+  display: none;
+}
+#main .app-table .actions-col .popover-col:hover .slds-popover{
+  display: inline-block;
+}
+#main .app-table .actions-col .slds-button_middle .slds-button{
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
 /**
  * Connections
  */
@@ -195,7 +214,7 @@
   margin-top: 0.8rem;
 }
 .new-pipeline-detail .slds-visual-picker_medium{
-  margin-right: 1.5rem;
+  margin-right: 0.75rem;
 }
 .new-pipeline-detail .slds-visual-picker_medium .slds-visual-picker__figure {
   width: 7rem;
@@ -203,6 +222,12 @@
 }
 .new-pipeline-detail .slds-visual-picker__figure .slds-text-heading_large{
   margin-bottom: 0.5rem;
+}
+.new-pipeline-detail .slds-visual-picker__figure .fa-code-branch{
+  vertical-align: middle;
+  font-size: 2.7rem;
+  font-weight: 900;
+  color: #706e6b;
 }
 .new-pipeline-detail .slds-visual-picker__figure .slds-icon{
   fill: #706e6b;
@@ -272,7 +297,12 @@
   word-wrap: break-word;
   word-break: break-all;
 }
-
+#main .pipeline-detail .pipeline-status.success{
+  color: #4bc076;
+}
+#main .pipeline-detail .pipeline-status.error{
+  color: #d4504c;
+}
 /**
  * Loading
  */

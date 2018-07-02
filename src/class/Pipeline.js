@@ -35,6 +35,70 @@ class Pipeline {
   }
 
   /**
+   * Clone from pipeline id
+   * @param {Object} ev 
+   * @param {Object} arg - { id : 'pipeline id' } 
+   */
+  clonePipeline(ev, arg) {
+    const callback = function(err, result) {
+      ev.sender.send('data-clone-pipeline-callback',err, result);
+    }
+    try{
+      let pipelines = this.storage.getAll({ cache : false }); 
+      let pipeline = this.storage.get(arg.id);
+      if(utils.isBlank(pipeline)) {
+        return callback(new Error('Pipeline not found.'));
+      }
+      // Change id
+      const now = new Date();
+      let newPipeline = utils.popItems(pipeline, ['branch', 'commits', 'type', 'from', 'name', 'prs', 'to', '']);
+      newPipeline['id'] = uuidv4();
+      newPipeline['status'] = 'ready';
+      newPipeline['created_at'] = now.toISOString();
+      newPipeline['updated_at'] = now.toISOString();
+      pipelines.push(newPipeline);
+      this.storage.setAll(pipelines);
+      return callback(null, {id : newPipeline.id});
+    }catch(err) {
+      return callback(err);
+    }
+  }
+
+  /**
+   * Remove from pipeline id
+   * @param {Object} ev 
+   * @param {Object} arg - { id : 'pipeline id' } 
+   */
+  removePipeline(ev, arg) {
+    const self = this;
+    const callback = function(err, result) {
+      ev.sender.send('data-remove-pipeline-callback',err, result);
+    }
+    try{
+      let pipelines = self.storage.getAll({ cache : false }); 
+      let pipeline = null;
+      const metadata = new Metadata();
+      for(let i in pipelines) {
+        if(pipelines[i].id == arg.id) {
+          pipeline = pipelines[i];
+          metadata.rmPipelineCache(pipeline.id, function() {
+            pipelines.splice(i, 1);
+            self.storage.setAll(pipelines);
+            return callback(null, {id : arg.id});
+          });
+          break;
+        }
+      }
+      if(pipeline == null) {
+        return callback(new Error('Pipeline not found.'), {id : arg.id});
+      }
+    }catch(err) {
+      console.error('[ERROR]', err);
+      return callback(err);
+    }
+  }
+
+  /**
    * Save pipeline info by id
    * @param {String} id 
    * @param {Object} arg 
@@ -65,7 +129,7 @@ class Pipeline {
     }
     try{
       let result = this.storage.getAll({ cache : false }); 
-      console.log('>>>> getPipelines ', result);
+      //console.log('>>>> getPipelines ', result);
       return callback(null, result);
     }catch(err) {
       return callback(err);
@@ -82,7 +146,8 @@ class Pipeline {
       ev.sender.send('data-pipeline-log-callback',err, result);
     }
     try{
-      console.log('>>> getPipelineLog', (new Date()));
+      let index = 1;
+      
       const metadata = new Metadata();
       const pPath = metadata.getPipelineFolder();
       const logPath = path.join(pPath, arg.id, 'pipeline.log');
@@ -90,6 +155,8 @@ class Pipeline {
         return callback(null);
       }
       fs.readFile(logPath, 'utf-8', function(err, data) {
+        console.log('>>> getPipelineLog' + index, (new Date()));
+        index++;
         if(err) return callback(err);
         const result = data;
         return callback(null, result);
@@ -171,6 +238,7 @@ class Pipeline {
       })
       .then(function(deployResult) {
         // Save deploy result
+        deployResult['url'] = toConn.instanceUrl + '/changemgmt/monitorDeploymentsDetails.apexp?asyncId=' + deployResult.id
         self.outputDeployLog(pipelineLog, deployResult);
         const now = new Date();
         const endTime = now.toISOString();
@@ -226,6 +294,7 @@ class Pipeline {
     pipelineLog('           Tests Total: ' + deployResult.numberTestsTotal);
     pipelineLog('           Tests Error: ' + deployResult.numberTestErrors);
     pipelineLog('           Tests Completed: ' + deployResult.numberTestsCompleted);
+    pipelineLog('[Metadata] Deploy result: @see ' + deployResult.url);
   }
 
 }

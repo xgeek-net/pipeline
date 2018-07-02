@@ -47,14 +47,30 @@ Vue.component('app-newpipeline-detail-git', {
       const self = this;
       self.pipeline.type = 'branch';
       app.showLoading();
-      console.log('>>> listBranches ',self.pipeline);
+      //console.log('>>> listBranches ',self.pipeline);
       // Request branches
       app.request('git-branches', 
         self.connection,
         function(err, branches) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          console.log('>>> git-listBranches callback ',err, branches);
+          //console.log('>>> git-listBranches callback ',err, branches);
+          self.branches = branches;
+        }
+      );
+    },
+    listCommits : function(ev) {
+      const self = this;
+      self.pipeline.type = 'commit';
+      app.showLoading();
+      //console.log('>>> listCommits ',self.pipeline);
+      // Request branches
+      app.request('git-branches', 
+        self.connection,
+        function(err, branches) {
+          app.hideLoading();
+          if(err) return app.handleError(err);
+          //console.log('>>> git-commits callback ',err, branches);
           self.branches = branches;
         }
       );
@@ -72,6 +88,7 @@ Vue.component('app-newpipeline-detail-git', {
     },
     selectBranch : function(ev) {
       const self = this;
+      if(self.pipeline.type != 'commit') return;
       app.showLoading();
       // Request pull requests
       app.request('git-branch-commits', 
@@ -140,12 +157,32 @@ Vue.component('app-newpipeline-detail-git', {
                     <span>
                       <span class="slds-text-heading_large">
                         <span class="slds-icon_container">
+                          <i class="fas fa-code-branch slds-icon_large"></i>
+                        </span>
+                      </span>
+                      <span class="slds-text-title">Branch</span>
+                    </span>
+                  </span>
+                  <span class="slds-icon_container slds-visual-picker__text-check">
+                    <svg class="slds-icon slds-icon-text-check slds-icon_x-small" aria-hidden="true">
+                      <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#check"></use>
+                    </svg>
+                  </span>
+                </label>
+              </div><!-- .slds-visual-picker -->
+              <div class="slds-visual-picker slds-visual-picker_medium">
+                <input type="radio" id="visual-picker-source-type-3" value="1" name="sourcetype" v-on:click="listCommits()" />
+                <label for="visual-picker-source-type-3">
+                  <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
+                    <span>
+                      <span class="slds-text-heading_large">
+                        <span class="slds-icon_container">
                           <svg class="slds-icon slds-icon_large" aria-hidden="true">
                             <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#rating"></use>
                           </svg>
                         </span>
                       </span>
-                      <span class="slds-text-title">Branch</span>
+                      <span class="slds-text-title">Commit</span>
                     </span>
                   </span>
                   <span class="slds-icon_container slds-visual-picker__text-check">
@@ -206,7 +243,7 @@ Vue.component('app-newpipeline-detail-git', {
             </div><!-- .slds-form-element__control -->
           </div><!-- .slds-form-element -->
 
-          <div class="slds-form-element pipeline-prs" v-if="pipeline.type=='branch'">
+          <div class="slds-form-element pipeline-prs" v-if="pipeline.type=='branch' || pipeline.type=='commit'">
             <label class="slds-form-element__label">Branches</label>
             <div class="slds-form-element__control" v-if="branches!=null">
               <div class="slds-select_container input-small">

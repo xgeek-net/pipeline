@@ -11,42 +11,68 @@ Vue.component('pipeline-detail', {
   created: function () {
     const self = this;
     self.refPipeline = self.pipeline;
+    //console.log('>>>> loadBody created', (new Date()));
     this.loadBody();
   },
   updated: function () {
+    const self = this;
     if(self.refPipeline.id != self.pipeline.id) {
+      //console.log('>>>> loadBody updated', (new Date()));
       this.loadBody();
+    }
+  },
+  destroyed: function () {
+    const self = this;
+    if(self.refIntervalId) {
+      //console.log('>>>> clearInterval ', self.refIntervalId);
+      clearInterval(self.refIntervalId);
+      self.refIntervalId = null;
     }
   },
   methods: {
     closeDetail : function(ev) {
+      if(self.refIntervalId) {
+        clearInterval(self.refIntervalId);
+        self.refIntervalId = null;
+      }
       app.closePipelineDetail();
     },
     loadBody : function() {
       const self = this;
       if(self.refIntervalId) {
-        console.log('>>>> clearInterval ', self.refIntervalId);
+        //console.log('>>>> clearInterval ', self.refIntervalId);
         clearInterval(self.refIntervalId);
+        self.refIntervalId = null;
       }
       if(!self.pipeline.completed_at || self.pipeline.completed_at == '') {
-        // Processing
+        // Processing, Loop each 2s
         self.refIntervalId = setInterval(function() {
           self.requestPipelineLog();
-        }, 3000);
+        }, 2000);
+      } else {
+        // Completed pipeline
+        self.requestPipelineLog();
       }
-      console.log('>>>> loadBody updated', (new Date()));
-      this.request = 0;
+      
     },
     requestPipelineLog : function() {
+      const self = this;
+      //console.log('>>>> loadBody request', (new Date()));
       app.request('data-pipeline-log', {id : self.pipeline.id}, function(err, result){
         if(err) app.handleError(err);
-        console.log('>>>> loadBody Callback', self.pipeline.id, (new Date()));
+        //console.log('>>>> loadBody Callback', self.pipeline.id, (new Date()));
         result = result || '';
         self.body = result.replace(/ /g, '&nbsp;').replace(/\r?\n/g, '<br />');
-        self.request--;
-        // Loop each 2s
-        if(!self.pipeline.completed_at || self.pipeline.completed_at == '') {
-          
+        if(self.body.length > 0) {
+          // Scroll to bottom
+          var bodyEle = document.getElementById('pipeline-detail-body');
+          bodyEle.scrollTop = bodyEle.scrollHeight;
+        }
+        if(self.pipeline.completed_at && self.pipeline.completed_at.length > 0 && 
+          self.refIntervalId) {
+          // Cancel loop if completed
+          clearInterval(self.refIntervalId);
+          self.refIntervalId = null;
         }
       });
     }
@@ -56,8 +82,13 @@ Vue.component('pipeline-detail', {
       <div class="detail-header slds-size_2-of-2">
         <h2>{{ pipeline.name }}
           <p class="status">
-            <span class="duration">{{ pipeline.duration || ' ' }}</span>
-            <i class="fas" v-bind:class="{ 'fa-check-circle': pipeline.status=='successful', 'fa-spinner fa-spin': (pipeline.status=='pending' || pipeline.status=='processing'), 'fa-exclamation-circle': pipeline.status=='failed' }"></i>
+            <span class="duration">&nbsp;{{ pipeline.duration || '' }}</span>
+            <span class="pipeline-status" v-bind:class="{ 'success': pipeline.status=='successful', 'error': pipeline.status=='failed' }">
+              <i v-bind:class="{ 'far fa-pause-circle': pipeline.status=='ready', 
+                            'fas fa-spinner fa-spin': (pipeline.status=='processing'), 
+                            'fas fa-check-circle': pipeline.status=='successful', 
+                            'fas fa-exclamation-circle': pipeline.status=='failed' }"></i>
+            </span>
           </p>
         </h2>
         <div class="detail-buttons">
@@ -68,7 +99,7 @@ Vue.component('pipeline-detail', {
           </button>
         </div>
       </div><!-- .detail-header -->
-      <div class="detail-body slds-size_2-of-2">
+      <div class="detail-body slds-size_2-of-2" id="pipeline-detail-body">
         <p v-html="body"></p>
       </div><!-- .detail-body -->
     </article>

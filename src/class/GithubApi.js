@@ -206,7 +206,7 @@ class GithubApi {
     if(pipeline.type == 'pr') {
       log += '#' + pipeline.prs.join(', #');
     } else {
-      log += '#' + pipeline.branch + ' ' + pipeline.commits.join(',');
+      log += '#' + pipeline.branch + ' ' + pipeline.commits.join(', ');
     }
     self.logger('[Github] Pull from ' + connection.repos.name + ' (' + log + '):');
     return new Promise(function(resolve, reject) {
@@ -216,8 +216,11 @@ class GithubApi {
         // Download files
         if(pipeline.type == 'pr') {
           return self.getFilesFromPRs(repos, pipeline.prs);
-        } else {
+        } else if(pipeline.type == 'commit') {
           return self.getFilesFromCommits(repos, pipeline.branch, pipeline.commits);
+        } else if(pipeline.type == 'branch') {
+          // From Branch
+          return self.getFilesFromBranch(repos, pipeline.branch);
         }
       })
       .then(function(success) {
@@ -265,18 +268,79 @@ class GithubApi {
   }
 
   /**
+   * Get files from multiple pr numbers
+   * @param {Object} repos - repos object
+   * @param {String} branchName - Branch name
+   * @return {Promise}
+   */
+  getFilesFromBranch(repos, branchName) {
+    const self = this;
+    self.logger('[Github] Pull files from branch: #' + branchName);
+    return self.getFilesFromSha(repos, branchName, '')
+  }
+
+  getFilesFromSha(repos, branchName, filepath) {
+    const self = this;
+    const metadata = new Metadata();
+    return new Promise(function(resolve, reject) {
+      repos.getSha(branchName, filepath, function(err, result) {
+        if(err) { return reject(err); }
+        // Fetch file content to local
+        if(Array.isArray(result)) {
+          // is folder
+          async.eachSeries(result, function(file, callback) {
+            if(file.type == 'dir') {
+              // is folder
+              self.getFilesFromSha(repos, branchName, file.path)
+              .then(function() {
+                return callback(null);
+              })
+              .catch(function(err) {
+                return callback(err);
+              });
+              return;
+            } 
+            // is file
+            let filename = path.basename(file.path);
+            filename = utils.getFileName(filename);
+            if(utils.isBlank(filename)) {
+              // eg, .gitignore
+              return callback(null);
+            }
+            repos.getContents(branchName, file.path, true, function(err, content) {
+              self.logger('        > ' + file.path + ' (Size: ' + content.length + ')');
+              // Save file content
+              metadata.saveSingleFile(self.pipeline.id, file.path, content)
+              .then(function(success) {
+                //console.log('>>>> download', file.filename, 'completed');
+                return callback(null);
+              })
+              .catch(function(err) {
+                return callback(err);
+              });
+            });
+          }, function(err){
+            //console.log('>>>> getFilesFromCommits DONE');
+            if(err) { return reject(err); }
+            return resolve(true);
+          });
+        }
+      });
+    });
+  }
+
+  /**
    * Get files from commits in branch
    * @param {Object} repos - repos object
-   * @param {String} branchName 
    * @param {Array} commits 
    */
-  getFilesFromCommits(repos, branchName, commits) {
+  getFilesFromCommits(repos, commits) {
     const self = this;
     return new Promise(function(resolve, reject) {
       //console.log('>>>> commits ', branchName, commits);
       async.eachSeries(commits, function(shaOfCommit, callback) {
 
-        self.logger('[Github] Pull files from commit' + shaOfCommit);
+        self.logger('[Github] Pull files from commit: ' + shaOfCommit);
         repos.getSingleCommit(shaOfCommit, function(err, result) {
           if(err) { return reject(err); }
           //console.log('>>>> result', shaOfCommit, result);

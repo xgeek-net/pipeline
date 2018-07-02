@@ -28,24 +28,18 @@ Vue.component('app-newpipeline', {
         if(self.$refs.detail) {
           self.$refs.detail.reload();
         }
-        //console.log('>>>> self.connection ', self.connection);
         self.validate = true;
-        /*if(self.connection.type!="sfdc") {
-          // TODO do validation
-          self.validate = true;
-        } else {
-          // SFDC
-        }*/
       },
       runPipeline : function(ev){
         const self = this;
+        ev.target.setAttribute('disabled','disabled');
         let depipelinetail = null;
         if(self.$refs.detail) {
           const now = new Date();
           pipeline = self.$refs.detail.getPipeline();
           pipeline['from'] = self.pipeline.from;
           pipeline['to'] = self.pipeline.to;
-          pipeline['status'] = 'pending';
+          pipeline['status'] = 'ready';
           pipeline['created_at'] = now.toISOString();
           pipeline['updated_at'] = now.toISOString();
         }
@@ -56,12 +50,10 @@ Vue.component('app-newpipeline', {
             console.log('>>>> result ', result);
             app.hideLoading();
             if(err) return app.handleError(err);
-            app.reloadPipelines({
-              callback : function() {
-                app.activeMenu('pipelines', CONST.titles.pipelines);
-                app.runPipeline(result.id);
-              }
-            });
+            app.runPipeline(result.id);
+            app.activeMenu('pipelines', CONST.titles.pipelines);
+            app.openPipelineDetail(result.id);
+            if(ev) ev.target.removeAttribute('disabled');
           }
         );
       }
