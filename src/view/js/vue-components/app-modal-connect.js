@@ -48,10 +48,15 @@ Vue.component('app-modal-connect', {
             break;
           }
         }
-
         params['repos'] = repos;
         params['access_token'] = data.access_token;
         params['loginname'] = data.loginname || '';
+        if(data.type == 'bitbucket') {
+          // Save refresh token
+          params['refresh_token'] = data.refresh_token;
+          params['expires_at'] = data.expires_at;
+          params['expires_in'] = data.expires_in;
+        }
       }
 
       app.saveConnect(params);

@@ -4,6 +4,7 @@ const uuidv4 = require('uuid/v4');
 const moment = require('moment');
 
 const Storage = require('./Storage.js');
+const Connect = require('./Connect.js');
 const GithubApi = require('./GithubApi.js');
 const BitbucketApi = require('./BitbucketApi.js');
 const SfdcApi = require('./SfdcApi.js');
@@ -24,6 +25,7 @@ class Pipeline {
     try{
       const self = this;
       let pipeline = arg.pipeline;
+      //console.log('>>>> pipeline', pipeline);
       if(pipeline.id) {
         const metadata = new Metadata();
         metadata.rmPipelineCache(pipeline.id, function() {
@@ -227,9 +229,9 @@ class Pipeline {
       
       // Download metadata
       //console.log('>>>> Download metadata ', pPath);
-      const connect = new Storage({ configName: 'connect' });
-      const fromConn = connect.get(pipeline.from);
-      const toConn = connect.get(pipeline.to);
+      const connect = new Connect();
+      const fromConn = connect.getConnect(pipeline.from);
+      const toConn = connect.getConnect(pipeline.to);
       let client;
       if(fromConn.type == 'github') {
         client = new GithubApi(fromConn);
@@ -238,7 +240,15 @@ class Pipeline {
       } else if(fromConn.type == 'sfdc') {
         client = new SfdcApi(fromConn);
       }
-      metadata.checkConnect(toConn)
+      // TODO sfdc api check token not exist
+      client.checkToken(fromConn)
+      .then(function(token) {
+        if(token != true && token.refresh_token) {
+          // Refresh Token for bitbucket
+          connect.restoreToken(fromConn, token);
+        }
+        return metadata.checkConnect(toConn);
+      })
       .then(function(success) {
         pipelineLog('[SF.api] Authorize : ' + success);
         return client.getFiles(pipeline, fromConn, pipelineLog);
@@ -312,7 +322,9 @@ class Pipeline {
       pipelineLog('[Metadata] Deploy submitted : ' + deployResult.id);
     } else {
       pipelineLog('[Metadata] Request Status: ' + deployResult.status);
-      pipelineLog('           Components Deployed: ' + deployResult.details.componentSuccesses.length);
+      if(deployResult.details.componentSuccesses) {
+        pipelineLog('           Components Deployed: ' + deployResult.details.componentSuccesses.length);
+      }
     }
   }
 

@@ -6,12 +6,16 @@ Vue.component('app-newpipeline-detail-git', {
         type : null,
         name : '',
         prs : [],
-        branch : '',
+        branch : {},
         commits : []
       },
+      branchName : null,
       pullrequests : null,
+      pullrequestMap : null,
       branches : null,
-      commits : null
+      branchMap : null,
+      commits : null,
+      commitMap : null
     }
   },
   mounted: function () {
@@ -29,6 +33,11 @@ Vue.component('app-newpipeline-detail-git', {
       const self = this;
       self.pipeline = { type : null, name : '', prs : [], branch : '', commits : [] };
       self.pullrequests = null;
+      self.pullrequestMap = null;
+      self.branches = null;
+      self.branchMap = null;
+      self.commits = null;
+      self.commitMap = null;
     },
     // Edit pipeline data
     setPipeline : function(pipeline) {
@@ -41,6 +50,18 @@ Vue.component('app-newpipeline-detail-git', {
       }
     },
     getPipeline : function(){
+      // Clear dummy data
+      if(this.pipeline.type == 'pr') {
+        this.pipeline.branch = {};
+        this.pipeline.commits = [];
+      }
+      if(this.pipeline.type == 'branch') {
+        this.pipeline.prs = [];
+        this.pipeline.commits = [];
+      }
+      if(this.pipeline.type == 'commit') {
+        this.pipeline.prs = [];
+      }
       return this.pipeline;
     },
     listPullRequests : function(ev) {
@@ -53,8 +74,12 @@ Vue.component('app-newpipeline-detail-git', {
         function(err, pulls) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          //console.log('>>> git-pullrequests callback ',err, pulls);
+          console.log('>>> git-pullrequests callback ',err, pulls);
           self.pullrequests = pulls;
+          self.pullrequestMap = {};
+          for(let pr of pulls) {
+            self.pullrequestMap[pr.number] = { number : pr.number, base : pr.base, sha : pr.sha };
+          }
         }
       );
       
@@ -69,9 +94,13 @@ Vue.component('app-newpipeline-detail-git', {
         self.connection,
         function(err, branches) {
           app.hideLoading();
+          console.log('>>> git-branches callback ',err, branches);
           if(err) return app.handleError(err);
-          //console.log('>>> git-listBranches callback ',err, branches);
           self.branches = branches;
+          self.branchMap = {};
+          for(let br of branches) {
+            self.branchMap[br.name] = { name : br.name, sha : br.sha };
+          }
         }
       );
     },
@@ -89,9 +118,13 @@ Vue.component('app-newpipeline-detail-git', {
         function(err, branches) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          //console.log('>>> git-commits callback ',err, branches);
+          console.log('>>> git-branches callback ',err, branches);
           self.branches = branches;
-          if(self.pipeline.branch) {
+          self.branchMap = {};
+          for(let br of branches) {
+            self.branchMap[br.name] = { name : br.name, sha : br.sha };
+          }
+          if(self.branchName) {
             // Reload commit list
             self.selectBranch();
           }
@@ -101,38 +134,56 @@ Vue.component('app-newpipeline-detail-git', {
     checkPR : function(prNum, ev) {
       const self = this;
       const checked = ev.target.checked;
-      if(checked && self.pipeline.prs.indexOf(prNum) < 0) {
-        self.pipeline.prs.push(prNum);
+      let index = -1;
+      for(let pi in self.pipeline.prs) {
+        if(self.pipeline.prs[pi].number == prNum) {
+          index = pi;
+        }
       }
-      if(!checked && self.pipeline.prs.indexOf(prNum) >= 0) {
-        var index = self.pipeline.prs.indexOf(prNum);
+      if(checked && index < 0) {
+        const newPr = self.pullrequestMap[prNum];
+        self.pipeline.prs.push(newPr);
+      }
+      if(!checked && index >= 0) {
         self.pipeline.prs.splice(index, 1);
       }
     },
     selectBranch : function(ev) {
       const self = this;
+      self.pipeline.branch = self.branchMap[self.branchName];
       if(self.pipeline.type != 'commit') return;
       app.showLoading();
+      //console.log('>>>> pipeline ', self.pipeline);
       // Request pull requests
       app.request('git-branch-commits', 
-        {connection : self.connection,
-         branch : self.pipeline.branch},
+        { connection : self.connection,
+         branch : self.pipeline.branch },
         function(err, commits) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          //console.log('>>> git-pullrequests callback ',err, commits);
+          console.log('>>> git-branch-commits callback ',err, commits);
           self.commits = commits;
+          self.commitMap = {};
+          for(let commit of commits) {
+            self.commitMap[commit.sha] = { sha : commit.sha, commit_date : commit.commit_date };
+          }
         }
       );
     },
     checkCommit : function(sha, ev) {
       const self = this;
       const checked = ev.target.checked;
-      if(checked && self.pipeline.commits.indexOf(sha) < 0) {
-        self.pipeline.commits.push(sha);
+      let index = -1;
+      for(let ck in self.pipeline.commits) {
+        if(self.pipeline.commits[ck].sha == sha) {
+          index = ck;
+        }
       }
-      if(!checked && self.pipeline.commits.indexOf(sha) >= 0) {
-        var index = self.pipeline.commits.indexOf(sha);
+      if(checked && index < 0) {
+        const newCom = self.commitMap[sha];
+        self.pipeline.commits.push(newCom);
+      }
+      if(!checked && index >= 0) {
         self.pipeline.commits.splice(index, 1);
       }
     }
@@ -270,7 +321,7 @@ Vue.component('app-newpipeline-detail-git', {
             <label class="slds-form-element__label">Branches</label>
             <div class="slds-form-element__control" v-if="branches!=null">
               <div class="slds-select_container input-small">
-                <select class="slds-select" v-model="pipeline.branch" v-on:change="selectBranch()">
+                <select class="slds-select" v-model="branchName" v-on:change="selectBranch()">
                   <option value="" selected="selected">--None--</option>
                   <option v-for="br in branches" v-bind:value="br.name">{{ br.name }}</option>
                 </select>

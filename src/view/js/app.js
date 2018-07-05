@@ -129,7 +129,7 @@ var app = new Vue({
       var self = this;
       self.request('pipeline-run', {id : id}, function(err, result){
         // Will fire multiple time
-        if(err) self.handleError(err);
+        if(err) return self.handleError(err);
         self.reloadPipelines();
         if(result.type != 'process') {
           // Remove Listener

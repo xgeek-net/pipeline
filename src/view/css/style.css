@@ -18,6 +18,9 @@
 .slds-color-text-error{
   color: #c23934;
 }
+.slds-select {
+  font-family: "Salesforce Sans",Arial,sans-serif,"FontAwesome";
+}
 
 /**
  * #sidebar
@@ -218,6 +221,10 @@
 }
 .new-pipeline-connect .slds-card__header-title{
   font-size: 1rem;
+}
+.new-pipeline-detail .slds-form_horizontal .slds-form-element {
+  height: auto;
+  overflow: hidden;
 }
 .new-pipeline-detail .slds-form_horizontal .slds-form-element+.slds-form-element {
   margin-top: 0.8rem;

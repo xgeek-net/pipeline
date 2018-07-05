@@ -33,8 +33,13 @@ class Connect {
       this.storage.setAll(connections);
       return callback(null, connections);
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
+  }
+
+  getConnect(key) {
+    return this.storage.get(key);
   }
 
   /**
@@ -58,6 +63,7 @@ class Connect {
       this.storage.setAll(connections);
       return true;
     }catch(err) {
+      console.error('[ERROR]', err);
       return false;
     }
   }
@@ -70,9 +76,21 @@ class Connect {
       let result = this.storage.getAll({ cache : false });
       return callback(null, result);
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
   }
+
+  /**
+   * Clone a connection from exist bitbucket connection
+   * @param {Object} connection 
+   */
+  cloneBitConnection(connection) {
+    let newConn = utils.popItems(connection, ['access_token', 'avatar', 'expires_at', 'expires_in', 
+                                'loginname', 'refresh_token', 'repos', 'type', 'username']);
+    return newConn;
+  }
+
   /**
    * OAuth2 Login to provider
    * @param {Object} ev 
@@ -81,6 +99,28 @@ class Connect {
   authLogin(ev, arg) {
     const self = this;
     let client, uri;
+
+    if(arg.type == 'bitbucket') {
+      // Clone connection from exist bibucket
+      // Bitbucket does not allow multiple authorize
+      const connections = this.storage.getAll({ cache : false }); 
+      for(let connect of connections) {
+        if(connect.type === 'bitbucket') {
+          let newConn = self.cloneBitConnection(connect);
+          //console.log('>>>> newConn ', newConn);
+          client = new BitbucketApi(newConn);
+          client.getReposList(newConn.username, function(err, reposList) {
+            if(err) return callback(err);
+            newConn['repos'] = reposList;
+            //console.log('>>>> repos callback ', newConn);
+            return ev.sender.send('oauth-login-callback',null, newConn);
+          });
+          return;
+        }
+      }
+    }
+
+    // New OAuth2 connect
     if(arg.type == 'github') {
       client = new GithubApi();
       uri = client.getAuthUrl();
@@ -117,20 +157,7 @@ class Connect {
           return ev.sender.send('oauth-login-callback',null, res);
         }
         //console.log('>>> params', params);
-        if(params.type == 'github' && params.code) {
-          return client.authorize(params.code, authCallback);
-        }
-        if(params.type == 'bitbucket') {
-          if (uri.split('#').length < 2) {
-            loginWindow.close();
-            return ev.sender.send('oauth-login-callback','OAuth Error');
-          }
-          const hash = uri.split('#')[1];
-          const token = qs.parse(hash);
-          //console.log('>>>> callback ', uri, urlObj, params, token)
-          return client.authorize(token, authCallback);
-        }
-        if(params.type == 'sfdc' && params.code) {
+        if(params.code) {
           return client.authorize(params.code, authCallback);
         }
       }
@@ -144,7 +171,6 @@ class Connect {
       ev.sender.send('git-pullrequests-callback',err, result);
     }
     try{
-      //console.log('>>>> getPullRequests ', connection);
       let gitApi;
       let username;
       if(connection.type == 'github') {
@@ -154,16 +180,22 @@ class Connect {
         gitApi = new BitbucketApi(connection);
         username = connection.username;
       }
-      gitApi.getPullRequests(username, connection.repos.name)
+      gitApi.checkToken(connection)
+      .then(function(token) {
+        if(token != true && token.refresh_token) {
+          // Refresh Token for bitbucket
+          self.restoreToken(connection, token);
+        }
+        return gitApi.getPullRequests(username, connection.repos.name);
+      })
       .then(function(prs) {
-        //console.log('>>>> get pull requests ', prs);
         return callback(null, prs);
       })
       .catch(function(err){
-        //console.error('>>>> get pull requests error ', err);
         return callback(err);
       });
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
     
@@ -185,7 +217,14 @@ class Connect {
         gitApi = new BitbucketApi(connection);
         username = connection.username;
       }
-      gitApi.getBranches(username, connection.repos.name)
+      gitApi.checkToken(connection)
+      .then(function(token) {
+        if(token != true && token.refresh_token) {
+          // Refresh Token for bitbucket
+          self.restoreToken(connection, token);
+        }
+        return gitApi.getBranches(username, connection.repos.name)
+      })
       .then(function(branches) {
         //console.log('>>>> get pull requests ', branches);
         return callback(null, branches);
@@ -195,6 +234,7 @@ class Connect {
         return callback(err);
       });
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
   }
@@ -216,7 +256,14 @@ class Connect {
         gitApi = new BitbucketApi(connection);
         username = connection.username;
       }
-      gitApi.getCommits(username, connection.repos.name, branch)
+      gitApi.checkToken(connection)
+      .then(function(token) {
+        if(token != true && token.refresh_token) {
+          // Refresh Token for bitbucket
+          self.restoreToken(connection, token);
+        }
+        return gitApi.getCommits(username, connection.repos.name, branch);
+      })
       .then(function(commits) {
         //console.log('>>>> get pull requests ', commits);
         return callback(null, commits);
@@ -226,8 +273,20 @@ class Connect {
         return callback(err);
       });
     }catch(err) {
+      console.error('[ERROR]', err);
       return callback(err);
     }
+  }
+
+  /**
+   * Restore refresh token info
+   * @param {Object} connection 
+   * @param {Object} token 
+   */
+  restoreToken(connection, token) {
+    const self = this;
+    const newConn = utils.popItems(token, ['access_token', 'refresh_token', 'expires_in', 'expires_at'])
+    return self.setConnect(connection.id, newConn);
   }
 }
 

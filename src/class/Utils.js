@@ -67,6 +67,44 @@ const utils = {
   },
 
   /**
+   * Sort pullrequest by number
+   */
+  sortPR : function(prs, desc) {
+    if(desc == true) {
+      prs.sort(function(a, b){return b.number-a.number});
+    } else {
+      prs.sort(function(a, b){return a.number-b.number});
+    }
+    return prs;
+  },
+
+  /**
+   * Sort pullrequest by number
+   */
+  sortCommit : function(commits, desc) {
+    if(desc == true) {
+      commits.sort(function(a, b){
+        if(b.commit_date == a.commit_date) return 0;
+        if(moment(b.commit_date).isAfter(moment(a.commit_date))) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+    } else {
+      commits.sort(function(a, b){
+        if(a.commit_date == b.commit_date) return 0;
+        if(moment(a.commit_date).isAfter(moment(b.commit_date))) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+    }
+    return commits;
+  },
+
+  /**
    * Get duration text between two times
    * @return {String} duration text
    */

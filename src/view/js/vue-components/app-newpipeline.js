@@ -120,7 +120,7 @@ Vue.component('app-newpipeline', {
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.from" v-on:change="changeConnect()">
                       <option value="" selected>--None--</option>
-                      <option v-for="conn in connections" v-bind:value="conn.id">{{ conn.name }}</option>
+                      <option v-for="conn in connections" v-bind:value="conn.id" v-if="(conn.type!='sfdc')"> [{{ conn.type }}] {{ conn.name }}</option>
                     </select>
                   </div>
                 </div>

@@ -22,6 +22,8 @@ class GithubApi {
     this.pipeline = null; 
     // Pipeline process logger
     this.logger = null; 
+    // Pipeline downloaded file list
+    this.cacheFiles = null;
   }
 
   getAuthUrl() {
@@ -81,6 +83,16 @@ class GithubApi {
   }
 
   /**
+   * Validate access token
+   * @param {Object} connetion
+   * @param {Function} callback 
+   */
+  checkToken(connetion) {
+    // TODO validate Token
+    return Promise.resolve(true);
+  }
+
+  /**
    * Get repository object
    * @param {String} username - github login name
    * @param {String} reposName - name
@@ -119,6 +131,7 @@ class GithubApi {
             let pr = utils.popItems(res, ['id', 'number', 'title', 'created_at', 'updated_at']);
             //console.log('>>> pr', pr, res.base.ref, res.user.login, res.user.avatar_url);
             pr['base'] = res.base.ref;
+            pr['sha'] = res.merge_commit_sha;
             pr['user'] = {};
             pr['user']['loginname'] = res.user.login;
             pr['user']['avatar'] = res.user.avatar_url;
@@ -147,8 +160,14 @@ class GithubApi {
         //console.log('>>> repos', repos);
         repos.listBranches(function(err, result) {
           if(err) return reject(err);
-          if(utils.isBlank(result) || result.length == 0) return resolve([]);
-          return resolve(result);
+          let branches = [];
+          if(utils.isBlank(result) || result.length == 0) return resolve(branches);
+          for(let res of result) {
+            let br = utils.popItems(res, ['name']);
+            br['sha'] = '';
+            branches.push(br);
+          }
+          return resolve(branches);
         });
       })
       .catch(function(err){
@@ -161,16 +180,16 @@ class GithubApi {
    * Get commit list from branch sha
    * @param {String} username - github login name
    * @param {String} reposName - repos name
-   * @param {String} sha - Branch sha or branch name
+   * @param {String} branch - Branch object { name : 'branchname', sha : '' }
    * @return {Promise} - Commit list
    */
-  getCommits(username, reposName, branchName) {
+  getCommits(username, reposName, branch) {
     const self = this;
     return new Promise(function(resolve, reject) {
       self.getRepos(username, reposName)
       .then(function(repos){
         //console.log('>>> repos', repos);
-        repos.listCommits({sha: branchName}, function(err, result) {
+        repos.listCommits({sha: branch.name}, function(err, result) {
           if(err) return reject(err);
           if(utils.isBlank(result) || result.length == 0) return resolve([]);
           let commits = [];
@@ -202,11 +221,21 @@ class GithubApi {
     const self = this;
     self.pipeline = pipeline;
     self.logger = logger;  // Report process log to 
+    self.cacheFiles = [];
     let log = '';
     if(pipeline.type == 'pr') {
-      log += '#' + pipeline.prs.join(', #');
+      let numbers = [];
+      for(let pr of pipeline.prs) {
+        numbers.push(pr.number);
+      }
+      log += '#' + numbers.join(', #');
     } else {
-      log += '#' + pipeline.branch + ' ' + pipeline.commits.join(', ');
+      log += '#' + pipeline.branch.name;
+      let shas = [];
+      for(let com of pipeline.commits) {
+        shas.push(com.sha);
+      }
+      log += ' ' + shas.join(',');
     }
     self.logger('[Github] Pull from ' + connection.repos.name + ' (' + log + '):');
     return new Promise(function(resolve, reject) {
@@ -239,15 +268,15 @@ class GithubApi {
    * @param {Array} prs - Pull Request array 
    * @return {Promise}
    */
-  getFilesFromPRs(repos, prs) {
+  getFilesFromPRs(repos, pullrequests) {
     const self = this;
     return new Promise(function(resolve, reject) {
-      let numbers = utils.sort(prs);
+      let prs = utils.sortPR(pullrequests, true);
       //console.log('>>>> numbers ', numbers, Array.isArray(numbers));
-      async.eachSeries(numbers, function(number, callback) {
+      async.eachSeries(prs, function(pr, callback) {
 
-        self.logger('[Github] Pull files from #' + number);
-        repos.listPullRequestFiles(number, function(err, files) {
+        self.logger('[Github] Pull files from #' + pr.number);
+        repos.listPullRequestFiles(pr.number, function(err, files) {
           if(err) return callback(err);
           //console.log('>>>> list files ', files);
           // Fetch file content to local
@@ -270,25 +299,26 @@ class GithubApi {
   /**
    * Get files from multiple pr numbers
    * @param {Object} repos - repos object
-   * @param {String} branchName - Branch name
+   * @param {String} branch - Branch info { name : 'dev01', sha : '0728682' }
    * @return {Promise}
    */
-  getFilesFromBranch(repos, branchName) {
+  getFilesFromBranch(repos, branch) {
     const self = this;
-    self.logger('[Github] Pull files from branch: #' + branchName);
-    return self.getFilesFromSha(repos, branchName, '')
+    self.logger('[Github] Pull files from branch: #' + branch.name);
+    return self.getFilesFromSha(repos, branch.name, '');
   }
 
   getFilesFromSha(repos, branchName, filepath) {
     const self = this;
     const metadata = new Metadata();
     return new Promise(function(resolve, reject) {
+      // TODO Muitlple pages
       repos.getSha(branchName, filepath, function(err, result) {
         if(err) { return reject(err); }
         // Fetch file content to local
         if(Array.isArray(result)) {
           // is folder
-          async.eachSeries(result, function(file, callback) {
+          async.eachLimit(result, 10, function(file, callback) {
             if(file.type == 'dir') {
               // is folder
               self.getFilesFromSha(repos, branchName, file.path)
@@ -337,17 +367,17 @@ class GithubApi {
   getFilesFromCommits(repos, commits) {
     const self = this;
     return new Promise(function(resolve, reject) {
-      //console.log('>>>> commits ', commits);
-      async.eachSeries(commits, function(shaOfCommit, callback) {
+      let sortCommits = utils.sortCommit(commits, true);
+      async.eachSeries(sortCommits, function(commit, callback) {
 
-        self.logger('[Github] Pull files from commit: ' + shaOfCommit);
-        repos.getSingleCommit(shaOfCommit, function(err, result) {
+        self.logger('[Github] Pull files from commit: ' + commit.sha);
+        repos.getSingleCommit(commit.sha, function(err, result) {
           if(err) { return reject(err); }
-          //console.log('>>>> result', shaOfCommit, result);
+          //console.log('>>>> result', commit.sha, result);
           // Fetch file content to local
           self.fetchFilesContent(repos, result.files)
           .then(function(success) {
-            //console.log('>>>> get commit', shaOfCommit, 'completed');
+            //console.log('>>>> get commit', commit.sha, 'completed');
             return callback(null);
           })
           .catch(function(err) {
@@ -374,14 +404,17 @@ class GithubApi {
     const metadata = new Metadata();
     return new Promise(function(resolve, reject) {
       //console.log('>>>> download files', files.length);
-      async.eachSeries(files, function(file, callback) {
+      async.eachLimit(files, 10, function(file, callback) {
         //console.log('>>>> download', file.filename);
         let filename = path.basename(file.filename);
         filename = utils.getFileName(filename);
-        if(utils.isBlank(filename)) {
+        if(utils.isBlank(filename) || self.cacheFiles.indexOf(file.filename) >= 0) {
           // eg, .gitignore
+          self.logger('        > ' + file.filename + ' (Ignored)');
           return callback(null);
         }
+        self.cacheFiles.push(file.filename);
+
         const urlObj = url.parse(file.contents_url);
         const params = qs.parse(urlObj.query);
         const ref = params.ref;
