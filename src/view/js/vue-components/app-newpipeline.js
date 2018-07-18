@@ -1,13 +1,23 @@
 Vue.component('app-newpipeline', {
-    props: ['connections', 'record'],
+    props: ['connections', 'setting', 'record'],
     data : function () {
       return {
         pipeline : {
           from : '',
-          to : ''
+          to : '',
+          toApiVersion : ''
         },
         validate : false,
         connection : null,
+        apiVersionList : []
+      }
+    },
+    created: function() {
+      const self = this;
+      let apiVersion = parseInt(self.setting.apiVersion || '37.0');
+      let apiMaxVersion = parseInt(self.setting.pfMaxApiVersion || '37.0');
+      for(let ver = apiVersion; ver <= apiMaxVersion; ver++) {
+        self.apiVersionList.push(ver + '.0');
       }
     },
     mounted: function () {
@@ -51,12 +61,12 @@ Vue.component('app-newpipeline', {
       savePipeline : function(ev, callback){
         const self = this;
         ev.target.setAttribute('disabled','disabled');
-        let depipelinetail = null;
         if(self.$refs.detail) {
           const now = new Date();
           pipeline = self.$refs.detail.getPipeline();
           pipeline['from'] = self.pipeline.from;
           pipeline['to'] = self.pipeline.to;
+          pipeline['toApiVersion'] = self.pipeline.toApiVersion;
           pipeline['status'] = 'ready';
           pipeline['created_at'] = now.toISOString();
           pipeline['updated_at'] = now.toISOString();
@@ -119,7 +129,7 @@ Vue.component('app-newpipeline', {
                 <div class="slds-form-element__control">
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.from" v-on:change="changeConnect()">
-                      <option value="" selected>--None--</option>
+                      <option value="">--None--</option>
                       <option v-for="conn in connections" v-bind:value="conn.id" v-if="(conn.type!='sfdc')"> [{{ conn.type }}] {{ conn.name }}</option>
                     </select>
                   </div>
@@ -157,8 +167,21 @@ Vue.component('app-newpipeline', {
                 <div class="slds-form-element__control">
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.to">
-                      <option value="" selected>--None--</option>
+                      <option value="">--None--</option>
                       <option v-for="conn in connections" v-bind:value="conn.id" v-if="(conn.type=='sfdc' && conn.id!=pipeline.from)">{{ conn.name }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div><!-- .slds-form-element -->
+              <div class="slds-form-element slds-grid mt1">
+                <label class="slds-select__label slds-size_3-of-12">
+                  <span class="slds-checkbox_faux"></span>
+                  <span class="slds-form-element__label">API Version</span>
+                </label>
+                <div class="slds-form-element__control slds-size_9-of-12">
+                  <div class="slds-select_container">
+                    <select class="slds-select" v-model="pipeline.toApiVersion">
+                      <option v-for="ver in apiVersionList" v-bind:value="ver">{{ ver }}</option>
                     </select>
                   </div>
                 </div>

@@ -8,6 +8,7 @@ var app = new Vue({
       menu : '', title : '', loading : false
     },
     modal : { show : false, loading : false, title : '', data : null },
+    setting : null,
     newConnection : null,
     connections : [],
     pipelines : [],
@@ -31,6 +32,9 @@ var app = new Vue({
       }
       if(menu == 'pipelines') {
         this.reloadPipelines();
+      }
+      if(this.setting == null) {
+        this.loadSetting();
       }
     },
     showLoading : function(opt) {
@@ -69,6 +73,13 @@ var app = new Vue({
       self.ipc.send(apiName, params);
       self.ipc.once(apiName + '-callback', function(ev, err, result) {
         callback(err, result);
+      });
+    },
+    loadSetting : function() {
+      const self = this;
+      self.request('data-setting', {}, function(err, setting) {
+        if(err) self.handleError(err);
+        self.setting = setting;
       });
     },
     /** Reload connection list from local storage */

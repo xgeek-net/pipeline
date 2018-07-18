@@ -322,7 +322,7 @@ Vue.component('app-newpipeline-detail-git', {
             <div class="slds-form-element__control" v-if="branches!=null">
               <div class="slds-select_container input-small">
                 <select class="slds-select" v-model="branchName" v-on:change="selectBranch()">
-                  <option value="" selected="selected">--None--</option>
+                  <option value="">--None--</option>
                   <option v-for="br in branches" v-bind:value="br.name">{{ br.name }}</option>
                 </select>
               </div>

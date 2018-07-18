@@ -255,7 +255,7 @@ class Pipeline {
       })
       .then(function(success) {
         // Generate package.xml file
-        return metadata.createPackageXml(pPath);
+        return metadata.createPackageXml(pPath, { version : pipeline.toApiVersion });
       })
       .then(function() {
         pipelineLog('[Metadata] Generate package.xml Done.');

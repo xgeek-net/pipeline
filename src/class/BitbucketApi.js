@@ -7,8 +7,8 @@ const qs = require('querystring');
 const moment = require('moment');
 
 const CLIENT = require('../config/client');
-const utils = require('./Utils.js');
-const Metadata = require('./Metadata.js');
+const utils = require('./Utils');
+const Metadata = require('./Metadata');
 
 class BitbucketApi {
   constructor(opts) {

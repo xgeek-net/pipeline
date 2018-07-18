@@ -95,6 +95,9 @@ class Metadata {
   createPackageXml(targetPath, opts) {
     opts = opts || {};
     const metaPath = path.join(targetPath, 'metadata', 'src');
+    if(fs.existsSync(metaPath + '/package.xml')) {
+      return true;
+    }
     return sgp({
       'src': metaPath, // salesforce src directory path : ./src
       'apiVersion': opts.version || '40.0', // salesforce API verion : 40.0

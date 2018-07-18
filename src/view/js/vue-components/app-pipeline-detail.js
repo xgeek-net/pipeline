@@ -11,20 +11,25 @@ Vue.component('pipeline-detail', {
   created: function () {
     const self = this;
     self.refPipeline = self.pipeline;
-    console.log('>>>> loadBody created', (new Date()));
+    //console.log('>>>> loadBody created', (new Date()));
     this.loadBody();
   },
   updated: function () {
     const self = this;
     if(self.refPipeline.id != self.pipeline.id) {
-      console.log('>>>> loadBody updated', (new Date()));
+      //console.log('>>>> loadBody updated', (new Date()));
       this.loadBody();
+    }
+    if(self.body.length > 0) {
+      // Scroll to bottom
+      var bodyEle = document.getElementById('pipeline-detail-body');
+      bodyEle.scrollTop = bodyEle.scrollHeight;
     }
   },
   destroyed: function () {
     const self = this;
     if(self.refIntervalId) {
-      console.log('>>>> clearInterval destroyed ', self.refIntervalId);
+      //console.log('>>>> clearInterval destroyed ', self.refIntervalId);
       clearInterval(self.refIntervalId);
       self.refIntervalId = null;
     }
@@ -40,7 +45,7 @@ Vue.component('pipeline-detail', {
     loadBody : function() {
       const self = this;
       if(self.refIntervalId) {
-        console.log('>>>> clearInterval loadBody ', self.refIntervalId);
+        //console.log('>>>> clearInterval loadBody ', self.refIntervalId);
         clearInterval(self.refIntervalId);
         self.refIntervalId = null;
       }
@@ -63,11 +68,6 @@ Vue.component('pipeline-detail', {
         //console.log('>>>> loadBody Callback', self.pipeline.id, (new Date()));
         result = result || '';
         self.body = result.replace(/ /g, '&nbsp;').replace(/\r?\n/g, '<br />');
-        if(self.body.length > 0) {
-          // Scroll to bottom
-          var bodyEle = document.getElementById('pipeline-detail-body');
-          bodyEle.scrollTop = bodyEle.scrollHeight;
-        }
         if(self.pipeline.completed_at && self.pipeline.completed_at.length > 0 && 
           self.refIntervalId) {
           // Cancel loop if completed

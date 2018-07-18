@@ -10,10 +10,10 @@ eventEmitter.setMaxListeners(15);
 const path = require('path');
 const url = require('url');
 // Classes
-const Setting = require('./class/Setting.js');
-const Connect = require('./class/Connect.js');
-const Pipeline = require('./class/Pipeline.js');
-const utils = require('./class/Utils.js');
+const Setting = require('./class/Setting');
+const Connect = require('./class/Connect');
+const Pipeline = require('./class/Pipeline');
+const utils = require('./class/Utils');
 const setting = new Setting();
 const connect = new Connect();
 const pipeline = new Pipeline();
@@ -70,6 +70,9 @@ ipc.on('git-branches', (event, arg) => {
 });
 ipc.on('git-branch-commits', (event, arg) => {
   connect.getCommits(event, arg);
+});
+ipc.on('data-setting', (event, arg) => {
+  setting.getSetting(event, arg);
 });
 ipc.on('data-new-connection', (event, arg) => {
   connect.newConnect(event, arg);

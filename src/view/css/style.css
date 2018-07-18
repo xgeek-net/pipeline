@@ -216,6 +216,10 @@
   display: none;
 }
 
+#pipeline-new .slds-select__label .slds-form-element__label{
+  line-height: 2;
+}
+
 .new-pipeline-connect .slds-icon{
   fill: #0070d2;
 }
