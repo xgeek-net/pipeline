@@ -236,7 +236,7 @@ Vue.component('app-newpipeline', {
         </div><!-- .slds-size_5-of-12 -->
 
         <div class="slds-size_11-of-12 mt1">
-          <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type=='git')" ref="detail"></app-newpipeline-detail-git>
+          <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type!='sfdc')" ref="detail"></app-newpipeline-detail-git>
           <app-newpipeline-detail-sfdc v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type=='sfdc')" ref="detail"></app-newpipeline-detail-sfdc>
         </div><!-- .slds-size_11-of-12 -->
 
