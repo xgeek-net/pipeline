@@ -108,7 +108,7 @@ var app = new Vue({
       self.request('data-new-connection', {connect : data}, function(err, connections) {
         if(err) self.handleError(err);
         self.connections = connections;
-        self.connectionMap = self.convertMap(result);
+        self.connectionMap = self.convertMap(connections);
         //console.log('>>> save result', connections);
         self.closeModal();
       });
