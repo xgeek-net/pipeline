@@ -1,8 +1,8 @@
 Vue.component('app-pipelines', {
-  props: ['pipelines', 'detail'],
+  props: ['connectionmap', 'pipelines', 'detail'],
   data: function(){
     return {
-      menu : {}
+      menu : {},
     }
   },
   methods: {
@@ -104,8 +104,28 @@ Vue.component('app-pipelines', {
                 <div class="slds-truncate">{{ index+1 }}</div>
               </th>
               <td class="main-col">
-                <div class="slds-truncate">
-                  <a v-on:click="openDetail(row.id)">{{ row.name }}</a>
+                <div class="slds-truncate pipeline-name">
+                  <a v-on:click="openDetail(row.id)">{{ row.name }}</a><br />
+                  <p class="pipeline-desc slds-m-top_xx-small" v-if="(connectionmap[row.from] && connectionmap[row.to])">
+                    <i class="fab fa-github type-icon-small" v-if="connectionmap[row.from].type=='github'"></i>
+                    <i class="fab fa-bitbucket type-icon-small" v-if="connectionmap[row.from].type=='bitbucket'"></i>
+                    <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="connectionmap[row.from].type=='sfdc'"> 
+                      <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
+                        <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
+                      </svg>
+                    </span>
+                    &nbsp;
+                    <i class="fas fa-arrow-right type-icon-small"></i>
+                    &nbsp;
+                    <i class="fab fa-github type-icon-small" v-if="connectionmap[row.to].type=='github'"></i>
+                    <i class="fab fa-bitbucket type-icon-small" v-if="connectionmap[row.to].type=='bitbucket'"></i>
+                    <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="connectionmap[row.to].type=='sfdc'"> 
+                      <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
+                        <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
+                      </svg>
+                    </span>
+                    {{ connectionmap[row.to].name }}
+                  </p><!-- .pipeline-desc -->
                 </div>
               </td>
               <td class="sub-col">

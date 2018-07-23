@@ -74,7 +74,7 @@ Vue.component('app-newpipeline-detail-git', {
         function(err, pulls) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          console.log('>>> git-pullrequests callback ',err, pulls);
+          //console.log('>>> git-pullrequests callback ',err, pulls);
           self.pullrequests = pulls;
           self.pullrequestMap = {};
           for(let pr of pulls) {
@@ -94,7 +94,7 @@ Vue.component('app-newpipeline-detail-git', {
         self.connection,
         function(err, branches) {
           app.hideLoading();
-          console.log('>>> git-branches callback ',err, branches);
+          //console.log('>>> git-branches callback ',err, branches);
           if(err) return app.handleError(err);
           self.branches = branches;
           self.branchMap = {};
@@ -118,7 +118,7 @@ Vue.component('app-newpipeline-detail-git', {
         function(err, branches) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          console.log('>>> git-branches callback ',err, branches);
+          //console.log('>>> git-branches callback ',err, branches);
           self.branches = branches;
           self.branchMap = {};
           for(let br of branches) {
@@ -161,7 +161,7 @@ Vue.component('app-newpipeline-detail-git', {
         function(err, commits) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          console.log('>>> git-branch-commits callback ',err, commits);
+          //console.log('>>> git-branch-commits callback ',err, commits);
           self.commits = commits;
           self.commitMap = {};
           for(let commit of commits) {

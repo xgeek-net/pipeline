@@ -48,12 +48,19 @@
   padding-bottom: 3px;
   margin-bottom: 5px;
 }
+#sidebar .sidebar-body .hr.heading{
+  padding-top: 5px;
+  width: 45%;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border-top: 1px solid #d8dde6;
+}
 #sidebar .sidebar-body .menu-button{
   display: block;
   border-radius: 50%;
   border: 1px solid transparent;
 }
-#sidebar .sidebar-body .menu-button.button-round{
+#sidebar .sidebar-body .menu-button.button-round:hover{
   background-color: rgba(9, 30, 66, 0.04);  
 }
 #sidebar .sidebar-body .menu-button.button-bound{
@@ -109,7 +116,6 @@
 #main .app-table .fa-bitbucket.type-icon-medium{
   color: #1589ee;
 }
-
 #main .app-table .type-icon .slds-icon{
   fill: #1589ee;
 }
@@ -164,7 +170,16 @@
   border-right: none;
 }
 
-
+#main .app-table .pipeline-name .pipeline-desc{
+  font-size: 0.75rem;
+  color: rgba(150,148,146,0.8);
+}
+#main .app-table .pipeline-name .type-icon-small{
+  color: rgba(150,148,146,0.8);
+}
+#main .app-table .pipeline-desc .type-icon .slds-icon{
+  fill: rgba(150,148,146,0.8);
+}
 /**
  * Connections
  */
@@ -274,6 +289,10 @@
 .slds-dropdown_actions a.slds-color-text-error:hover {
   color: #c23934;
 }
+
+/* .new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label{
+  width: 100px;
+} */
 
 /**
  * pipeline-detail

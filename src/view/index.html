@@ -29,7 +29,7 @@
       <div class="container slds-size_2-of-2 slds-m-around_small slds-m-top_medium">
         <app-newpipeline v-bind:connections="connections" v-bind:record="pipeline" v-bind:setting="setting" v-if="page.menu=='newpipeline'"></app-newpipeline>
         <app-connections v-bind:connections="connections" v-if="page.menu=='connections'"></app-connections>
-        <app-pipelines v-bind:pipelines="pipelines" v-bind:detail="pipeline" v-if="page.menu=='pipelines'"></app-pipelines>
+        <app-pipelines v-bind:connectionmap="connectionMap" v-bind:pipelines="pipelines" v-bind:detail="pipeline" v-if="page.menu=='pipelines'"></app-pipelines>
         <pipeline-detail v-bind:pipeline="pipeline" v-if="page.menu=='pipelines' && pipeline!=null"></pipeline-detail>
       </div><!-- .container -->
     </main><!-- #main -->
@@ -46,6 +46,7 @@
   <script type="text/javascript" src="js/include/master.js"></script>
   <script type="text/javascript" src="js/vue-components/app-sidebar.js"></script>
   <script type="text/javascript" src="js/vue-components/app-newpipeline-detail-git.js"></script>
+  <script type="text/javascript" src="js/vue-components/app-newpipeline-detail-sfdc.js"></script>
   <script type="text/javascript" src="js/vue-components/app-newpipeline.js"></script>
   <script type="text/javascript" src="js/vue-components/app-connections.js"></script>
   <script type="text/javascript" src="js/vue-components/app-pipeline-detail.js"></script>

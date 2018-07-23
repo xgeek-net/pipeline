@@ -7,6 +7,7 @@ const path = require('path');
 const url = require('url');
 const qs = require('querystring');
 
+const CONFIG = require('../config/config');
 const CLIENT = require('../config/client');
 const utils = require('./Utils');
 const Metadata = require('./Metadata');
@@ -233,9 +234,9 @@ class GithubApi {
       log += '#' + pipeline.branch.name;
       let shas = [];
       for(let com of pipeline.commits) {
-        shas.push(com.sha);
+        shas.push(com.sha.substr(0, 10));
       }
-      log += ' ' + shas.join(',');
+      log += ' ' + shas.join(', ');
     }
     self.logger('[Github] Pull from ' + connection.repos.name + ' (' + log + '):');
     return new Promise(function(resolve, reject) {
@@ -332,11 +333,15 @@ class GithubApi {
             } 
             // is file
             let filename = path.basename(file.path);
+            let filedir = path.dirname(file.path);
             filename = utils.getFileName(filename);
-            if(utils.isBlank(filename)) {
-              // eg, .gitignore
+            // ignore blank file, file out of src folder, cached file
+            if(utils.isBlank(filename) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(file.path) >= 0) {
+              self.logger('        > ' + file.path + ' (Ignored)');
               return callback(null);
             }
+            self.cacheFiles.push(file.filename);
+
             repos.getContents(branchName, file.path, true, function(err, content) {
               self.logger('        > ' + file.path + ' (Size: ' + content.length + ')');
               // Save file content
@@ -407,9 +412,10 @@ class GithubApi {
       async.eachLimit(files, 10, function(file, callback) {
         //console.log('>>>> download', file.filename);
         let filename = path.basename(file.filename);
+        let filedir = path.dirname(file.filename);
         filename = utils.getFileName(filename);
-        if(utils.isBlank(filename) || self.cacheFiles.indexOf(file.filename) >= 0) {
-          // eg, .gitignore
+        // ignore blank file, file out of src folder, cached file
+        if(utils.isBlank(filename) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(file.filename) >= 0) {
           self.logger('        > ' + file.filename + ' (Ignored)');
           return callback(null);
         }

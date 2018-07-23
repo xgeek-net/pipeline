@@ -4,6 +4,7 @@ Vue.component('app-newpipeline', {
       return {
         pipeline : {
           from : '',
+          fromApiVersion : '',
           to : '',
           toApiVersion : ''
         },
@@ -19,6 +20,8 @@ Vue.component('app-newpipeline', {
       for(let ver = apiVersion; ver <= apiMaxVersion; ver++) {
         self.apiVersionList.push(ver + '.0');
       }
+      self.pipeline.fromApiVersion = apiMaxVersion + '.0';
+      self.pipeline.toApiVersion = apiMaxVersion + '.0';
     },
     mounted: function () {
       const self = this;
@@ -71,6 +74,10 @@ Vue.component('app-newpipeline', {
           pipeline['created_at'] = now.toISOString();
           pipeline['updated_at'] = now.toISOString();
         }
+        const valid = self.validateData(pipeline);
+        if(valid != true) {
+          return app.handleError(valid);
+        }
         app.showLoading();
         app.request('data-save-pipeline', 
           { pipeline : pipeline },
@@ -102,6 +109,30 @@ Vue.component('app-newpipeline', {
           app.runPipeline(result.id);
           app.openPipelineDetail(result.id);
         })
+      },
+      validateData : function(pipeline) {
+        if(!pipeline.from || pipeline.from.length == 0) {
+          return 'CONNECTION (FROM) is required';
+        }
+        if(!pipeline.to || pipeline.to.length == 0) {
+          return 'CONNECTION (TO) is required';
+        }
+        if(!pipeline.name || pipeline.name.length == 0) {
+          return 'Pipeline name is required';
+        }
+        if(!pipeline.type || pipeline.type.length == 0) {
+          return 'Pipeline type is required';
+        }
+        if(pipeline.type == 'pr' && pipeline.prs.length == 0) {
+          return 'Pipeline Pull Request is required';
+        }
+        if(pipeline.type == 'branch' && Object.keys(pipeline.branch).length == 0) {
+          return 'Pipeline Branch is required';
+        }
+        if(pipeline.type == 'commit' && pipeline.commits.length == 0) {
+          return 'Pipeline Commit is required';
+        }
+        return true;
       }
     },
     template: `
@@ -129,8 +160,21 @@ Vue.component('app-newpipeline', {
                 <div class="slds-form-element__control">
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.from" v-on:change="changeConnect()">
-                      <option value="">--None--</option>
-                      <option v-for="conn in connections" v-bind:value="conn.id" v-if="(conn.type!='sfdc')"> [{{ conn.type }}] {{ conn.name }}</option>
+                      <option value="" selected="selected">--None--</option>
+                      <option v-for="conn in connections" v-bind:value="conn.id" v-bind:seleced="pipeline.from==conn.id"> [{{ conn.type }}] {{ conn.name }}</option>
+                    </select>
+                  </div>
+                </div>
+              </div><!-- .slds-form-element -->
+              <div class="slds-form-element slds-grid mt1" v-if="(connection!=null && connection.type=='sfdc')">
+                <label class="slds-select__label slds-size_3-of-12">
+                  <span class="slds-checkbox_faux"></span>
+                  <span class="slds-form-element__label">API Version</span>
+                </label>
+                <div class="slds-form-element__control slds-size_9-of-12">
+                  <div class="slds-select_container">
+                    <select class="slds-select" v-model="pipeline.fromApiVersion">
+                      <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.fromApiVersion==ver">{{ ver }}</option>
                     </select>
                   </div>
                 </div>
@@ -167,8 +211,8 @@ Vue.component('app-newpipeline', {
                 <div class="slds-form-element__control">
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.to">
-                      <option value="">--None--</option>
-                      <option v-for="conn in connections" v-bind:value="conn.id" v-if="(conn.type=='sfdc' && conn.id!=pipeline.from)">{{ conn.name }}</option>
+                      <option value="" selected="selected">--None--</option>
+                      <option v-for="conn in connections" v-bind:value="conn.id" v-bind:seleced="pipeline.to==conn.id" v-if="(conn.type=='sfdc' && conn.id!=pipeline.from)">{{ conn.name }}</option>
                     </select>
                   </div>
                 </div>
@@ -181,7 +225,7 @@ Vue.component('app-newpipeline', {
                 <div class="slds-form-element__control slds-size_9-of-12">
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.toApiVersion">
-                      <option v-for="ver in apiVersionList" v-bind:value="ver">{{ ver }}</option>
+                      <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.toApiVersion==ver">{{ ver }}</option>
                     </select>
                   </div>
                 </div>
@@ -192,10 +236,11 @@ Vue.component('app-newpipeline', {
         </div><!-- .slds-size_5-of-12 -->
 
         <div class="slds-size_11-of-12 mt1">
-          <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="connection!=null" ref="detail"></app-newpipeline-detail-git>
+          <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type=='git')" ref="detail"></app-newpipeline-detail-git>
+          <app-newpipeline-detail-sfdc v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type=='sfdc')" ref="detail"></app-newpipeline-detail-sfdc>
         </div><!-- .slds-size_11-of-12 -->
 
-        <div class="slds-size_11-of-12 mt1" v-if="validate">
+        <div class="slds-size_11-of-12 mt1" v-if="validate==true">
           <div class="slds-wrap slds-text-align_right">
             <button class="slds-button slds-button_neutral" v-on:click="savePipeline">Save</button>
             <button class="slds-button slds-button_brand" v-on:click="runPipeline">Run Pipeline</button>

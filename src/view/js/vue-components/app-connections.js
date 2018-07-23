@@ -22,7 +22,7 @@ Vue.component('app-connections', {
       app.request('oauth-login', 
         {type : 'bitbucket'},
         function(err, result) {
-          console.log('>>> bitbucket callback ', result);
+          //console.log('>>> bitbucket callback ', result);
           app.showModal({ loading : false, data : result });
         }
       );
@@ -44,8 +44,11 @@ Vue.component('app-connections', {
         this.connDropdownOpen = true;
       }
     },
-    delConnect : function(cid){
-      
+    delConnect : function(cid, ev){
+      ev.target.setAttribute('disabled','disabled');
+      app.delConnect(cid, function(err, result) {
+        ev.target.removeAttribute('disabled');
+      });
     }
   },
   template: `
@@ -175,18 +178,32 @@ Vue.component('app-connections', {
                 <div class="slds-truncate"><span class="slds-badge" v-bind:class="{ 'success': row.status=='actived', 'error': row.status=='error' }">{{ row.status }}</span></div>
               </td>
               <td>
-                <div class="slds-truncate">
-                  <button class="slds-button slds-button_icon slds-button_icon-border-filled">
-                    <svg class="slds-button__icon" aria-hidden="true">
-                      <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#refresh"></use>
-                    </svg>
-                  </button>
-                  <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-on:click="delConnect(row.id)">
-                    <svg class="slds-button__icon" aria-hidden="true">
-                      <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#delete"></use>
-                    </svg>
-                  </button>
-                </div>
+                <div class="slds-truncate actions-col">
+                  <ul class="slds-grid slds-button-group">
+                    <li class="popover-col">
+                      <button class="slds-button slds-button_icon slds-button_icon-border-filled" disabled="disabled" v-on:click="">
+                        <svg class="slds-button__icon" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#redo"></use>
+                        </svg>
+                      </button>
+                      <div class="slds-popover slds-popover--tooltip slds-nubbin_bottom-right">
+                        <div class="slds-popover__body">Refresh</div>
+                      </div>
+                    </li>
+                    <li class="popover-col">
+                      <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last">
+                        <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-on:click="delConnect(row.id, $event)">
+                          <svg class="slds-button__icon" aria-hidden="true">
+                            <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                          </svg>
+                        </button>
+                        <div class="slds-popover slds-popover--tooltip slds-nubbin_bottom-right">
+                          <div class="slds-popover__body">Remove</div>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div><!-- .actions-col -->
               </td>
             </tr>
           </tbody>

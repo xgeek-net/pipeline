@@ -1,6 +1,6 @@
 {
   "name": "pipeline-for-salesforce",
-  "description": "The Metadata Deploy Tool for Salesforce",
+  "description": "Be less busy, less mistake for Salesforce metadata deploy",
   "version": "0.1.0",
   "private": false,
   "dependencies": {

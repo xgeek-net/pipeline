@@ -68,6 +68,32 @@ class Connect {
     }
   }
 
+  removeConnect(ev, arg) {
+    const self = this;
+    const callback = function(err, result) {
+      ev.sender.send('data-remove-connection-callback',err, result);
+    }
+    try{
+      let connections = self.storage.getAll({ cache : false }); 
+      let connect = null;
+      for(let i in connections) {
+        if(connections[i].id == arg.id) {
+          connect = connections[i];
+          connections.splice(i, 1);
+          self.storage.setAll(connections);
+          break;
+        }
+      }
+      if(connect == null) {
+        return callback(new Error('Connection not found.'), {id : arg.id});
+      }
+      return callback(null, {id : arg.id});
+    }catch(err) {
+      console.error('[ERROR]', err);
+      return callback(err);
+    }
+  }
+
   getConnections(ev, arg) {
     const callback = function(err, result) {
       ev.sender.send('data-connections-callback',err, result);
@@ -137,10 +163,15 @@ class Connect {
     //console.log('>>>> open url', uri);
     loginWindow.webContents.session.clearStorageData();
     loginWindow.setTitle(arg.type.toUpperCase());
-    loginWindow.webContents.on('will-navigate', (event, uri) => {
-      const urlObj = url.parse(uri)
+    loginWindow.webContents.on('will-navigate', (event, pageurl) => {
+      const urlObj = url.parse(pageurl)
       const params = qs.parse(urlObj.query);
-      //console.log('>>>> callback url', uri);
+      //console.log('>>>> callback url', pageurl, urlObj);
+      if(urlObj.hostname == 'id.atlassian.com' && urlObj.pathname == '/openid/v2/op') {
+        // Fix Atlassian OAuth doesn't redirect bug
+        loginWindow.loadURL(uri);
+        return;
+      }
       if(urlObj.pathname == '/oauth/callback') {
         /*loginWindow.loadURL(url.format({
           pathname: path.join(__dirname, '../view/loading.html'),
@@ -285,9 +316,54 @@ class Connect {
    */
   restoreToken(connection, token) {
     const self = this;
-    const newConn = utils.popItems(token, ['access_token', 'refresh_token', 'expires_in', 'expires_at'])
+    let newConn;
+    if(connection.type == 'sfdc') {
+      newConn = utils.popItems(token, ['accessToken']);
+    } else {
+      newConn = utils.popItems(token, ['access_token', 'refresh_token', 'expires_in', 'expires_at']);
+    }
     return self.setConnect(connection.id, newConn);
   }
+
+  getMetadataList(ev, arg) {
+    const self = this;
+    const callback = function(err, result) {
+      ev.sender.send('sfdc-metadata-list-callback',err, result);
+    }
+    try{
+      let metadataList = [];
+      let folders = [];
+      const connection = arg.connection;
+      const sfdcApi = new SfdcApi(connection);;
+      sfdcApi.checkConnect()
+      .then(function(token) {
+        if(token != true && token.refresh_token) {
+          // Refresh Token for bitbucket
+          self.restoreToken(connection, token);
+        }
+        return sfdcApi.describeMetadata();
+      })
+      .then(function(result) {
+        metadataList = result;
+        return sfdcApi.getFolderList(result);
+      })
+      .then(function(result) {
+        folders = result;
+        return sfdcApi.getMetadataDetailList(metadataList, folders);
+      })
+      .then(function(result) {
+        return callback(null, result);
+      })
+      .catch(function(err){
+        console.error('[ERROR]', err);
+        return callback(err);
+      });
+    }catch(err) {
+      console.error('[ERROR]', err);
+      return callback(err);
+    }
+  }
+
 }
 
 module.exports = Connect;

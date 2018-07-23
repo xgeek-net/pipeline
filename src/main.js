@@ -71,6 +71,9 @@ ipc.on('git-branches', (event, arg) => {
 ipc.on('git-branch-commits', (event, arg) => {
   connect.getCommits(event, arg);
 });
+ipc.on('sfdc-metadata-list', (event, arg) => {
+  connect.getMetadataList(event, arg);
+});
 ipc.on('data-setting', (event, arg) => {
   setting.getSetting(event, arg);
 });
@@ -79,6 +82,9 @@ ipc.on('data-new-connection', (event, arg) => {
 });
 ipc.on('data-connections', (event, arg) => {
   connect.getConnections(event, arg);
+});
+ipc.on('data-remove-connection', (event, arg) => {
+  connect.removeConnect(event, arg);
 });
 ipc.on('data-save-pipeline', (event, arg) => {
   pipeline.savePipeline(event, arg);

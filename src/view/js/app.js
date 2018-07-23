@@ -8,33 +8,42 @@ var app = new Vue({
       menu : '', title : '', loading : false
     },
     modal : { show : false, loading : false, title : '', data : null },
+    error : null,
     setting : null,
     newConnection : null,
     connections : [],
+    connectionMap : {},
     pipelines : [],
     pipeline : null
   },
   created: function() {
-    var self = this;
+    const self = this;
     self.ipc = ipcRenderer;
   },
   mounted: function () {
-    this.activeMenu('connections', CONST.titles.connections);
+    const self = this;
+    setTimeout(function(){
+      self.activeMenu('connections', CONST.titles.connections);
+    }, 1400);
   },
   methods: {
     activeMenu : function(menu, title) {
-      this.page.title = title;
-      this.page.menu = menu;
-      this.page.status = 'mounted';
-      this.page.loading = false;
+      const self = this;
+      self.page.title = title;
+      self.page.menu = menu;
       if(menu == 'connections') {
-        this.reloadConnect();
+        self.reloadConnect({ 
+          callback : function() {
+            self.page.status = 'mounted';
+            self.page.loading = false;
+          } 
+        });
       }
       if(menu == 'pipelines') {
-        this.reloadPipelines();
+        self.reloadPipelines();
       }
-      if(this.setting == null) {
-        this.loadSetting();
+      if(self.setting == null) {
+        self.loadSetting();
       }
     },
     showLoading : function(opt) {
@@ -89,6 +98,7 @@ var app = new Vue({
       self.request('data-connections', {}, function(err, result){
         if(err) self.handleError(err);
         self.connections = result;
+        self.connectionMap = self.convertMap(result);
         if(opt.callback) opt.callback();
       });
     },
@@ -98,18 +108,17 @@ var app = new Vue({
       self.request('data-new-connection', {connect : data}, function(err, connections) {
         if(err) self.handleError(err);
         self.connections = connections;
+        self.connectionMap = self.convertMap(result);
         //console.log('>>> save result', connections);
         self.closeModal();
       });
     },
-    delConnect: function(data) {
+    delConnect: function(id, callback) {
       const self = this;
-      self.modal.loading = true;
-      self.request('data-new-connection', {connect : data}, function(err, connections) {
-        if(err) self.handleError(err);
-        self.connections = connections;
-        //console.log('>>> save result', connections);
-        self.closeModal();
+      self.request('data-remove-connection', {id : id}, function(err, result){
+        if(err) return self.handleError(err);
+        self.reloadConnect();
+        if(callback) callback(true);
       });
     },
     /**
@@ -187,8 +196,17 @@ var app = new Vue({
       const self = this;
       self.pipeline = null;
     },
+    convertMap : function(records) {
+      if(!records) return {};
+      let recMap = {};
+      for(let record of records) {
+        recMap[record.id] = record;
+      }
+      return recMap;
+    },
     handleError : function(err) {
       // TODO alert error
+      this.error = err;
     }
   }
 });

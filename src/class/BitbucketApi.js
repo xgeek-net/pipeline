@@ -6,6 +6,7 @@ const url = require('url');
 const qs = require('querystring');
 const moment = require('moment');
 
+const CONFIG = require('../config/config');
 const CLIENT = require('../config/client');
 const utils = require('./Utils');
 const Metadata = require('./Metadata');
@@ -270,9 +271,9 @@ class BitbucketApi {
       log += '#' + pipeline.branch.name;
       let shas = [];
       for(let com of pipeline.commits) {
-        shas.push(com.sha);
+        shas.push(com.sha.substr(0, 10));
       }
-      log += ' ' + shas.join(',');
+      log += ' ' + shas.join(', ');
     }
     self.logger('[Bitbucket] Pull from ' + connection.repos.name + ' (' + log + '):');
     return new Promise(function(resolve, reject) {
@@ -339,7 +340,7 @@ class BitbucketApi {
                 return completion(err);
               });
             }, function(err){
-              console.log('>>>> getFilesFromCommits DONE');
+              //console.log('>>>> getFilesFromCommits DONE');
               if(err) { return callback(err); }
               return callback(null, true);
             }); // .async.eachSeries
@@ -479,8 +480,10 @@ class BitbucketApi {
     return new Promise(function(resolve, reject) {
       //console.log('>>>> download files', files.length);
       let filename = path.basename(filePath);
+      let filedir = path.dirname(filePath);
       filename = utils.getFileName(filename);
-      if(utils.isBlank(filename) || self.cacheFiles.indexOf(filePath) >= 0) {
+      // ignore blank file, file out of src folder, cached file
+      if(utils.isBlank(filename) || utils.isBlank(filedir) || !filePath.startsWith('src/') || self.cacheFiles.indexOf(filePath) >= 0) {
         // eg, .gitignore
         self.logger('        > ' + filePath + ' (Ignored)');
         return resolve(null);
@@ -521,7 +524,9 @@ class BitbucketApi {
       url: CLIENT.BITBUCKET_API + '/' + apiName,
       json: true,
     };
+    if(CONFIG.DEBUG_MODE) console.log('[APICALL] params', params);
     request.get(params, function(err, body, res) {
+      if(CONFIG.DEBUG_MODE) console.log('[APICALL] response', params);
       callback(err, res);
     });
   }
