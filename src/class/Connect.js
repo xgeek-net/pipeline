@@ -335,9 +335,9 @@ class Connect {
       let folders = [];
       const connection = arg.connection;
       const sfdcApi = new SfdcApi(connection);;
-      sfdcApi.checkConnect()
+      sfdcApi.checkToken()
       .then(function(token) {
-        if(token != true && token.refresh_token) {
+        if(token != true && token.accessToken) {
           // Refresh Token for bitbucket
           self.restoreToken(connection, token);
         }

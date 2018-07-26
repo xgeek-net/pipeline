@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">{% for value in types %}{% if value === "*" %}
+	<types>
+		<members>*</members>
+		<name>{{ loop.key }}</name>
+	</types>{% else %}
+	<types>{% for metadata_element in value %}
+		<members>{{ metadata_element }}</members>{%- endfor %}
+		<name>{{ loop.key }}</name>
+	</types>{%- endif -%}{%- endfor %}
+	<version>{{ apiVersion }}</version>
+</Package>

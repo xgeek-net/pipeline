@@ -14,6 +14,8 @@
       <div id="preloader"><span></span><span></span><span></span><span></span></div>
     </div><!-- .loading --> 
 
+    <app-message v-bind:message="message" v-if="message!=null"></app-message>
+
     <app-sidebar v-bind:menu="page.menu" v-if="(page.status=='mounted')"></app-sidebar>
     <main id="main" class="slds-grid slds-wrap" v-if="(page.status=='mounted')">
       <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand" v-if="page.loading">
@@ -44,6 +46,7 @@
   <script type="text/javascript" src="components/vue/dist/vue.min.js"></script>
   <script type="text/javascript" src="components/moment/min/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="js/include/master.js"></script>
+  <script type="text/javascript" src="js/vue-components/app-message.js"></script>
   <script type="text/javascript" src="js/vue-components/app-sidebar.js"></script>
   <script type="text/javascript" src="js/vue-components/app-newpipeline-detail-git.js"></script>
   <script type="text/javascript" src="js/vue-components/app-newpipeline-detail-sfdc.js"></script>

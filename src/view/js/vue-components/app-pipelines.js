@@ -15,6 +15,7 @@ Vue.component('app-pipelines', {
     rerunPipeline : function(pid, ev) {
       ev.target.setAttribute('disabled','disabled');
       app.runPipeline(pid);
+      app.openPipelineDetail(pid);
     },
     editPipeline : function(pid, ev) {
       app.editPipeline(pid);
@@ -81,7 +82,7 @@ Vue.component('app-pipelines', {
               <th scope="col" class="main-col">
                 <div class="slds-truncate" title="Pipeline">Pipeline</div>
               </th>
-              <th scope="col" class="sub-col">
+              <th scope="col" class="sub-col" style="width: 10rem;">
                 <div class="slds-truncate" title="Status">Status</div>
               </th>
               <th scope="col" class="sub-col">
@@ -114,6 +115,10 @@ Vue.component('app-pipelines', {
                         <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
                       </svg>
                     </span>
+                    <span v-if="row.type=='changeset'">{{ connectionmap[row.from].name }}</span>
+                    <span v-if="row.type=='pr'">#{{ (row.prs.length > 1) ? row.prs[0].number + '...' : row.prs[0].number }}</span>
+                    <span v-if="row.type=='branch'">{{ row.branch.name }}</span>
+                    <span v-if="row.type=='commit'">#{{ (row.commits.length > 1) ? row.commits[0].sha.substr(0, 10) + '...' : row.commits[0].sha.substr(0, 10) }}</span>
                     &nbsp;
                     <i class="fas fa-arrow-right type-icon-small"></i>
                     &nbsp;

@@ -8,7 +8,7 @@ var app = new Vue({
       menu : '', title : '', loading : false
     },
     modal : { show : false, loading : false, title : '', data : null },
-    error : null,
+    message : null,
     setting : null,
     newConnection : null,
     connections : [],
@@ -64,6 +64,12 @@ var app = new Vue({
     },
     closeModal : function() {
       this.modal = {show : false, loading : false};
+    },
+    showMessage : function(mes) {
+      this.message = mes;
+    },
+    closeMessage : function() {
+      this.message = null;
     },
     request : function(apiName, params, callback, opts) {
       const self = this;
@@ -205,8 +211,8 @@ var app = new Vue({
       return recMap;
     },
     handleError : function(err) {
-      // TODO alert error
-      this.error = err;
+      let message = (typeof err == 'string') ? err : err.message;
+      this.showMessage({ type : 'error', message : message });
     }
   }
 });

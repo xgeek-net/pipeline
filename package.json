@@ -7,6 +7,7 @@
     "archiver": "^2.1.1",
     "async": "^2.6.1",
     "events": "^3.0.0",
+    "extract-zip": "^1.6.7",
     "github-api": "^3.0.0",
     "jsforce": "^1.8.4",
     "make-dir": "^1.3.0",
@@ -23,9 +24,9 @@
   "license": "MIT",
   "scripts": {
     "start": "electron ./src",
-    "build-macOS": "electron-packager ./src --out ./build SalesforceDeliveryTool --platform=darwin --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
-    "build-windows": "electron-packager ./src --out ./build SalesforceDeliveryTool --platform=win32 --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
-    "build": "electron-packager ./src SalesforceDeliveryTool --all --out ./build --overwrite --icon=./src/img/app-icon.icns"
+    "build-macOS": "electron-packager ./src --out ./build Pipeline --platform=darwin --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
+    "build-windows": "electron-packager ./src --out ./build Pipeline --platform=win32 --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
+    "build": "electron-packager ./src Pipeline --all --out ./build --overwrite --icon=./src/img/app-icon.icns"
   },
   "devDependencies": {
     "electron": "^2.0.0",

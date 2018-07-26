@@ -91,7 +91,7 @@ module.exports = {
      "label":"",
      "label_ja":"",
      "children":{  
-        "actionOverrides":{"typeName":"ActionOverride","name":"actionName"},
+        // "actionOverrides":{"typeName":"ActionOverride","name":"actionName"},
         "fields":{"typeName":"CustomField","name":"fullName"},
         "businessProcesses":{"typeName":"BusinessProcess","name":"fullName"},
         "recordTypes":{"typeName":"RecordType","name":"fullName"},

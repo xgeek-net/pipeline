@@ -146,10 +146,10 @@ class Metadata {
   checkConnect(connection) {
     return new Promise(function(resolve, reject) {
       const sfdcApi = new SfdcApi(connection);
-      //console.log('>>>> sfdcApi.checkConnect ', connection);
-      sfdcApi.checkConnect()
+      //console.log('>>>> sfdcApi.checkToken ', connection);
+      sfdcApi.checkToken()
       .then(function(result) {
-        //console.log('>>>> sfdcApi.checkConnect result ', result);
+        //console.log('>>>> sfdcApi.checkToken result ', result);
         if(result != true && result.accessToken) {
           const connect = new Connect();
           connect.setConnect(connection.id, result);
@@ -188,29 +188,6 @@ class Metadata {
           return resolve(result);
         });
     });
-    /*
-    { checkOnly: false,
-      completedDate: '2018-06-27T09:40:29.000Z',
-      createdBy: '00510000002y8I6',
-      createdByName: 'xgeek',
-      createdDate: '2018-06-27T09:40:28.000Z',
-      details: '',
-      done: true,
-      id: '0Af10000007e7DgCAI',
-      ignoreWarnings: false,
-      lastModifiedDate: '2018-06-27T09:40:29.000Z',
-      numberComponentErrors: 0,
-      numberComponentsDeployed: 4,
-      numberComponentsTotal: 4,
-      numberTestErrors: 0,
-      numberTestsCompleted: 0,
-      numberTestsTotal: 0,
-      rollbackOnError: false,
-      runTestsEnabled: 'false',
-      startDate: '2018-06-27T09:40:28.000Z',
-      status: 'Succeeded',
-      success: true }
-    */
   }
 
 }

@@ -1,10 +1,16 @@
+const electron = require('electron');
+const fs = require('fs');
+const rimraf = require('rimraf');
 const jsforce = require('jsforce');
 const async = require('async');
+const path = require('path');
+const extract = require('extract-zip');
 
 const utils = require('./Utils');
+//const Metadata = require('./Metadata');
 const CONFIG = require('../config/config');
 const CLIENT = require('../config/client');
-const METACONF = require('../config/metadata');
+const METACONF = require('../config/package');
 
 class SfdcApi {
   constructor(opts) {
@@ -34,12 +40,14 @@ class SfdcApi {
     return url;
   }
 
-  checkConnect() {
+  checkToken() {
     const self = this;
     return new Promise(function(resolve, reject) {
       if(!self.conn) return reject(new Error('SFDC Connect ERROR!'));
       self.conn.identity(function(err, res) {
-        console.log('>>> identity ', err, res);
+        // console.log('>>> identity ', err, res);
+        // language: 'en_US',
+        // locale: 'ja_JP',
         if (err) {
           if(err.errorCode.indexOf('INVALID_SESSION_ID') >= 0 ||
             err.errorCode.indexOf('INVALID_LOGIN') >= 0 || 
@@ -158,6 +166,7 @@ class SfdcApi {
       self.conn.metadata.list(types, self.apiVer, function(err, metadata) {
         if(err) { return reject(err); }
         if(utils.isBlank(metadata))return resolve([]);
+        if(metadata && !Array.isArray(metadata)) metadata = [metadata];
         return resolve(metadata);
       });
     });
@@ -200,8 +209,7 @@ class SfdcApi {
       for(let key in METACONF) {
         metaTargets.push(METACONF[key].xmlName);
       }
-      console.log('>>>> metaTargets', metaTargets);
-
+      //console.log('>>>> metaTargets', metaTargets);
       let queues = [];
       for(let meta of metadataList) {
         if(meta.inFolder != true) {
@@ -220,11 +228,23 @@ class SfdcApi {
       let metadataDetailMap = {};
       // console.log('>>>> queues', queues);
       async.eachLimit(queues, 5, function(queue, completion) {
-        console.log('>>>> queue', queue);
+        //console.log('>>>> queue', queue);
         self.getMetadataList(queue)
         .then(function(metadata) {
-          console.log('>>>> queue : ' + queue.type, metadata.length);
-          metadataDetailMap[queue.type] = metadata;
+          //console.log('>>>> queue : ' + queue.type, metadata.length);
+          if(queue.type == 'CustomObject') {
+            let customObjects = [];
+            for(let meta of metadata) {
+              if(!meta.fullName.endsWith('__c')) {
+                // Filter standard object
+                continue;
+              }
+              customObjects.push(meta);
+            }
+            metadataDetailMap[queue.type] = customObjects;
+          } else {
+            metadataDetailMap[queue.type] = metadata;
+          }
           if(queue.type == 'CustomObject' || queue.type == 'Workflow') {
             //TODO SharingRules
             return self.readChildMetadata(metadata);
@@ -236,7 +256,7 @@ class SfdcApi {
           if(metadataMap == true) {
             return completion(null);
           }
-          console.log('>>>> metadataMap ', Object.keys(metadataMap));
+          //console.log('>>>> metadataMap ', Object.keys(metadataMap));
           for(let type in metadataMap) {
             metadataDetailMap[type] = metadataMap[type];
           }
@@ -262,6 +282,7 @@ class SfdcApi {
       let metadataMap = {}; 
       let fullNames = [];
       let metaType;
+      if(!Array.isArray(metadata)) console.log('[ERROR]', metadata);
       for(let meta of metadata) {
         metaType = meta.type;
         fullNames.push(meta.fullName);
@@ -335,6 +356,57 @@ class SfdcApi {
       
     });
   }
+
+  /**
+   * Download files for pipeline
+   * @param {Object} pipeline 
+   * @param {Object} connection 
+   */
+  getFiles(pipeline, connection, logger) {
+    const self = this;
+    //const metadata = new Metadata();
+    self.pipeline = pipeline;
+    self.logger = logger;  // Report process log to 
+    self.logger('[SFDC] Retrieve from ' + connection.name + ':');
+    return new Promise(function(resolve, reject) {
+      // { "ApexClass" : [ "thisclass", "thatclass" ], "ApexPage" : "*" }
+      const userDataPath = (electron.app || electron.remote.app).getPath('userData');
+      const pipelinePath = path.join(userDataPath, 'pipeline', pipeline.id);
+      const metaPath = path.join(pipelinePath, 'metadata', 'src');
+      if(!fs.existsSync(metaPath)) {
+        fs.mkdirSync(metaPath, '0777');
+      }
+      //const pipePath = metadata.getPipelineFolder();
+      for(let type of pipeline.targetTypes) {
+        self.logger('        > ' + type.name + ' [' + type.members.join(', ') + ']');
+      }
+      const packagePath = pipelinePath + '/src.zip';
+      const zipstream = fs.createWriteStream(packagePath);
+      const retrieveResult = self.conn.metadata.retrieve({
+        apiVersion: pipeline.fromApiVersion,
+        singlePackage: true,
+        unpackaged: {
+          types: pipeline.targetTypes
+        }
+      });
+      retrieveResult.complete(function(err, result) {
+        if(err) return reject(err);
+        if(result.success=='true') {
+          self.logger('[SFDC] Retrieve metadata Done.');
+          extract(packagePath, {dir: metaPath}, function (err) {
+            if(err) return reject(err);
+            // Remove src.zip
+            rimraf(packagePath, function(){});
+            return resolve(true);
+          });
+        } else {
+          return reject(new Error('Retrieve metadata failed'));
+        }
+      });
+      retrieveResult.stream().pipe(zipstream);
+    });
+  }
+  
 }
 
 module.exports = SfdcApi;

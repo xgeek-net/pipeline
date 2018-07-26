@@ -243,7 +243,7 @@ class Pipeline {
       // TODO sfdc api check token not exist
       client.checkToken(fromConn)
       .then(function(token) {
-        if(token != true && token.refresh_token) {
+        if(token != true && (token.refresh_token || token.accessToken)) {
           // Refresh Token for bitbucket
           connect.restoreToken(fromConn, token);
         }

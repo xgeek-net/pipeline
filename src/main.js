@@ -1,5 +1,6 @@
 const electron = require('electron');
 const app = electron.app;
+const shell = electron.shell;
 const ipc = electron.ipcMain;
 const BrowserWindow = electron.BrowserWindow;
 
@@ -32,6 +33,12 @@ function createWindow() {
   // Debug Mode
   mainWindow.webContents.openDevTools();
 
+  // Open link with target="_blank" on brower
+  mainWindow.webContents.on('new-window', (event, url) => {
+    event.preventDefault();
+    shell.openExternal(url);
+  })
+  
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

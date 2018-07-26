@@ -67,7 +67,12 @@ Vue.component('pipeline-detail', {
         if(err) app.handleError(err);
         //console.log('>>>> loadBody Callback', self.pipeline.id, (new Date()));
         result = result || '';
-        self.body = result.replace(/ /g, '&nbsp;').replace(/\r?\n/g, '<br />');
+        result = result.replace(/ /g, '&nbsp;').replace(/\r?\n/g, '<br />');
+        const regexp_url = /((h?)(ttps?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+))/g; // ']))/;
+        const regexp_makeLink = function(all, url, h, href) {
+          return '<a href="h' + href + '" target="_blank">' + url + '</a>';
+        }
+        self.body = result.replace(regexp_url, regexp_makeLink);
         if(self.pipeline.completed_at && self.pipeline.completed_at.length > 0 && 
           self.refIntervalId) {
           // Cancel loop if completed

@@ -53,8 +53,9 @@ Vue.component('app-newpipeline', {
             break;
           }
         }
-        if(self.$refs.detail) {
-          self.$refs.detail.reload();
+        const $detail = (self.$refs.gitdetail) ? self.$refs.gitdetail : self.$refs.sfdcdetail;
+        if($detail) {
+          $detail.reload();
         }
         self.validate = true;
       },
@@ -64,12 +65,14 @@ Vue.component('app-newpipeline', {
       savePipeline : function(ev, callback){
         const self = this;
         ev.target.setAttribute('disabled','disabled');
-        if(self.$refs.detail) {
+        const $detail = (self.$refs.gitdetail) ? self.$refs.gitdetail : self.$refs.sfdcdetail;
+        if($detail) {
           const now = new Date();
-          pipeline = self.$refs.detail.getPipeline();
+          pipeline = $detail.getPipeline();
           pipeline['from'] = self.pipeline.from;
           pipeline['to'] = self.pipeline.to;
           pipeline['toApiVersion'] = self.pipeline.toApiVersion;
+          pipeline['fromApiVersion'] = self.pipeline.fromApiVersion;
           pipeline['status'] = 'ready';
           pipeline['created_at'] = now.toISOString();
           pipeline['updated_at'] = now.toISOString();
@@ -132,6 +135,9 @@ Vue.component('app-newpipeline', {
         if(pipeline.type == 'commit' && pipeline.commits.length == 0) {
           return 'Pipeline Commit is required';
         }
+        if(pipeline.type == 'changeset' && pipeline.targetTypes.length == 0) {
+          return 'Pipeline metadata component is required';
+        }
         return true;
       }
     },
@@ -161,7 +167,7 @@ Vue.component('app-newpipeline', {
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.from" v-on:change="changeConnect()">
                       <option value="" selected="selected">--None--</option>
-                      <option v-for="conn in connections" v-bind:value="conn.id" v-bind:seleced="pipeline.from==conn.id"> [{{ conn.type }}] {{ conn.name }}</option>
+                      <option v-for="conn in connections" v-bind:value="conn.id" v-bind:seleced="pipeline.from==conn.id"> [{{ conn.type.toUpperCase() }}] {{ conn.name }}</option>
                     </select>
                   </div>
                 </div>
@@ -183,7 +189,7 @@ Vue.component('app-newpipeline', {
             <footer class="slds-card__footer"></footer>
           </article>
         </div><!-- .slds-size_5-of-12 -->
-        <div class="slds-size_1-of-12 mt2">
+        <div class="slds-size_1-of-12 mt4">
           <div class="slds-align_absolute-center">
             <span class="pipeline-from-icon"><i class="fas fa-arrow-right"></i></span>
           </div>
@@ -236,8 +242,8 @@ Vue.component('app-newpipeline', {
         </div><!-- .slds-size_5-of-12 -->
 
         <div class="slds-size_11-of-12 mt1">
-          <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type!='sfdc')" ref="detail"></app-newpipeline-detail-git>
-          <app-newpipeline-detail-sfdc v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type=='sfdc')" ref="detail"></app-newpipeline-detail-sfdc>
+          <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type!='sfdc')" ref="gitdetail"></app-newpipeline-detail-git>
+          <app-newpipeline-detail-sfdc v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type=='sfdc')" ref="sfdcdetail"></app-newpipeline-detail-sfdc>
         </div><!-- .slds-size_11-of-12 -->
 
         <div class="slds-size_11-of-12 mt1" v-if="validate==true">
