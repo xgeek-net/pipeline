@@ -39,6 +39,12 @@ Vue.component('app-newpipeline', {
       }
     },
     methods: {
+      reload : function() {
+        this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '' };
+        this.validate = false;
+        this.connection = null;
+        this.apiVersionList = [];
+      },
       changeConnect : function(ev) {
         const self = this;
         if(self.pipeline.from == '') {

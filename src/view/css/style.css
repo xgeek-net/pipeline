@@ -15,13 +15,27 @@
 .mt2{
   margin-top: 2rem;
 }
+.mt3{
+  margin-top: 2rem;
+}
+.mt4{
+  margin-top: 2rem;
+}
 .slds-color-text-error{
   color: #c23934;
 }
 .slds-select {
   font-family: "Salesforce Sans",Arial,sans-serif,"FontAwesome";
 }
-
+.text-left{
+  text-align: left;
+}
+.inline-group{
+  display: inline-block;
+}
+.pr10{
+  padding-right: 10px;
+}
 /**
  * #sidebar
  */
@@ -90,6 +104,9 @@
   width: calc(100% - 64px);
   margin-left: 64px;
 }
+#main > .slds-spinner {
+  z-index: 999;
+}
 #main .page-loading-mockup{
   background: rgba(255, 255, 255, 0.1);
 }
@@ -113,9 +130,9 @@
   font-size: 1.25rem;
   margin-right: 4px;
 }
-#main .app-table .fa-bitbucket.type-icon-medium{
+/* #main .app-table .fa-bitbucket.type-icon-medium{
   color: #1589ee;
-}
+} */
 #main .app-table .type-icon .slds-icon{
   fill: #1589ee;
 }
@@ -171,8 +188,8 @@
 }
 
 #main .app-table .pipeline-name .pipeline-desc{
-  font-size: 0.75rem;
-  color: rgba(150,148,146,0.8);
+  font-size: 85%;
+  color: #706e6b;
 }
 #main .app-table .pipeline-name .type-icon-small{
   color: rgba(150,148,146,0.8);
@@ -211,7 +228,7 @@
  */
 .pipeline-from-icon{
   font-size: 2.0rem;
-  color: #f3f2f2;
+  color: #d8dde6;
 }
 .pr-to-icon {
   color: #e0e5ee;
@@ -270,7 +287,8 @@
 .new-pipeline-detail .slds-form_horizontal .slds-form-element__label{
   padding-right: 0.5rem;
 }
-.new-pipeline-detail .input-small{
+.new-pipeline-detail .input-small,
+.new-pipeline-detail-sfdc .input-small{
   max-width: 366px;
 }
 .new-pipeline-detail .remark{
@@ -289,7 +307,20 @@
 .slds-dropdown_actions a.slds-color-text-error:hover {
   color: #c23934;
 }
+.slds-form_horizontal .slds-form-element__control.w80 {
+  width: 80%;
+}
 
+.metadata-select-table{
+  padding-right: 10px;
+  max-height: calc(100% - 520px);
+  min-height: 400px;
+  overflow: hidden;
+  overflow-y: auto;
+}
+.slds-button-group.inline-group .slds-button+.slds-button {
+  margin-left: -4px;
+}
 /* .new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label{
   width: 100px;
 } */
@@ -341,6 +372,12 @@
 .pipeline-detail .detail-body p{
   word-wrap: break-word;
   word-break: break-all;
+}
+.pipeline-detail .detail-body p > a,
+.pipeline-detail .detail-body p > a:hover,
+.pipeline-detail .detail-body p > a:focus{
+  color: #dce5f5;
+  text-decoration: underline;
 }
 #main .pipeline-detail .pipeline-status.success{
   color: #4bc076;

@@ -19,6 +19,11 @@ const setting = new Setting();
 const connect = new Connect();
 const pipeline = new Pipeline();
 
+// Raven
+const CLIENT = require('./config/client');
+const Raven = require('raven');
+Raven.config(CLIENT.RAVEN_CLIENT_ID).install();
+
 // メインウィンドウ
 let mainWindow;
 

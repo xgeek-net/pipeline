@@ -3,9 +3,8 @@ const BrowserWindow = electron.BrowserWindow;
 
 const url = require('url');
 const qs = require('querystring');
-const path = require('path');
 const uuidv4 = require('uuid/v4');
-const moment = require('moment');
+const Raven = require('raven');
 
 const Storage = require('./Storage.js');
 const GithubApi = require('./GithubApi.js');
@@ -34,6 +33,7 @@ class Connect {
       return callback(null, connections);
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -64,6 +64,7 @@ class Connect {
       return true;
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return false;
     }
   }
@@ -90,6 +91,7 @@ class Connect {
       return callback(null, {id : arg.id});
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -103,6 +105,7 @@ class Connect {
       return callback(null, result);
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -227,6 +230,7 @@ class Connect {
       });
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
     
@@ -266,6 +270,7 @@ class Connect {
       });
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -305,6 +310,7 @@ class Connect {
       });
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -356,10 +362,12 @@ class Connect {
       })
       .catch(function(err){
         console.error('[ERROR]', err);
+        Raven.captureException(err);
         return callback(err);
       });
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }

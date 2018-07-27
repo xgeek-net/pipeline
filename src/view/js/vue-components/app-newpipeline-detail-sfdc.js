@@ -15,7 +15,8 @@ Vue.component('app-newpipeline-detail-sfdc', {
       metadataMap : null,
       metadataTypes : null,
       metadataList : null,
-      metaChecked : 0
+      metaChecked : 0,
+      allChecked : false
     }
   },
   mounted: function () {
@@ -85,12 +86,35 @@ Vue.component('app-newpipeline-detail-sfdc', {
           self.metadataMap = result;
           self.metadataTypes = Object.keys(result);
           self.metaChecked = 0;
+          if(result && self.pipeline.targetTypes.length > 0) {
+            self.initMetaCheck();
+          }
           self.searchMetadata();
         }
       );
     },
+    // Check on edit pipeline
+    initMetaCheck : function() {
+      const self = this;
+      self.metaChecked = 0;
+      let types = {};
+      for(let type of self.pipeline.targetTypes) {
+        types[type.name] = type.members;
+      }
+      for(let key in self.metadataMap) {
+        for(let meta of self.metadataMap[key]) {
+          const memberName = (meta.Object) ? meta.Object + '.' + meta.fullName : meta.fullName;
+          if(types.hasOwnProperty(key) && types[key].indexOf(memberName) >= 0) {
+            // Check target component
+            meta['MetaChecked'] = true;
+            self.metaChecked++;
+          }
+        }
+      }
+    },
     searchMetadata : function() {
       const self = this;
+      self.allChecked = true;
       self.metadataList = [];
       const _pushMetadaList = function(metaType, targets) {
         for(let i = 0; i < targets.length; i++) {
@@ -112,7 +136,13 @@ Vue.component('app-newpipeline-detail-sfdc', {
           if(willShow == false) continue;
           if(!meta.hasOwnProperty('MetaIndex')) meta['MetaIndex'] = i;
           if(!meta.hasOwnProperty('MetaType')) meta['MetaType'] = metaType;
-          if(!meta.hasOwnProperty('MetaChecked')) meta['MetaChecked'] = false;
+          if(!meta.hasOwnProperty('MetaChecked')) {
+            meta['MetaChecked'] = false;
+            self.allChecked = false;
+          } else {
+            // Set to false if MetaChecked is false
+            self.allChecked = meta.MetaChecked;
+          }
           self.metadataList.push(meta);
         }
       }
@@ -148,6 +178,17 @@ Vue.component('app-newpipeline-detail-sfdc', {
       // Fix for fire update event
       self.metadataList = metaList;
       self.metaChecked = self.countChecked();
+      if(checked == false) {
+        self.allChecked = false;
+      } else {
+        self.allChecked = true;
+        for(let i = 0; i < metaList.length; i++) {
+          if(metaList[i].MetaChecked == false) {
+            self.allChecked = false;
+            break;
+          }
+        } // .metaList
+      }
     },
     showOnlyChecked : function(ev) {
       const self = this;
@@ -240,7 +281,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
                       <div class="slds-form-element">
                         <div class="slds-form-element__control">
                           <span class="slds-checkbox">
-                            <input type="checkbox" name="all" id="chk-metadata-all" v-on:click="checkAll" value="all" />
+                            <input type="checkbox" name="all" id="chk-metadata-all" v-bind:checked="allChecked" v-on:click="checkAll" value="all" />
                             <label class="slds-checkbox__label" for="chk-metadata-all">
                               <span class="slds-checkbox_faux"></span>
                               <span class="slds-form-element__label"></span>

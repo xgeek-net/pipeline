@@ -23,7 +23,11 @@ var app = new Vue({
   mounted: function () {
     const self = this;
     setTimeout(function(){
-      self.activeMenu('connections', CONST.titles.connections);
+      self.reloadConnect({ 
+        callback : function() {
+          self.activeMenu('pipelines', CONST.titles.pipelines);
+        } 
+      });
     }, 1400);
   },
   methods: {
@@ -32,15 +36,15 @@ var app = new Vue({
       self.page.title = title;
       self.page.menu = menu;
       if(menu == 'connections') {
-        self.reloadConnect({ 
+        self.reloadConnect();
+      }
+      if(menu == 'pipelines') {
+        self.reloadPipelines({ 
           callback : function() {
             self.page.status = 'mounted';
             self.page.loading = false;
           } 
         });
-      }
-      if(menu == 'pipelines') {
-        self.reloadPipelines();
       }
       if(self.setting == null) {
         self.loadSetting();
@@ -147,6 +151,9 @@ var app = new Vue({
     },
     // Open new pipeline page
     newPipeline: function (ev) {
+      if(this.$refs.newpipeline) {
+        this.$refs.newpipeline.reload();
+      }
       this.page.title = 'New Pipeline';
       this.page.menu = 'newpipeline';
     },
@@ -175,8 +182,9 @@ var app = new Vue({
     },
     editPipeline : function(id) {
       const self = this;
-      self.pipeline = self.getPipeline(id);
       self.newPipeline();
+      this.page.title = 'Edit Pipeline';
+      self.pipeline = self.getPipeline(id);
     },
     clonePipeline : function(id, callback) {
       const self = this;
@@ -212,7 +220,9 @@ var app = new Vue({
     },
     handleError : function(err) {
       let message = (typeof err == 'string') ? err : err.message;
-      this.showMessage({ type : 'error', message : message });
+      if(message && message.length > 0) {
+        this.showMessage({ type : 'error', message : message });
+      }
     }
   }
 });

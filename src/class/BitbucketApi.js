@@ -526,7 +526,7 @@ class BitbucketApi {
     };
     if(CONFIG.DEBUG_MODE) console.log('[APICALL] params', params);
     request.get(params, function(err, body, res) {
-      if(CONFIG.DEBUG_MODE) console.log('[APICALL] response', params);
+      if(CONFIG.DEBUG_MODE) console.log('[APICALL] response', res);
       callback(err, res);
     });
   }

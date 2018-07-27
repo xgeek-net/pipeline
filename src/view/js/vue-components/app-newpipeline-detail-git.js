@@ -43,10 +43,14 @@ Vue.component('app-newpipeline-detail-git', {
     setPipeline : function(pipeline) {
       const self = this;
       self.pipeline = pipeline;
-      // Fire self.listPullRequests(); OR self.listBranches(); OR self.listCommits();
-      const typeEle = document.getElementById('visual-picker-source-type-' + self.pipeline.type);
-      if(typeEle) {
-        typeEle.click();
+      if(self.pipeline.type == 'pr') {
+        self.listPullRequests();
+      }
+      if(self.pipeline.type == 'branch') {
+        self.listBranches();
+      }
+      if(self.pipeline.type == 'commit') {
+        self.listCommits();
       }
     },
     getPipeline : function(){
@@ -77,16 +81,24 @@ Vue.component('app-newpipeline-detail-git', {
           //console.log('>>> git-pullrequests callback ',err, pulls);
           self.pullrequests = pulls;
           self.pullrequestMap = {};
+          let checkedPrs = [];
+          if(self.pipeline.prs.length > 0) {
+            for(let pr of self.pipeline.prs) {
+              checkedPrs.push(pr.number);
+            }
+          }
           for(let pr of pulls) {
-            self.pullrequestMap[pr.number] = { number : pr.number, base : pr.base, sha : pr.sha };
+            const checked = (checkedPrs.indexOf(pr.number) >= 0) ? true : false;
+            self.pullrequestMap[pr.number] = { number : pr.number, base : pr.base, sha : pr.sha, checked : checked };
           }
         }
       );
       
     },
-    listBranches : function(ev) {
+    listBranches : function(ev, opts) {
       const self = this;
-      self.pipeline.type = 'branch';
+      opts = opts || {};
+      self.pipeline.type = (opts.type) ? opts.type : 'branch';
       app.showLoading();
       //console.log('>>> listBranches ',self.pipeline);
       // Request branches
@@ -101,6 +113,11 @@ Vue.component('app-newpipeline-detail-git', {
           for(let br of branches) {
             self.branchMap[br.name] = { name : br.name, sha : br.sha };
           }
+          if(self.pipeline.branch.name) {
+            // Check branch select
+            self.branchName = self.pipeline.branch.name;
+          }
+          if(opts.callback) opts.callback();
         }
       );
     },
@@ -109,27 +126,12 @@ Vue.component('app-newpipeline-detail-git', {
      */
     listCommits : function(ev) {
       const self = this;
-      self.pipeline.type = 'commit';
-      app.showLoading();
-      //console.log('>>> listCommits ',self.pipeline);
-      // Request branches
-      app.request('git-branches', 
-        self.connection,
-        function(err, branches) {
-          app.hideLoading();
-          if(err) return app.handleError(err);
-          //console.log('>>> git-branches callback ',err, branches);
-          self.branches = branches;
-          self.branchMap = {};
-          for(let br of branches) {
-            self.branchMap[br.name] = { name : br.name, sha : br.sha };
-          }
-          if(self.branchName) {
-            // Reload commit list
-            self.selectBranch();
-          }
+      self.listBranches(ev, { type : 'commit', callback : function() {
+        if(self.branchName) {
+          // Reload commit list
+          self.selectBranch();
         }
-      );
+      }});
     },
     checkPR : function(prNum, ev) {
       const self = this;
@@ -164,8 +166,15 @@ Vue.component('app-newpipeline-detail-git', {
           //console.log('>>> git-branch-commits callback ',err, commits);
           self.commits = commits;
           self.commitMap = {};
+          let checkedCommits = [];
+          if(self.pipeline.commits.length > 0) {
+            for(let cm of self.pipeline.commits) {
+              checkedCommits.push(cm.sha);
+            }
+          }
           for(let commit of commits) {
-            self.commitMap[commit.sha] = { sha : commit.sha, commit_date : commit.commit_date };
+            const checked = (checkedCommits.indexOf(commit.sha) >= 0) ? true : false;
+            self.commitMap[commit.sha] = { sha : commit.sha, commit_date : commit.commit_date, checked : checked };
           }
         }
       );
@@ -203,7 +212,7 @@ Vue.component('app-newpipeline-detail-git', {
             <label class="slds-form-element__label">Source Type</label>
             <div class="slds-form-element__control">
               <div class="slds-visual-picker slds-visual-picker_medium">
-                <input type="radio" id="visual-picker-source-type-pr" value="1" name="sourcetype" v-on:click="listPullRequests()" />
+                <input type="radio" id="visual-picker-source-type-pr" v-bind:checked="pipeline.type=='pr'" value="1" name="sourcetype" v-on:click="listPullRequests()" />
                 <label for="visual-picker-source-type-pr">
                   <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
                     <span>
@@ -225,7 +234,7 @@ Vue.component('app-newpipeline-detail-git', {
                 </label>
               </div><!-- .slds-visual-picker -->
               <div class="slds-visual-picker slds-visual-picker_medium">
-                <input type="radio" id="visual-picker-source-type-branch" value="1" name="sourcetype" v-on:click="listBranches()" />
+                <input type="radio" id="visual-picker-source-type-branch" v-bind:checked="pipeline.type=='branch'" value="1" name="sourcetype" v-on:click="listBranches()" />
                 <label for="visual-picker-source-type-branch">
                   <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
                     <span>
@@ -245,7 +254,7 @@ Vue.component('app-newpipeline-detail-git', {
                 </label>
               </div><!-- .slds-visual-picker -->
               <div class="slds-visual-picker slds-visual-picker_medium">
-                <input type="radio" id="visual-picker-source-type-commit" value="1" name="sourcetype" v-on:click="listCommits()" />
+                <input type="radio" id="visual-picker-source-type-commit" v-bind:checked="pipeline.type=='commit'" value="1" name="sourcetype" v-on:click="listCommits()" />
                 <label for="visual-picker-source-type-commit">
                   <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
                     <span>
@@ -280,7 +289,7 @@ Vue.component('app-newpipeline-detail-git', {
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                               <span class="slds-checkbox">
-                                <input type="checkbox" name="all" v-bind:id="('chk-pr-' + index)" v-on:click="checkPR(pr.number, $event)" value="1" />
+                                <input type="checkbox" name="all" v-bind:id="('chk-pr-' + index)" v-bind:checked="pullrequestMap[pr.number].checked" v-on:click="checkPR(pr.number, $event)" value="1" />
                                 <label class="slds-checkbox__label" v-bind:for="('chk-pr-' + index)">
                                   <span class="slds-checkbox_faux"></span>
                                   <span class="slds-form-element__label"></span>
@@ -313,7 +322,6 @@ Vue.component('app-newpipeline-detail-git', {
                   </tr>
                 </tbody>
               </table>
-
             </div><!-- .slds-form-element__control -->
           </div><!-- .slds-form-element -->
 
@@ -322,8 +330,8 @@ Vue.component('app-newpipeline-detail-git', {
             <div class="slds-form-element__control" v-if="branches!=null">
               <div class="slds-select_container input-small">
                 <select class="slds-select" v-model="branchName" v-on:change="selectBranch()">
-                  <option value="">--None--</option>
-                  <option v-for="br in branches" v-bind:value="br.name">{{ br.name }}</option>
+                  <option value="" v-bind:seleced="!pipeline.branch.name">--None--</option>
+                  <option v-for="br in branches" v-bind:value="br.name" v-bind:seleced="br.name==pipeline.branch.name">{{ br.name }}</option>
                 </select>
               </div>
             </div><!-- .slds-form-element__control -->
@@ -340,7 +348,7 @@ Vue.component('app-newpipeline-detail-git', {
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                               <span class="slds-checkbox">
-                                <input type="checkbox" name="all" v-bind:id="('chk-com-' + index)"  v-on:click="checkCommit(c.sha, $event)" value="1" />
+                                <input type="checkbox" name="all" v-bind:id="('chk-com-' + index)" v-bind:checked="commitMap[c.sha].checked" v-on:click="checkCommit(c.sha, $event)" value="1" />
                                 <label class="slds-checkbox__label" v-bind:for="('chk-com-' + index)">
                                   <span class="slds-checkbox_faux"></span>
                                   <span class="slds-form-element__label"></span>

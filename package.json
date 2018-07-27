@@ -1,6 +1,6 @@
 {
-  "name": "pipeline-for-salesforce",
-  "description": "Be less busy, less mistake for Salesforce metadata deploy",
+  "name": "pipeline",
+  "description": "Be less busy, less mistake in Salesforce metadata deploy",
   "version": "0.1.0",
   "private": false,
   "dependencies": {
@@ -13,9 +13,10 @@
     "make-dir": "^1.3.0",
     "moment": "^2.22.2",
     "querystring": "^0.2.0",
+    "raven": "^2.6.3",
     "request": "^2.87.0",
     "rimraf": "^2.6.2",
-    "sfdc-generate-package": "^2.2.0",
+    "sfdc-generate-package": "git://github.com/xgeek-net/sfdc-generate-package.git",
     "url": "^0.11.0",
     "uuid": "^3.2.1"
   },

@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const uuidv4 = require('uuid/v4');
 const moment = require('moment');
+const Raven = require('raven');
 
 const Storage = require('./Storage.js');
 const Connect = require('./Connect.js');
@@ -48,6 +49,7 @@ class Pipeline {
       return callback(null, {id : pipeline.id});
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -79,6 +81,7 @@ class Pipeline {
       return callback(null, {id : newPipeline.id});
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -113,6 +116,7 @@ class Pipeline {
       }
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -139,6 +143,7 @@ class Pipeline {
       return true;
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return false;
     }
   }
@@ -153,6 +158,7 @@ class Pipeline {
       return callback(null, result);
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -184,6 +190,7 @@ class Pipeline {
       });
     }catch(err) {
       console.error('[ERROR]', err);
+      Raven.captureException(err);
       return callback(err);
     }
   }
@@ -298,6 +305,7 @@ class Pipeline {
 
     }catch(err) {
       console.error('[ERROR] Run pipeline', err);
+      Raven.captureException(err);
       const now = new Date();
       const endTime = now.toISOString();
       const duration = utils.getDuration(endTime, startTime);
