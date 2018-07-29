@@ -58,33 +58,36 @@ class Metadata {
     }
   }
 
-  /**
-   * Save single file content to local pipeline folder
-   * @param {String} pid 
-   * @param {String} filename - file name include path, eg, config/default.js
-   * @param {String} content - file content
-   */
-  saveSingleFile(pid, filename, content) {
+  // prepare folder for file 
+  makeDir(pid, filename) {
     const self = this;
     const userDataPath = (electron.app || electron.remote.app).getPath('userData');
     const pipelinePath = path.join(userDataPath, 'pipeline', pid, 'metadata');
-
+    const filePath = path.join(pipelinePath, filename);
+    const filePathWithoutName = path.dirname(filePath);
     return new Promise(function(resolve, reject) {
-      var filePath = path.join(pipelinePath, filename);
-      // var dirStrWithouFileName = dirStr.substring(0, dirStr.lastIndexOf("\\"));
-      var filePathWithoutName = path.dirname(filePath);
-
       makeDir(filePathWithoutName)
       .then(function(path) {
-        fs.writeFile(filePath, content, { mode : '0777' }, function(err) {
-          if(err) return reject(err);
-          return resolve(true);
-        });
+        return resolve(filePath);
       })
       .catch(function(err) {
         return reject(err);
       });
-    
+    });
+  }
+
+  // Save file from stream
+  saveFileStream(filePath, response, callback) {
+    const self = this;
+    const localFilePath = filePath;
+    // console.log('>>>saveFileStream start', localFilePath) // 200
+    // console.log('>>>response', response.statusCode, localFilePath) // 200
+    // console.log('>>>response', response.headers['content-type']) // 'image/png'
+    const stream = fs.createWriteStream(localFilePath);
+    response.pipe(stream);
+    response.on('end', function() {
+      stream.end();
+      return callback(true);
     });
   }
 

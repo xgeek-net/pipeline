@@ -2,6 +2,7 @@
 const request = require('request');
 const async = require('async');
 const path = require('path');
+const fs = require('fs');
 const url = require('url');
 const qs = require('querystring');
 const moment = require('moment');
@@ -433,6 +434,7 @@ class BitbucketApi {
         self.logger('[Bitbucket] Pull files from commit: ' + commit.sha);
         const apiPath = path.join('repositories', username, reposName, 'diffstat', commit.sha);
         self.apiCall(apiPath , function(err, result) {
+          //console.log('>>>> apiPath result', result);
           if(err) { return reject(err); }
           // Fetch file content to local
           if(Array.isArray(result.values)) {
@@ -478,9 +480,10 @@ class BitbucketApi {
   fetchFileContent(username, reposName, sha, filePath) {
     const self = this;
     return new Promise(function(resolve, reject) {
-      //console.log('>>>> download files', files.length);
+      //console.log('>>>> download files', filePath);
       let filename = path.basename(filePath);
       let filedir = path.dirname(filePath);
+      //const extension = filename.split('.').pop();
       filename = utils.getFileName(filename);
       // ignore blank file, file out of src folder, cached file
       if(utils.isBlank(filename) || utils.isBlank(filedir) || !filePath.startsWith('src/') || self.cacheFiles.indexOf(filePath) >= 0) {
@@ -489,25 +492,34 @@ class BitbucketApi {
         return resolve(null);
       }
       self.cacheFiles.push(filePath);
-
-      const fileContentPath = path.join('repositories', username, reposName, 'src', sha, filePath);
-      //console.log('>>>> fileContentPath', fileContentPath);
-      self.apiCall(fileContentPath, function(err, content) {
-        if(utils.isBlank(content)) {
-          self.logger('        > ' + filePath + ' (ERROR: not found)');
-          return resolve(true);
-        }
-        self.logger('        > ' + filePath + ' (Size: ' + content.length + ')');
-        // Save file content
-        const metadata = new Metadata();
-        metadata.saveSingleFile(self.pipeline.id, filePath, content)
-        .then(function(success) {
-          return resolve(true);
+      // TODO move to metadata as a common function
+      const metadata = new Metadata();
+      metadata.makeDir(self.pipeline.id, filePath)
+      .then(function(localPath) {
+        const fileContentUri = path.join('repositories', username, reposName, 'src', sha, filePath + '?raw');
+        self.apiCall(fileContentUri, {})
+        .on('response', function(response) {
+          if(utils.isBlank(response.statusCode) || response.statusCode != '200') {
+            self.logger('        > ' + filePath + ' (ERROR: not found)');
+            return resolve(true);
+          }
+          let contentLength = 0;
+          response.on('data', function(content) {
+            if(utils.isNotBlank(content)) contentLength += content.length;
+          });
+          metadata.saveFileStream(localPath, response, function(success) {
+            self.logger('        > ' + filePath + ' (Size: ' + contentLength + ')');
+            return resolve(success);
+          })
         })
-        .catch(function(err) {
+        .on('error', function(err) {
           return reject(err);
         });
-      }); // .apiCall
+      })
+      .catch(function(err) {
+        return reject(err);
+      }); // .metadata.makeDir
+
     });
   }
 
@@ -525,8 +537,12 @@ class BitbucketApi {
       json: true,
     };
     if(CONFIG.DEBUG_MODE) console.log('[APICALL] params', params);
+    if(!callback) {
+      // Return Promise
+      return request.get(params);
+    }
     request.get(params, function(err, body, res) {
-      if(CONFIG.DEBUG_MODE) console.log('[APICALL] response', res);
+      //if(CONFIG.DEBUG_MODE) console.log('[APICALL] response', res);
       callback(err, res);
     });
   }

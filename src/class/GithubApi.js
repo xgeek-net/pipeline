@@ -1,6 +1,7 @@
 //Module Docs  @see https://github.com/github-tools/github
 //API Docs @see https://developer.github.com/v3
 const GitHub = require('github-api');
+const axios = require('axios');
 const request = require('request');
 const async = require('async');
 const path = require('path');
@@ -18,6 +19,7 @@ class GithubApi {
     this.api = null;
     if(opts.access_token) {
       this.api = new GitHub({token : opts.access_token});
+      this.access_token = opts.access_token;
     }
     // Pipeline info object
     this.pipeline = null; 
@@ -342,18 +344,31 @@ class GithubApi {
             }
             self.cacheFiles.push(file.filename);
 
-            repos.getContents(branchName, file.path, true, function(err, content) {
-              self.logger('        > ' + file.path + ' (Size: ' + content.length + ')');
-              // Save file content
-              metadata.saveSingleFile(self.pipeline.id, file.path, content)
-              .then(function(success) {
-                //console.log('>>>> download', file.filename, 'completed');
-                return callback(null);
-              })
-              .catch(function(err) {
-                return callback(err);
+            // TODO move to metadata as a common function
+            const metadata = new Metadata();
+            metadata.makeDir(self.pipeline.id, file.path)
+            .then(function(localPath) {
+              
+              const fileContentUri = path.join('repos', repos.__fullname, 'contents', file.path);
+              self.fileApiCall(fileContentUri, { ref : branchName })
+              .then(function(response) {
+                if(utils.isBlank(response.status) || response.status != 200) {
+                  self.logger('        > ' + file.path + ' (ERROR: not found)');
+                  return callback(null);
+                }
+                let contentLength = 0;
+                response.data.on('data', function(content) {
+                  if(utils.isNotBlank(content)) contentLength += content.length;
+                });
+                metadata.saveFileStream(localPath, response.data, function(success) {
+                  self.logger('        > ' + file.path + ' (Size: ' + contentLength + ')');
+                  return callback(null);
+                })
               });
-            });
+            })
+            .catch(function(err) {
+              return callback(err);
+            }); // .metadata.makeDir
           }, function(err){
             //console.log('>>>> getFilesFromCommits DONE');
             if(err) { return reject(err); }
@@ -424,24 +439,57 @@ class GithubApi {
         const urlObj = url.parse(file.contents_url);
         const params = qs.parse(urlObj.query);
         const ref = params.ref;
-        repos.getContents(ref, file.filename, true, function(err, content) {
-          self.logger('        > ' + file.filename + ' (Size: ' + content.length + ')');
-          // Save file content
-          metadata.saveSingleFile(self.pipeline.id, file.filename, content)
-          .then(function(success) {
-            //console.log('>>>> download', file.filename, 'completed');
-            return callback(null);
-          })
-          .catch(function(err) {
-            return callback(err);
+
+        // TODO move to metadata as a common function
+        const metadata = new Metadata();
+        metadata.makeDir(self.pipeline.id, file.filename)
+        .then(function(localPath) {
+          
+          const fileContentUri = path.join('repos', repos.__fullname, 'contents', file.filename);
+          self.fileApiCall(fileContentUri, { ref : ref })
+          .then(function(response) {
+            if(utils.isBlank(response.status) || response.status != 200) {
+              self.logger('        > ' + file.filename + ' (ERROR: not found)');
+              return callback(null);
+            }
+            let contentLength = 0;
+            response.data.on('data', function(content) {
+              if(utils.isNotBlank(content)) contentLength += content.length;
+            });
+            metadata.saveFileStream(localPath, response.data, function(success) {
+              self.logger('        > ' + file.filename + ' (Size: ' + contentLength + ')');
+              return callback(null);
+            })
           });
-        });
+        })
+        .catch(function(err) {
+          return callback(err);
+        }); // .metadata.makeDir
       }, function(err){
         //console.log('>>>> download completed', err);
         if(err) { return reject(err); }
         return resolve(true);
       });
     });
+  }
+
+  // Download file with stream, 
+  // to fix binary file (static resource) download bug.
+  fileApiCall(apiName, opts) {
+    const config = {
+      url: 'https://api.github.com/' + apiName,
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json;charset=UTF-8',
+        'Accept': 'application/vnd.github.v3.raw+json',
+        'Authorization': 'token ' + this.access_token
+      },
+      params: opts || {},
+      responseType: 'stream',
+   };
+   if(CONFIG.DEBUG_MODE) console.log('[APICALL] params', config);
+   const requestPromise = axios(config);
+   return requestPromise;
   }
 
 }
