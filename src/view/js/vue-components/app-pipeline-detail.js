@@ -35,6 +35,12 @@ Vue.component('pipeline-detail', {
     }
   },
   methods: {
+    reload : function() {
+      this.refPipeline = null;
+      this.refIntervalId = null;
+      this.body = '';
+      this.request = 0;
+    },
     closeDetail : function(ev) {
       if(self.refIntervalId) {
         clearInterval(self.refIntervalId);

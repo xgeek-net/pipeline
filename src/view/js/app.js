@@ -163,12 +163,11 @@ var app = new Vue({
       self.request('pipeline-run', {id : id}, function(err, result){
         // Will fire multiple time
         if(err) return self.handleError(err);
-        self.reloadPipelines();
         if(result.type != 'process') {
           // Remove Listener
           self.ipc.removeListener('pipeline-run-callback', function(){});
         }
-        if(callback) callback(true);
+        self.reloadPipelines({ callback : callback });
       },
       { once : false });
     },
@@ -209,6 +208,9 @@ var app = new Vue({
     closePipelineDetail : function(id) {
       const self = this;
       self.pipeline = null;
+      if(self.$refs.pipelinedetail) {
+        self.$refs.pipelinedetail.$destroy();
+      }
     },
     convertMap : function(records) {
       if(!records) return {};

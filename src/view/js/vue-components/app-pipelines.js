@@ -14,8 +14,9 @@ Vue.component('app-pipelines', {
     },
     rerunPipeline : function(pid, ev) {
       ev.target.setAttribute('disabled','disabled');
-      app.runPipeline(pid);
-      app.openPipelineDetail(pid);
+      app.runPipeline(pid, function() {
+        app.openPipelineDetail(pid);
+      });
     },
     editPipeline : function(pid, ev) {
       app.editPipeline(pid);

@@ -9,7 +9,7 @@ Vue.component('app-newpipeline-detail-git', {
         branch : {},
         commits : []
       },
-      branchName : null,
+      branchName : '',
       pullrequests : null,
       pullrequestMap : null,
       branches : null,
@@ -127,7 +127,7 @@ Vue.component('app-newpipeline-detail-git', {
     listCommits : function(ev) {
       const self = this;
       self.listBranches(ev, { type : 'commit', callback : function() {
-        if(self.branchName) {
+        if(self.branchName && self.branchName.length > 0) {
           // Reload commit list
           self.selectBranch();
         }
