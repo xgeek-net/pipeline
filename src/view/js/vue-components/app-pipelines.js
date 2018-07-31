@@ -52,7 +52,7 @@ Vue.component('app-pipelines', {
   },
   template: `
     <article class="slds-card" v-bind:class="{ 'only-show-main': detail!=null}" v-on:click="hideAllMenu">
-      <div class="slds-card__header slds-grid">
+      <div class="slds-card__header slds-grid" v-if="(pipelines!=null && pipelines.length > 0)">
         <header class="slds-media slds-media_center slds-has-flexi-truncate">
           <div class="slds-media__figure">
             <span class="slds-icon_container slds-icon-standard-feed" title="contact">
@@ -73,7 +73,7 @@ Vue.component('app-pipelines', {
           </div>
         </header>
       </div>
-      <div class="slds-card__body">
+      <div class="slds-card__body" v-if="(pipelines!=null && pipelines.length > 0)">
         <table class="slds-table slds-table_fixed-layout slds-table_bordered slds-no-row-hover slds-table_cell-buffer app-table">
           <thead>
             <tr class="slds-text-title_caps">
@@ -213,6 +213,25 @@ Vue.component('app-pipelines', {
           </tbody>
         </table>
       </div>
+
+      <!-- no conection yet -->
+      <div class="slds-wrap slds-grid" v-if="(pipelines==null || pipelines.length == 0)">
+        <div class="slds-media slds-media_center no-data-wrap">
+          <div class="slds-media__figure">
+            <span class="slds-avatar slds-avatar_large">
+              <img src="img/ninja-avatar-128.jpg" title="Ninja Avatar" />
+            </span>
+          </div>
+          <div class="slds-media__body">
+            <h3>Opps, No Pipeline Yet.</h3>
+            <p>Create your first Pipeline. </p>
+            <div class="slds-wrap">
+              <button class="slds-button slds-button_brand" v-on:click="newPipeline">New Pipeline</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- .slds-wrap -->
+
     </article>
   `
 })

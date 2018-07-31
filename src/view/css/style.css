@@ -215,6 +215,29 @@
 .slds-dropdown_actions.connect-new-types a small {
   color: #706e6b;
 }
+.no-data-wrap{
+  height: 12rem;
+  margin-bottom: 40px;
+}
+.no-data-wrap h3{
+  font-size: 1.75rem;
+}
+.no-data-wrap p{
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 8px 0 12px 0;
+}
+.no-data-wrap .slds-media__figure {
+  margin-right: 1.5rem;
+  margin-left: 3rem;
+}
+.no-data-wrap .slds-avatar.slds-avatar_large{
+  width: 128px;
+  height: 128px;
+}
+.no-data-wrap .slds-button {
+  font-size: 0.85rem;
+}
 
 /**
  * Modal

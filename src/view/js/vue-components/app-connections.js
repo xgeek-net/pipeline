@@ -53,7 +53,7 @@ Vue.component('app-connections', {
   },
   template: `
     <article class="slds-card">
-      <div class="slds-card__header slds-grid">
+      <div class="slds-card__header slds-grid" v-if="(connections!=null && connections.length > 0)">
         <header class="slds-media slds-media_center slds-has-flexi-truncate">
           <div class="slds-media__figure">
             <span class="slds-icon_container slds-icon-standard-avatar" title="contact">
@@ -122,7 +122,7 @@ Vue.component('app-connections', {
           </div>
         </header>
       </div>
-      <div class="slds-card__body">
+      <div class="slds-card__body" v-if="(connections!=null && connections.length > 0)">
         <table class="slds-table slds-table_fixed-layout slds-table_bordered slds-no-row-hover slds-table_cell-buffer app-table">
           <thead>
             <tr class="slds-text-title_caps">
@@ -209,6 +209,71 @@ Vue.component('app-connections', {
           </tbody>
         </table>
       </div>
+
+      <!-- no conection yet -->
+      <div class="slds-wrap slds-grid" v-if="(connections==null || connections.length == 0)">
+        <div class="slds-media slds-media_center no-data-wrap">
+          <div class="slds-media__figure">
+            <span class="slds-avatar slds-avatar_large">
+              <img src="img/ninja-avatar-128.jpg" title="Ninja Avatar" />
+            </span>
+          </div>
+          <div class="slds-media__body">
+            <h3>Opps, No Connection Yet.</h3>
+            <p>Create your first connection.</p>
+            <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last" v-bind:class="{'slds-is-open':connDropdownOpen}">
+                <button class="slds-button slds-button_brand" v-on:click="taggleConnDropdown">New Connection
+                  <svg class="slds-button__icon slds-button__icon_small" aria-hidden="true">
+                    <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#down"></use>
+                  </svg>
+                </button>
+                <div class="slds-dropdown slds-dropdown_right slds-dropdown_actions connect-new-types">
+                  <ul class="slds-dropdown__list" role="menu">
+                    <li class="slds-dropdown__item" role="presentation">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="0" v-on:click="newGithubConnect">
+                        <span class="slds-truncate" title="Github">
+                          <i class="fab fa-github type-icon-medium slds-m-right_x-small"></i> Github
+                        </span>
+                      </a>
+                    </li>
+                    <li class="slds-dropdown__item" role="presentation">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="1" v-on:click="newBitbucketConnect">
+                        <span class="slds-truncate" title="Github">
+                          <i class="fab fa-bitbucket type-icon-medium slds-m-right_x-small"></i> Bitbucket
+                        </span>
+                      </a>
+                    </li>
+                    <li class="slds-dropdown__item" role="presentation">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="2" v-on:click="newSfdcConnect('production')">
+                        <span class="slds-truncate">
+                          <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon-medium slds-m-right_x-small">
+                            <svg class="slds-icon slds-icon_xx_small" aria-hidden="true">
+                              <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
+                            </svg>
+                          </span>
+                          Salesforce <small>Production</small> 
+                        </span>
+                      </a>
+                    </li>
+                    <li class="slds-dropdown__item" role="presentation">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="3" v-on:click="newSfdcConnect('sandbox')">
+                        <span class="slds-truncate">
+                          <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon-medium slds-m-right_x-small">
+                            <svg class="slds-icon slds-icon_xx_small" aria-hidden="true">
+                              <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
+                            </svg>
+                          </span>
+                          Salesforce <small>Sandbox</small>
+                        </span>
+                      </a>
+                    </li>
+                  </ul>
+                </div><!-- .slds-dropdown_actions -->
+              </div>
+          </div>
+        </div>
+      </div><!-- .slds-wrap -->
+
     </article>
   `
 })

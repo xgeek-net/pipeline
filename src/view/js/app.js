@@ -25,6 +25,14 @@ var app = new Vue({
     setTimeout(function(){
       self.reloadConnect({ 
         callback : function() {
+          if(self.connections == null || self.connections.length == 0) {
+            // Initial page first time
+            self.page.title = CONST.titles.connections;
+            self.page.menu = 'connections';
+            self.page.status = 'mounted';
+            self.page.loading = false;
+            return;
+          }
           self.activeMenu('pipelines', CONST.titles.pipelines);
         } 
       });
@@ -161,9 +169,10 @@ var app = new Vue({
       //console.log('>>>>run pipeline', id);
       var self = this;
       self.request('pipeline-run', {id : id}, function(err, result){
+        console.log('>>>pipeline-run', err, result);
         // Will fire multiple time
-        if(err) return self.handleError(err);
-        if(result.type != 'process') {
+        if(err) self.handleError(err);
+        if(result && result.type != 'process') {
           // Remove Listener
           self.ipc.removeListener('pipeline-run-callback', function(){});
         }

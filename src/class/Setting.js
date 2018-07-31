@@ -23,6 +23,8 @@ class Setting {
 
   getSetting(ev, arg) {
     const result = this.storage.getAll();
+    if(!result.apiVersion) result['apiVersion'] = CONFIG.SFDC_DEFAULT_API_VERSION;
+    if(!result.pfMaxApiVersion) result['pfMaxApiVersion'] = CONFIG.SFDC_DEFAULT_API_VERSION;
     ev.sender.send('data-setting-callback',null, result);
   }
 }
