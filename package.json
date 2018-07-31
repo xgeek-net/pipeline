@@ -16,7 +16,7 @@
     "raven": "^2.6.3",
     "request": "^2.87.0",
     "rimraf": "^2.6.2",
-    "sfdc-generate-package": "git://github.com/xgeek-net/sfdc-generate-package.git",
+    "sfdc-generate-package": "^2.2.1",
     "url": "^0.11.0",
     "uuid": "^3.2.1"
   },
