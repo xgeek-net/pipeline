@@ -99,9 +99,10 @@ class SfdcApi {
           avatar : self.conn.instanceUrl + '/_slds/images/themes/lightning_blue/lightning_blue_profile_avatar_96.png',
           orgId : userInfo.organizationId,
           orgType : self.orgType,
+          language : user.LanguageLocaleKey,  //en_US, ja
           userId : userInfo.id
         };
-        //console.log('>>>> data ', data);
+        //console.log('>>>> resp ', resp);
         return callback(null, resp);
       });
     });
@@ -355,6 +356,35 @@ class SfdcApi {
       }); // .async.eachSeries
       
     });
+  }
+
+  // Get component labels
+  getComponentLabels(language) {
+    const getLabel = function(meta, typeKey) {
+      let label  = meta[typeKey];
+      if(language == 'ja' && meta.label_ja && meta.label_ja.length > 0) {
+        label = meta.label_ja;
+      } else if(meta.label && meta.label.length > 0) {
+        label = meta.label;
+      }
+      return label;
+    }
+    let labels = {};
+    for(let type in METACONF) {
+      let meta = METACONF[type];
+      labels[meta.xmlName] = getLabel(meta, 'xmlName');
+      if(meta.xmlName == 'CustomLabels') {
+        labels['CustomLabel'] = labels[meta.xmlName];
+      }
+      // Has children
+      if(meta.xmlName == 'CustomObject' || meta.xmlName == 'Workflow' || meta.xmlName == 'SharingRules') {
+        for(let ctype in meta.children) {
+          let cMeta = meta.children[ctype];
+          labels[cMeta.typeName] = getLabel(cMeta, 'typeName');
+        }
+      }
+    }
+    return labels;
   }
 
   /**

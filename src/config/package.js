@@ -48,8 +48,8 @@ module.exports = {
   },
   "globalValueSets":{
      "xmlName":"GlobalValueSet",
-     "label":"",
-     "label_ja":"",
+     "label":"Global Value Set",
+     "label_ja":"グローバル値セット",
      "children":{  
 
      }
@@ -72,58 +72,58 @@ module.exports = {
   },
   "pages":{  
      "xmlName":"ApexPage",
-     "label":"",
-     "label_ja":"",
+     "label":"Visualforce Page",
+     "label_ja":"Visualforce ページ",
      "children":{  
 
      }
   },
   "queues":{  
      "xmlName":"Queue",
-     "label":"",
-     "label_ja":"",
+     "label":"Queue",
+     "label_ja":"キュー",
      "children":{  
 
      }
   },
   "objects":{  
      "xmlName":"CustomObject",
-     "label":"",
-     "label_ja":"",
+     "label":"Custom Object",
+     "label_ja":"カスタムオブジェクト",
      "children":{  
         // "actionOverrides":{"typeName":"ActionOverride","name":"actionName"},
-        "fields":{"typeName":"CustomField","name":"fullName"},
-        "businessProcesses":{"typeName":"BusinessProcess","name":"fullName"},
-        "recordTypes":{"typeName":"RecordType","name":"fullName"},
-        "webLinks":{"typeName":"WebLink","name":"fullName"},
-        "validationRules":{"typeName":"ValidationRule","name":"fullName"},
-        "namedFilters":{"typeName":"NamedFilter","name":"fullName"},
-        "sharingReasons":{"typeName":"SharingReason","name":"fullName"},
-        "listViews":{"typeName":"ListView","name":"fullName"},
-        "fieldSets":{"typeName":"FieldSet","name":"fullName"},
-        "compactLayouts":{"typeName":"CompactLayout","name":"fullName"}
+        "fields":{"typeName":"CustomField","name":"fullName","label":"Custom Field","label_ja":"カスタム項目"},
+        "businessProcesses":{"typeName":"BusinessProcess","name":"fullName","label":"","label_ja":""},
+        "recordTypes":{"typeName":"RecordType","name":"fullName","label":"Record Type","label_ja":"レコードタイプ"},
+        "webLinks":{"typeName":"WebLink","name":"fullName","label":"Button or Link","label_ja":"ボタンまたはリンク"},
+        "validationRules":{"typeName":"ValidationRule","name":"fullName","label":"Validation Rule","label_ja":"入力規則"},
+        "namedFilters":{"typeName":"NamedFilter","name":"fullName","label":"","label_ja":""},
+        "sharingReasons":{"typeName":"SharingReason","name":"fullName","label":"Apex Sharing Reason","label_ja":"Apex 共有の理由"},
+        "listViews":{"typeName":"ListView","name":"fullName","label":"List View","label_ja":"リストビュー"},
+        "fieldSets":{"typeName":"FieldSet","name":"fullName","label":"Field Set","label_ja":"項目セット"},
+        "compactLayouts":{"typeName":"CompactLayout","name":"fullName","label":"Compact Layout","label_ja":"コンパクトレイアウト"}
      }
   },
   "reportTypes":{  
      "xmlName":"ReportType",
-     "label":"",
-     "label_ja":"",
+     "label":"Custom Report Type",
+     "label_ja":"カスタムレポートタイプ",
      "children":{  
 
      }
   },
   "reports":{  
      "xmlName":"Report",
-     "label":"",
-     "label_ja":"",
+     "label":"Report",
+     "label_ja":"レポート",
      "children":{  
 
      }
   },
   "dashboards":{  
      "xmlName":"Dashboard",
-     "label":"",
-     "label_ja":"",
+     "label":"Dashboard",
+     "label_ja":"ダッシュボード",
      "children":{  
 
      }
@@ -138,8 +138,8 @@ module.exports = {
   },
   "layouts":{  
      "xmlName":"Layout",
-     "label":"",
-     "label_ja":"",
+     "label":"Page Layout",
+     "label_ja":"ページレイアウト",
      "children":{  
 
      }
@@ -154,8 +154,8 @@ module.exports = {
   },
   "documents":{  
      "xmlName":"Document",
-     "label":"",
-     "label_ja":"",
+     "label":"Document",
+     "label_ja":"ドキュメント",
      "children":{  
 
      }
@@ -178,16 +178,16 @@ module.exports = {
   },
   "flexipages":{  
      "xmlName":"FlexiPage",
-     "label":"",
-     "label_ja":"",
+     "label":"Lightning Page",
+     "label_ja":"Lightning ページ",
      "children":{  
 
      }
   },
   "tabs":{  
      "xmlName":"CustomTab",
-     "label":"",
-     "label_ja":"",
+     "label":"Tab",
+     "label_ja":"タブ",
      "children":{  
 
      }
@@ -202,111 +202,111 @@ module.exports = {
   },
   "applications":{  
      "xmlName":"CustomApplication",
-     "label":"",
-     "label_ja":"",
+     "label":"App",
+     "label_ja":"アプリケーション",
      "children":{  
 
      }
   },
   "letterhead":{  
      "xmlName":"Letterhead",
-     "label":"",
-     "label_ja":"",
+     "label":"Letterhead",
+     "label_ja":"レターヘッド",
      "children":{  
 
      }
   },
   "email":{  
      "xmlName":"EmailTemplate",
-     "label":"",
-     "label_ja":"",
+     "label":"Email Template",
+     "label_ja":"メールテンプレート",
      "children":{  
 
      }
   },
   "workflows":{  
      "xmlName":"Workflow",
-     "label":"",
-     "label_ja":"",
+     "label":"Workflow Rule",
+     "label_ja":"ワークフロールール",
      "children":{  
-        "alerts":{"typeName":"WorkflowAlert","name":"fullName"},
-        "tasks":{"typeName" : "WorkflowTask", "name" : "fullName"},
-        "outboundMessages":{"typeName" : "WorkflowOutboundMessage","name" : "fullName"},
-        "fieldUpdates":{"typeName" : "WorkflowFieldUpdate", "name" : "fullName"},
-        "rules":{"typeName" : "WorkflowRule", "name" : "fullName"},
-        "emailRecipients":{"typeName" : "WorkflowEmailRecipient", "name" : "fullName"},
-        "timeTriggers":{"typeName" : "WorkflowTimeTrigger", "name" : "fullName"},
-        "actionReferences":{"typeName" : "WorkflowActionReference", "name" : "fullName"}
+        "alerts":{"typeName":"WorkflowAlert","name":"fullName","label":"Workflow Email Alert","label_ja":"ワークフローメールアラート"},
+        "tasks":{"typeName" : "WorkflowTask", "name" : "fullName","label":"Workflow Task","label_ja":"ワークフロー ToDo"},
+        "outboundMessages":{"typeName" : "WorkflowOutboundMessage","name" : "fullName","label":"Workflow Outbound Message","label_ja":"ワークフローアウトバウンドメッセージ"},
+        "fieldUpdates":{"typeName" : "WorkflowFieldUpdate", "name" : "fullName","label":"Workflow Field Update","label_ja":"ワークフロー項目自動更新"},
+        "rules":{"typeName" : "WorkflowRule", "name" : "fullName","label":"Workflow Rule","label_ja":"ワークフロールール"},
+        "emailRecipients":{"typeName" : "WorkflowEmailRecipient", "name" : "fullName","label":"","label_ja":""},
+        "timeTriggers":{"typeName" : "WorkflowTimeTrigger", "name" : "fullName","label":"","label_ja":""},
+        "actionReferences":{"typeName" : "WorkflowActionReference", "name" : "fullName","label":"","label_ja":""}
      }
   },
   "assignmentRules":{  
      "xmlName":"AssignmentRules",
-     "label":"",
-     "label_ja":"",
+     "label":"Assignment Rule",
+     "label_ja":"割り当てルール",
      "children":{  
 
      }
   },
   "autoResponseRules":{  
      "xmlName":"AutoResponseRules",
-     "label":"",
-     "label_ja":"",
+     "label":"Auto-Response Rule",
+     "label_ja":"自動レスポンスルール",
      "children":{  
 
      }
   },
   "escalationRules":{  
      "xmlName":"EscalationRules",
-     "label":"",
-     "label_ja":"",
+     "label":"Escalation Rule",
+     "label_ja":"エスカレーションルール",
      "children":{  
 
      }
   },
   "roles":{  
      "xmlName":"Role",
-     "label":"",
-     "label_ja":"",
+     "label":"Role",
+     "label_ja":"ロール",
      "children":{  
 
      }
   },
   "groups":{  
      "xmlName":"Group",
-     "label":"",
-     "label_ja":"",
+     "label":"Group",
+     "label_ja":"グループ",
      "children":{  
 
      }
   },
   "postTemplates":{  
      "xmlName":"PostTemplate",
-     "label":"",
-     "label_ja":"",
+     "label":"Post Template",
+     "label_ja":"投稿テンプレート",
      "children":{  
 
      }
   },
   "approvalProcesses":{  
      "xmlName":"ApprovalProcess",
-     "label":"",
-     "label_ja":"",
+     "label":"Approval Process",
+     "label_ja":"承認プロセス",
      "children":{  
 
      }
   },
   "homePageComponents":{  
      "xmlName":"HomePageComponent",
-     "label":"",
-     "label_ja":"",
+     "label":"Home Page Component",
+     "label_ja":"ホームページのコンポーネント",
      "children":{  
 
      }
   },
   "homePageLayouts":{  
      "xmlName":"HomePageLayout",
-     "label":"",
-     "label_ja":"",
+     "label":"Home Page Layout",
+     "label_ja":"ホームページのページレイアウト",
      "children":{  
 
      }
@@ -329,32 +329,32 @@ module.exports = {
   },
   "classes":{  
      "xmlName":"ApexClass",
-     "label":"",
-     "label_ja":"",
+     "label":"Apex Class",
+     "label_ja":"Apex クラス",
      "children":{  
 
      }
   },
   "triggers":{  
      "xmlName":"ApexTrigger",
-     "label":"",
-     "label_ja":"",
+     "label":"Apex Trigger",
+     "label_ja":"Apex トリガ",
      "children":{  
 
      }
   },
   "profiles":{  
      "xmlName":"Profile",
-     "label":"",
-     "label_ja":"",
+     "label":"Profile",
+     "label_ja":"プロファイル",
      "children":{  
 
      }
   },
   "permissionsets":{  
      "xmlName":"PermissionSet",
-     "label":"",
-     "label_ja":"",
+     "label":"Permission Set",
+     "label_ja":"権限セット",
      "children":{  
 
      }
@@ -369,16 +369,16 @@ module.exports = {
   },
   "remoteSiteSettings":{  
      "xmlName":"RemoteSiteSetting",
-     "label":"",
-     "label_ja":"",
+     "label":"Remote Site",
+     "label_ja":"リモートサイト",
      "children":{  
 
      }
   },
   "authproviders":{  
      "xmlName":"AuthProvider",
-     "label":"",
-     "label_ja":"",
+     "label":"Auth. Provider",
+     "label_ja":"認証プロバイダ",
      "children":{  
 
      }
@@ -449,8 +449,8 @@ module.exports = {
   },
   "callCenters":{  
      "xmlName":"CallCenter",
-     "label":"",
-     "label_ja":"",
+     "label":"Call Center",
+     "label_ja":"コールセンター",
      "children":{  
 
      }
@@ -489,8 +489,8 @@ module.exports = {
   },
   "aura":{  
      "xmlName":"AuraDefinitionBundle",
-     "label":"",
-     "label_ja":"",
+     "label":"Lightning Component Bundle",
+     "label_ja":"Lightning コンポーネントバンドル",
      "children":{  
 
      }
@@ -507,16 +507,16 @@ module.exports = {
   },
   "contentassets":{  
      "xmlName":"ContentAsset",
-     "label":"",
-     "label_ja":"",
+     "label":"Asset File",
+     "label_ja":"アセットファイル",
      "children":{  
 
      }
   }, 
   "networks":{  
      "xmlName":"Network",
-     "label":"",
-     "label_ja":"",
+     "label":"Network",
+     "label_ja":"ネットワーク",
      "children":{  
 
      }
@@ -531,16 +531,16 @@ module.exports = {
   }, 
   "flowDefinitions":{  
      "xmlName":"FlowDefinition",
-     "label":"",
-     "label_ja":"",
+     "label":"Flow Definition",
+     "label_ja":"フロー定義",
      "children":{  
 
      }
   },
   "matchingRules":{  
      "xmlName":"MatchingRules",
-     "label":"",
-     "label_ja":"",
+     "label":"Matching Rule",
+     "label_ja":"一致ルール",
      "children":{  
 
      }

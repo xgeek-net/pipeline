@@ -80,11 +80,12 @@ Vue.component('app-newpipeline-detail-sfdc', {
       app.request('sfdc-metadata-list', 
         { connection : self.connection }, 
         function(err, result) {
-          console.log('>>> result ', result);
+          // { components : components, types : {} }
+          //console.log('>>> result ', result);
           app.hideLoading();
           if(err) return app.handleError(err);
-          self.metadataMap = result;
-          self.metadataTypes = Object.keys(result);
+          self.metadataMap = result.components;
+          self.metadataTypes = result.types;
           self.metaChecked = 0;
           if(result && self.pipeline.targetTypes.length > 0) {
             self.initMetaCheck();
@@ -121,11 +122,13 @@ Vue.component('app-newpipeline-detail-sfdc', {
           let meta = targets[i];
           let willShow = false;
           // Filter by keyword
-          if(typeof self.search.keyword == 'undefined' || self.search.keyword == null || self.search.keyword.length ==0) {
+          let keyword = self.search.keyword;
+          if(typeof keyword == 'undefined' || keyword == null || keyword.length ==0) {
             willShow = true;
           } else {
-            if((meta.label && meta.label.indexOf(self.search.keyword) >= 0) || 
-              (meta.fullName && meta.fullName.indexOf(self.search.keyword) >= 0)) {
+            keyword = keyword.toUpperCase();
+            if((meta.label && meta.label.toUpperCase().indexOf(keyword) >= 0) || 
+              (meta.fullName && meta.fullName.toUpperCase().indexOf(keyword) >= 0)) {
               willShow = true;
             }
           }
@@ -233,7 +236,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
                   <div class="slds-select_container input-small">
                     <select class="slds-select" v-model="search.type" v-on:change="selectEntityType()">
                       <option value="all" v-bind:seleced="search.type=='all'">All</option>
-                      <option v-for="metaType in metadataTypes" v-bind:value="metaType" v-bind:seleced="search.type==metaType">{{ metaType }}</option>
+                      <option v-for="metaType in Object.keys(metadataTypes)" v-bind:value="metaType" v-bind:seleced="search.type==metaType">{{ metadataTypes[metaType] }}</option>
                     </select>
                   </div>
                 </div><!-- .slds-form-element__control -->
@@ -259,11 +262,11 @@ Vue.component('app-newpipeline-detail-sfdc', {
                   </label>
                 </span>
                 <div class="slds-button-group inline-group" role="group">
-                  <button class="slds-button slds-button_neutral" v-on:click="listMetadataList">
+                  <button class="slds-button slds-button_neutral" disabled="disabled" v-on:click="listMetadataList">
                     <svg class="slds-button__icon slds-button__icon_left">
                       <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#download"></use>
                     </svg>Export</button>
-                  <button class="slds-button slds-button_neutral" v-on:click="listMetadataList">
+                  <button class="slds-button slds-button_neutral" disabled="disabled" v-on:click="listMetadataList">
                     <svg class="slds-button__icon slds-button__icon_left">
                       <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#upload"></use>
                     </svg>Import</button>
@@ -326,7 +329,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
                     <div class="slds-truncate">{{ row.ObjectLabel }}</div>
                   </td>
                   <td>
-                    <div class="slds-truncate">{{ (search.type=='all') ? row.type : (row.ObjectLabel || row.type) }}</div>
+                    <div class="slds-truncate">{{ (search.type=='all') ? metadataTypes[row.type] : (row.ObjectLabel || metadataTypes[row.type]) }}</div>
                   </td>
                 </tr>
               </tbody>

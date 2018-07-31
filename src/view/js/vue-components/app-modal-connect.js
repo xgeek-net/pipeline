@@ -29,6 +29,7 @@ Vue.component('app-modal-connect', {
         params['accessToken'] = data.accessToken;
         params['refreshToken'] = data.refreshToken;
         params['instanceUrl'] = data.instanceUrl;
+        params['language'] = data.language;
         params['loginUrl'] = data.loginUrl;
         params['fullname'] = data.fullname;
         params['orgType'] = data.orgType;

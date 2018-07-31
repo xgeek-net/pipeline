@@ -357,12 +357,22 @@ class Connect {
         folders = result;
         return sfdcApi.getMetadataDetailList(metadataList, folders);
       })
-      .then(function(result) {
+      .then(function(components) {
+        // Set language label
+        const labels = sfdcApi.getComponentLabels(connection.language);
+        let result = { components : components, types : {} };
+        for(let type in result.components) {
+          // Remove blank metadata component
+          if(result.components[type].length == 0) {
+            delete result.components[type];
+            continue;
+          }
+          result.types[type] = (labels.hasOwnProperty(type)) ? labels[type] : type;
+        }
         return callback(null, result);
       })
       .catch(function(err){
         console.error('[ERROR]', err);
-        Raven.captureException(err);
         return callback(err);
       });
     }catch(err) {
