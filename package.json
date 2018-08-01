@@ -20,13 +20,13 @@
     "url": "^0.11.0",
     "uuid": "^3.2.1"
   },
-  "keywords": [],
+  "keywords": ["Pipeline", "Salesforce", "Force", "Metadata", "Deploy", "Changeset"],
   "author": "Xiaoan Lin<admin@xgeek.net>",
   "license": "MIT",
   "scripts": {
     "start": "electron ./src",
-    "build-macOS": "electron-packager ./src --out ./build Pipeline --platform=darwin --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
-    "build-windows": "electron-packager ./src --out ./build Pipeline --platform=win32 --arch=x64 --overwrite --icon=./src/img/app-icon.icns",
+    "build-mac": "electron-packager ./src --out ./build Pipeline --platform=darwin --arch=x64 --overwrite --icon=./src/view/img/icon.icns",
+    "build-windows": "electron-packager ./src --out ./build Pipeline --platform=win32 --arch=x64 --overwrite --icon=./src/view/img/icon.icns",
     "build": "electron-packager ./src Pipeline --all --out ./build --overwrite --icon=./src/img/app-icon.icns"
   },
   "devDependencies": {
