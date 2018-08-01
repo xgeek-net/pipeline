@@ -496,7 +496,7 @@ class BitbucketApi {
       const metadata = new Metadata();
       metadata.makeDir(self.pipeline.id, filePath)
       .then(function(localPath) {
-        const fileContentUri = path.join('repositories', username, reposName, 'src', sha, filePath + '?raw');
+        const fileContentUri = path.join('repositories', username, reposName, 'src', sha, encodeURIComponent(filePath) + '?raw');
         self.apiCall(fileContentUri, {})
         .on('response', function(response) {
           if(utils.isBlank(response.statusCode) || response.statusCode != '200') {
