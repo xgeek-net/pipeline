@@ -3,6 +3,8 @@
  */
 const electron = require('electron');
 const moment = require('moment');
+const path = require('path');
+const os = require('os');
 
 const utils = {
 
@@ -12,7 +14,8 @@ const utils = {
       width: display.size.width * 0.75, 
       height: display.size.height * 0.85, 
       x : display.size.width * 0.125, 
-      y : display.size.height * 0.075
+      y : display.size.height * 0.075,
+      icon : path.join(__dirname, '../../build/icons/256x256.png')
     };
   },
 
@@ -22,7 +25,8 @@ const utils = {
       width: display.size.width * 0.5, 
       height: display.size.height * 0.75, 
       x : display.size.width * 0.25, 
-      y : display.size.height * 0.125
+      y : display.size.height * 0.125,
+      icon : path.join(__dirname, '../../build/icons/256x256.png')
     };
   },
 

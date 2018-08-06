@@ -4,6 +4,8 @@ const shell = electron.shell;
 const ipc = electron.ipcMain;
 const BrowserWindow = electron.BrowserWindow;
 
+if (require('electron-squirrel-startup')) app.quit();
+
 const events = require('events');
 const eventEmitter = new events.EventEmitter();
 eventEmitter.setMaxListeners(15);
@@ -36,7 +38,9 @@ function createWindow() {
     slashes: true
   }));
   // Debug Mode
-  mainWindow.webContents.openDevTools();
+  if(process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
 
   // Open link with target="_blank" on brower
   mainWindow.webContents.on('new-window', (event, url) => {

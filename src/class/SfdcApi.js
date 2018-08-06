@@ -4,7 +4,8 @@ const rimraf = require('rimraf');
 const jsforce = require('jsforce');
 const async = require('async');
 const path = require('path');
-const extract = require('extract-zip');
+//const extract = require('extract-zip');
+const DecompressZip = require('decompress-zip');
 
 const utils = require('./Utils');
 //const Metadata = require('./Metadata');
@@ -419,15 +420,28 @@ class SfdcApi {
           types: pipeline.targetTypes
         }
       });
+      const Raven = require('raven');
       retrieveResult.complete(function(err, result) {
         if(err) return reject(err);
         if(result.success=='true') {
           self.logger('[SFDC] Retrieve metadata Done.');
-          extract(packagePath, {dir: metaPath}, function (err) {
+          //self.logger('[SFDC] packagePath DecompressZip .' + packagePath + ' > ' + metaPath + ' > ' + (fs.existsSync(packagePath)));
+          if(!fs.existsSync(packagePath)) return reject(new Error('Metadata zip not found'));
+          const unzipper = new DecompressZip(packagePath)
+          unzipper.on('error', function (err) {
+            //self.logger('[SFDC] extract err.' + err);
             if(err) return reject(err);
-            // Remove src.zip
+          });
+          unzipper.on('extract', function (log) {
+            //self.logger('[SFDC]Finished extracting' + log);
             rimraf(packagePath, function(){});
             return resolve(true);
+          });
+          unzipper.extract({
+            path: metaPath,
+            filter: function (file) {
+              return file.type !== "SymbolicLink";
+            }
           });
         } else {
           return reject(new Error('Retrieve metadata failed'));
