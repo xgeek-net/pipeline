@@ -1,0 +1,20 @@
+{
+  "name": "Pipeline",
+  "version": "0.1.0-beta",
+  "authors": [
+    "Xiaoan Lin <admin@xgeek.net>"
+  ],
+  "description": "Be less busy, less mistake in Salesforce metadata deploy",
+  "license": "MIT",
+  "private": false,
+  "ignore": [
+    "**/.*",
+    "components"
+  ],
+  "dependencies": {
+    "salesforce-lightning-design-system": "^2.3.1",
+    "vue": "^2.5.16",
+    "font-awesome": "^5.0.13",
+    "moment": "^2.22.2"
+  }
+}
