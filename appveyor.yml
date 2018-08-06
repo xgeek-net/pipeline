@@ -1,0 +1,63 @@
+version: '{branch}-{build}'
+environment:
+  CLIENT_SECRET:
+    secure: gMz4Rk7Fiu9R18B9eAG0LCNCg8gFXnwRcjpSEv4Gezx2lG7OOyxI5pr/Hb1acnKvPrwYnTvWRPrId7PQJLYZvzqvllDC6cwjZnu8sEzDXaxurAI0rlMkdh6JIC8uHUT4YoDajtiUK25XnlyrCegWwa1FidoYcgBVHzjWyew8X1RFQxugI73LYqWZy9pqoEvQthTu/QIkS8Mp3d6832C4PJdM3p7Ux/xThySJHKWhDmOhkC7XdSezHWoIs1r5rtcjAB5x9aSOa+9hTbpTKEOdLZERikIQk0xOgw28tTZyHpbyabrr50ekTvv4opvvYqWQwLV83w9ihrH5Lu1CbZsrL/3jc2n/iTd7qPJDZOLrDqIy767MdomNrpdoezyXT7zPxnbeX4DryRwCX/TrS6m18nqPWgYDuKiY/dd2eBPv7IaD5G/2WzzXDrxlBDO2Xm6UeY3iHilWV2jWGUbZETkLgeeL0HxQ9bwcXijqbPjcQMkjQ5YhuiVOnNRdqmg+TXfJZXDEpdxKNr94ie6k0cXZc5fVTuHYl+wYXMjnjQG0RfvCNtH2UYxVFVHTkfj2ivGx2cRFs73ws7YMJPGRJ/F1OqSmmQdHAboZjWmO8VhCz09DZrgu/y+0g0pCNw6T01jvHICQus9WdjAPvtcPyZdgj4XsrvbnB/65820IWn7/c5sg7ubrxghVo1FCXDqtLR5BB/DWh06YGHnf4m7Y/dzjxuQvAWiwfkXiZ1MKXFp9PPnnxxm1TCv9BFgJt6Z9yC5Q3mKfkbd+YRS85NLziS0Nxr/B+WiYVm0VCIgwNGUZw0Wk6nO08E8lwr7xPJgihn7zAd2RsW14OPQbgtQ0yU1TYMjdqmUokdiW8KRJSq+sS4pHRY/Xb/n/6V/iuJIzvZ8MJusPUsU5IaxEB/lCRgyNTr0FR8zUasdsacY0HBF62DyZoS0slmUP0mLvT3g+0sEvMM8IIT9QC547fjgBRcqtIG4E1G3LIkAItcAVyuAhAZwfAC060gszr3OoMUg9vRlJNVwm5bQMKUSwAkdwCvNMvTuBuYEAh3jAzUVmwqxDOg0PUAC4AWgW322RDS6WFZyyO1BPmHIX306JaUkYcopoUE8lvgMB9DBBpZmNJ4v3dU6tm84/MnT1ndPlshyCdVS3khIbrZG3ad6gLiVeVK6sS+rR/3sH9sKOtmYRzNpfT7IQv86WVZpT71PWFQNh8qmPBnrEmhbxtHsyzz/+/47u+AWLdEpi40auo5aZvxH1hNCiK3R0lO++LMAIBnZQ2IjFjADvYx01njw2S648+uw6/6M6PXWPbehWeBGC6vkpj92S5/qsD9uXGGkv0k39pTakkylHZEvMTV+DF3U3erZ4pCkbSFmWiOgSFYJAvo0pMo5OL81Xg9lKEtoJNFBUR0VR1y/Fnoc0NzB9wEmooKLIk6kQsnauWMGJlchHHNPRlC9x+hVcXqg6QQH+p0kXCma2aXo3LZciEhmQagWIrq3Ciz4mbYZQVfozUI6ZuYtl71tj+OskbSDNQPJ0/oxJTbu9/L2pusivhvk9kkHX4QQslqWjuYGPpJVTdFiVgS+IBZ2vXArVkKA6xyTSSOj5Ffl/YHeukRCHs7VSBPAfdHkRW1y7H5Y2G3O/EDpJX63rbA0rpUUl62XNf9X4ny8G4KzSIyWho4lbQ6WTcQQtAFjsiulrx81QiLT2dlnvQWt6AgXjRhwNa5mdSC3aM8XNswdQvxNa6Yu3f1eTyDcAZY0hOb5bJAIx7Bb5UG6KO8JrKOtl46nDY2qBFyJoEaFLi0v0sbxZIz/xBJfyqxFw94k32XLaHLkA4At3biE/rPXuBMXzLpwGaNLH4ushjL2E6sKLtEAJAyBdzO65JIhbUOZMIc8rLl6iqd4Z8rRZPoyqqkY3IT18fIN5al4YDtHn4T+4iGlAr4aPvPIiGw/SLpcE8+qKLJ2MEsutuMCZK3ZiY3o=
+  matrix:
+  - nodejs_version: "10.8.0"
+    
+platform:
+  - x86
+
+cache:
+  - node_modules
+
+skip_tags: true
+
+install:
+  - ps: $env:package_version = (Get-Content -Raw -Path package.json | ConvertFrom-Json).version
+  - ps: $env:package_name = (Get-Content -Raw -Path package.json | ConvertFrom-Json).name
+  - ps: Update-AppveyorBuild -Version "$env:package_version"
+  - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version)
+  - ps: echo "version $env:package_version {version}"
+  - node --version
+  - git reset --hard HEAD
+
+  # Update NPM
+  - npm install -g npm
+  - npm --version
+
+  # Update node-gyp
+  - npm install -g node-gyp
+
+  - npm install
+
+  # Install build tools
+  - npm install -g bower
+  - bower --version
+
+  # Install bower packages
+  - bower install
+
+  # Create client.js
+  - ps: node build/appveyor.js "$env:CLIENT_SECRET"
+
+build_script:
+  - node --version
+  - npm --version
+  - npm run build:win
+
+artifacts:
+  - path: build\dist\squirrel-windows-ia32\*.exe
+  - path: build\dist\squirrel-windows-ia32\*.nupkg
+
+deploy:
+- provider: GitHub
+  appveyor_repo_tag: true
+  release: $(appveyor_build_version)
+  auth_token:
+    secure: 7t4/WdKUp1Mp1sNMRcBZVOlUw/8a7ZFSYFf6huQFOMdEH+1DLx7hOGzo/S+2gTU1
+  repository: xgeek-net/pipeline
+  prerelease: false
+  force_update: true
+  on:
+    branch: master

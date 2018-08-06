@@ -1,0 +1,47 @@
+
+{
+  "appId": "com.xgeek.pipeline",
+  "productName": "Pipeline",
+  "directories": {
+    "output": "./build/dist"
+  },
+  "files": [
+    "**/*",
+    "!LICENSE",
+    "!README.md",
+    "!.gitignore",
+    "!package.json",
+    "!package-lock.json",
+    "!node_modules/electron-builder/*",
+    "!node_modules/electron-builder-squirrel-windows/*",
+    "!node_modules/electron-packager/*",
+    "!node_modules/electron-prebuilt/*",
+    "!src/view/bower.json",
+    "!src/view/.bowerrc",
+    "!src/view/components/font-awesome/advanced-options/*",
+    "!src/view/components/font-awesome/svg-with-js/*",
+    "!src/view/components/font-awesome/use-on-desktop/*",
+    "!src/view/components/salesforce-lightning-design-system/design-tokens/*",
+    "!src/view/components/salesforce-lightning-design-system/scss/*",
+    "!src/view/components/salesforce-lightning-design-system/ui/*",
+    "!src/view/components/vue/benchmarks/*",
+    "!src/view/components/vue/examples/*",
+    "!src/view/components/vue/packages/*",
+    "!src/view/components/vue/src/*",
+    "!src/view/components/vue/test/*",
+    "!src/view/components/vue/types/*"
+  ],
+  "linux": {},
+  "mac" : {
+    "category": "public.app-category.developer-tools",
+    "target": [
+      "dmg"
+    ]
+  },
+  "win" : {
+    "target": [
+      "squirrel"
+    ],
+    "artifactName" : "Pipeline-${version}.${ext}"
+  }
+}

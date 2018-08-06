@@ -1,6 +1,19 @@
 # Pipeline
 Be less busy, less mistake in Salesforce metadata deploy
 
+| Platform | Status |
+| --- | --- |
+OS X | [![Build Status](https://travis-ci.org/xgeek-net/pipeline.svg)](https://travis-ci.org/xgeek-net/pipeline) |
+Windows | [![Build status](https://ci.appveyor.com/api/projects/status/vv0meml49a4lps3y?svg=true)](https://ci.appveyor.com/project/xgeek-net/pipeline) |
+
+## Installation
+
+Download and run from the [Releases](https://github.com/xgeek-net/pipeline/releases)
+
+## Issues
+
+Feel free to report issue at [Issuse](https://github.com/xgeek-net/pipeline)
+
 ## Usage
 
 ### Connections (Github, Bitbucket, Salesforce)

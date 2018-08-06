@@ -1,0 +1,39 @@
+sudo: required
+dist: trusty
+language: node_js
+os:
+  - osx
+cache: 
+  directories:
+    - node_modules
+env:
+  - NODE_VERSION="10.8.0"
+before_install:
+  - git clone https://github.com/xgeek-net/pipeline-release.git /tmp/.nvm
+  - nvm install $NODE_VERSION
+  - nvm use --delete-prefix $NODE_VERSION
+  - node --version
+  - echo $CLIENT_SECRET | base64 -D > src/config/client.js
+install:
+  - npm install
+#before_script:
+script:
+  - npm test
+before_deploy:
+  - brew update
+  - brew install bower
+  - brew install makensis
+  - bower install
+  - npm run archive:mac
+deploy:
+  provider: releases
+  api_key:
+    secure: ba8pvNLRmvxI8exeGzDVdRSU7oZ91JfYAXBb5XDyBIu3oQ5hWBWDT0o2dM9XyLMwM3lSbtJD+Tqprvi0o9xpk6ruJqThh6vbboE/TOSWZS8lWJUVwvWxDB/ldo6CJq45fFTJPj/WxTtkN5XszTmIUU/1YpaicJ5KsjKqNGh+IVEeCJ9kd8lG6PKI2JOuHbVr9VmxQcHLRAOMnCXCT+kg09jYdnJjpQqz36IyoNwYio/92IZoPpH+oWxoXRSQLiV9sXBEhyz6Zz/yOEftOoEdOpenBy9T4PWVjHNtidqjeRj6RhiehDu7VKyd0iVZRvycW9DYaDGY0KMKlfWiPlaGrqZM4WsrvciiOTvAN2xBwD4Ro78uUoEvx1icnBAmxtYU3EL2HiZYaQWABr7Aksg6z1pbABXimxBJ7nuOGd+ORbjNMjJUi051r4r8YIat95vBVy5C0ZNSdXrfg5tOQbPUVOObzPtz7RHHe0fuBx2ZzxWHCZvh2KtWdgN5/U+aHOv1Lk4reDghTqXg25uQdB1sClBxAz3xJDA6ZNVGzaiTtjutobOBDomHQt+FMx7A00CVgMjEhFQRrkAxWA5CEaMXJjRKTGJ0BycX2do387+hNCnJFd2K+Qy2gxkRaYbdndlNPmEkW4JIYsWNc4f2j9I4+bCEd24KoQrASN/VlIJUDv4=
+  file:
+    - build/dist/Pipeline-$TRAVIS_TAG-mac.zip
+    - build/dist/Pipeline-$TRAVIS_TAG.dmg
+  skip_cleanup: true
+  on:
+    repo: xgeek-net/pipeline
+    tags: true
+    all_branches: true

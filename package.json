@@ -1,0 +1,60 @@
+{
+  "name": "pipeline",
+  "description": "Be less busy, less mistake in Salesforce metadata deploy",
+  "version": "0.1.0-beta",
+  "private": false,
+  "main": "src/main.js",
+  "dependencies": {
+    "archiver": "^2.1.1",
+    "async": "^2.6.1",
+    "decompress-zip": "^0.3.1",
+    "electron-squirrel-startup": "^1.0.0",
+    "events": "^3.0.0",
+    "github-api": "^3.0.0",
+    "jsforce": "^1.8.4",
+    "make-dir": "^1.3.0",
+    "moment": "^2.22.2",
+    "os": "^0.1.1",
+    "querystring": "^0.2.0",
+    "raven": "^2.6.3",
+    "request": "^2.87.0",
+    "rimraf": "^2.6.2",
+    "sfdc-generate-package": "^2.2.1",
+    "url": "^0.11.0",
+    "uuid": "^3.3.2"
+  },
+  "keywords": [
+    "Pipeline",
+    "Salesforce",
+    "Force.com",
+    "Metadata",
+    "Deploy",
+    "Changeset"
+  ],
+  "author": "Xiaoan Lin<admin@xgeek.net>",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron ./src",
+    "test": "echo \"Warning: no test specified\"",
+    "clean": "rm -rf ./build/dist",
+    "clean:mac": "rm -rf ./build/dist/mac",
+    "clean:win": "rm -rf ./build/dist/win && rm -rf ./build/dist/win-unpacked && rm -rf ./build/dist/squirrel-windows",
+    "pack": "npm run pack:mac && npm run build:win",
+    "pack:mac": "npm run clean:mac && electron-packager . \"Pipeline\" --out=./build/dist/mac --platform=darwin --arch=x64 --icon=./build/icon.icns",
+    "pack:win": "npm run clean:win && electron-packager . \"Pipeline\" --out=./build/dist/win --platform=win32 --arch=ia32 --icon=./build/icon.ico",
+    "build": "npm run build:mac && npm run build:win",
+    "build:mac": "npm run pack:mac && electron-builder \"./build/dist/mac/Pipeline-darwin-x64/Pipeline.app\" --platform=darwin --config=builder.json",
+    "build:win": "npm run pack:win && electron-builder \"./build/dist/win/Pipeline-win32-ia32\" --platform=win32 --config=builder.json",
+    "archive": "npm run archive:mac && npm run archive:win",
+    "archive:mac": "npm run build:mac && zip -j \"./build/dist/Pipeline-${npm_package_version}-mac.zip\" \"./build/dist/Pipeline-${npm_package_version}.dmg\" && npm run clean:mac",
+    "archive:win": "npm run build:win && zip -j \"./build/dist/Pipeline-${npm_package_version}-win.zip\" \"./build/dist/squirrel-windows/Pipeline-${npm_package_version}.exe\" && npm run clean:win"
+  },
+  "devDependencies": {
+    "app-builder-lib": "^20.27.0",
+    "electron": "^2.0.6",
+    "electron-builder": "^20.26.1",
+    "electron-builder-squirrel-windows": "^20.27.0",
+    "electron-packager": "^12.0.2",
+    "electron-prebuilt": "^1.4.13"
+  }
+}
