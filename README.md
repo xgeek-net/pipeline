@@ -3,8 +3,8 @@ Be less busy, less mistake in Salesforce metadata deploy
 
 | Platform | Status |
 | --- | --- |
-OS X | [![Build Status](https://travis-ci.org/joeferraro/MavensMate-Desktop.svg)](https://travis-ci.org/xgeek-net/pipeline-release) |
-Windows | [![Build status](https://ci.appveyor.com/api/projects/status/u0i8yx97wuwylp88?svg=true)](https://travis-ci.org/xgeek-net/pipeline-release) |
+OS X | [![Build Status](https://travis-ci.org/xgeek-net/pipeline.svg)](https://travis-ci.org/xgeek-net/pipeline) |
+Windows | [![Build status](https://ci.appveyor.com/api/projects/status/vv0meml49a4lps3y?svg=true)](https://ci.appveyor.com/project/xgeek-net/pipeline) |
 
 ## Installation
 
