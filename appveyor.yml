@@ -11,6 +11,7 @@ platform:
 cache:
   - node_modules
 
+skip_branch_with_pr: true
 skip_tags: true
 
 install:
@@ -61,3 +62,7 @@ deploy:
   force_update: true
   on:
     branch: master
+    
+branches:
+  only:
+  - master
