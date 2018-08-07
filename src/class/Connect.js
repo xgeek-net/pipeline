@@ -334,7 +334,7 @@ class Connect {
   getMetadataList(ev, arg) {
     const self = this;
     const callback = function(err, result) {
-      ev.sender.send('sfdc-metadata-list-callback',err, result);
+      ev.sender.send('sfdc-metadata-list-callback',utils.serialize(err), result);
     }
     try{
       let metadataList = [];

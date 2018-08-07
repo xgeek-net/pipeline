@@ -17,6 +17,7 @@ const Setting = require('./class/Setting');
 const Connect = require('./class/Connect');
 const Pipeline = require('./class/Pipeline');
 const utils = require('./class/Utils');
+const appMenu = require('./class/AppMenu');
 const setting = new Setting();
 const connect = new Connect();
 const pipeline = new Pipeline();
@@ -26,7 +27,6 @@ const CLIENT = require('./config/client');
 const Raven = require('raven');
 Raven.config(CLIENT.RAVEN_CLIENT_ID).install();
 
-// メインウィンドウ
 let mainWindow;
 
 function createWindow() {
@@ -56,20 +56,18 @@ function createWindow() {
     let { width, height } = mainWindow.getBounds();
     setting.set('windowBounds', { width, height });
   });
+  // App Menu
+  appMenu.initMenu();
 }
 
 app.on('ready', createWindow);
 
-// 全てのウィンドウが閉じたときの処理
 app.on('window-all-closed', () => {
-  // macOSのとき以外はアプリケーションを終了させます
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-// アプリケーションがアクティブになった時の処理(Macだと、Dockがクリックされた時）
 app.on('activate', () => {
-  // メインウィンドウが消えている場合は再度メインウィンドウを作成する
   if (mainWindow === null) {
     createWindow();
   }
