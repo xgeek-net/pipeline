@@ -21,7 +21,7 @@ class Pipeline {
 
   savePipeline(ev, arg) {
     const callback = function(err, result) {
-      ev.sender.send('data-save-pipeline-callback',err, result);
+      ev.sender.send('data-save-pipeline-callback',utils.serialize(err), result);
     }
     try{
       const self = this;
@@ -61,7 +61,7 @@ class Pipeline {
    */
   clonePipeline(ev, arg) {
     const callback = function(err, result) {
-      ev.sender.send('data-clone-pipeline-callback',err, result);
+      ev.sender.send('data-clone-pipeline-callback',utils.serialize(err), result);
     }
     try{
       let pipelines = this.storage.getAll({ cache : false }); 
@@ -94,7 +94,7 @@ class Pipeline {
   removePipeline(ev, arg) {
     const self = this;
     const callback = function(err, result) {
-      ev.sender.send('data-remove-pipeline-callback',err, result);
+      ev.sender.send('data-remove-pipeline-callback',utils.serialize(err), result);
     }
     try{
       let pipelines = self.storage.getAll({ cache : false }); 
@@ -150,7 +150,7 @@ class Pipeline {
 
   getPipelines(ev, arg) {
     const callback = function(err, result) {
-      ev.sender.send('data-pipelines-callback',err, result);
+      ev.sender.send('data-pipelines-callback',utils.serialize(err), result);
     }
     try{
       let result = this.storage.getAll({ cache : false }); 
@@ -170,7 +170,7 @@ class Pipeline {
    */
   getPipelineLog(ev, arg) {
     const callback = function(err, result) {
-      ev.sender.send('data-pipeline-log-callback',err, result);
+      ev.sender.send('data-pipeline-log-callback',utils.serialize(err), result);
     }
     try{
       let index = 1;
@@ -203,7 +203,7 @@ class Pipeline {
   runPipeline(ev, arg) {
     const self = this;
     const callback = function(err, result) {
-      ev.sender.send('pipeline-run-callback',err, result);
+      ev.sender.send('pipeline-run-callback',utils.serialize(err), result);
     }
     const processing = function() {
       ev.sender.send('pipeline-run-callback',null, { type : 'process' });

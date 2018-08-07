@@ -47,13 +47,13 @@ class SfdcApi {
       if(!self.conn) return reject(new Error('SFDC Connect ERROR!'));
       self.conn.identity(function(err, res) {
         // console.log('>>> identity ', err, res);
-        // language: 'en_US',
-        // locale: 'ja_JP',
         if (err) {
-          if(err.errorCode.indexOf('INVALID_SESSION_ID') >= 0 ||
-            err.errorCode.indexOf('INVALID_LOGIN') >= 0 || 
-            err.errorCode.indexOf('INVALID_OPERATION_WITH_EXPIRED_PASSWORD') >= 0 || 
-            err.name.indexOf('invalid_grant') >= 0
+          const errorCode = err.errorCode || '';
+          const errorName = err.name || '';
+          if(errorCode.indexOf('INVALID_SESSION_ID') >= 0 ||
+            errorCode.indexOf('INVALID_LOGIN') >= 0 || 
+            errorCode.indexOf('INVALID_OPERATION_WITH_EXPIRED_PASSWORD') >= 0 || 
+            errorName.indexOf('invalid_grant') >= 0
           ) {
             //console.log('Refresh Token', self.conn.refreshToken);
             self.conn.oauth2.refreshToken(self.conn.refreshToken, function(err, ret) {

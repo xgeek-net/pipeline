@@ -145,7 +145,12 @@ const utils = {
       res[key] = obj[key];
     }
     return res;
-  } 
+  },
+  
+  serialize : function(err) {
+    if(err instanceof Error)  return err.toString();
+    return err;
+  }
 }
 
 module.exports = utils;
