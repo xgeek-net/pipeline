@@ -4,7 +4,6 @@
 const electron = require('electron');
 const moment = require('moment');
 const path = require('path');
-const os = require('os');
 
 const utils = {
 
