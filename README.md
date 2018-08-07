@@ -5,10 +5,10 @@ Be less busy, less mistake in Salesforce metadata deploy.
 
 
 ## Overview
-Pipeline is a metadata deploy app for Salesforce, supports:
-・Quickly making Changeset from Excel/CSV, in 10 seconds or less! (Coming soon)
-・No dependencies on Salesforce Org, deploying metadata between different organizations.
-・Deploying metadata base on git flow, pull from Github/Bitbucket Branchs, Pull Requests and Commits.
+Pipeline is a metadata deploy app for Salesforce, supports:<br /><br />
+・Quickly making Changeset from Excel/CSV, in 10 seconds or less! (Coming soon)<br />
+・No dependencies on Salesforce Org, deploying metadata between different organizations.<br />
+・Deploying metadata base on git flow, pull from Github/Bitbucket Branchs, Pull Requests and Commits.<br />
 
 ## Installation
 
