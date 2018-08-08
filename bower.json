@@ -1,13 +1,10 @@
 {
-  "name": "Salesforce Delivery Tool",
-  "version": "0.1.0",
+  "name": "Pipeline",
+  "version": "0.1.0-beta",
   "authors": [
     "Xiaoan Lin <admin@xgeek.net>"
   ],
-  "description": "The best deploy tool for Salesforce developer.",
-  "keywords": [
-    "Salesforce Deploy"
-  ],
+  "description": "Be less busy, less mistake in Salesforce metadata deploy",
   "license": "MIT",
   "private": false,
   "ignore": [
