@@ -23,9 +23,11 @@ const connect = new Connect();
 const pipeline = new Pipeline();
 
 // Raven
-const CLIENT = require('./config/client');
-const Raven = require('raven');
-Raven.config(CLIENT.RAVEN_CLIENT_ID).install();
+if(process.env.NODE_ENV !== 'development') {
+  const CLIENT = require('./config/client');
+  const Raven = require('raven');
+  Raven.config(CLIENT.RAVEN_CLIENT_ID).install();
+}
 
 let mainWindow;
 
