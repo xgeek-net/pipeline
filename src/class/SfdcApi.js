@@ -63,6 +63,9 @@ class SfdcApi {
             });
           }
         } else {
+          // Set Default value
+          self.conn.metadata.pollTimeout = 300000; // 5 mins
+
           return resolve(true);
         }
       });
@@ -425,29 +428,54 @@ class SfdcApi {
         if(err) return reject(err);
         if(result.success=='true') {
           self.logger('[SFDC] Retrieve metadata Done.');
-          //self.logger('[SFDC] packagePath DecompressZip .' + packagePath + ' > ' + metaPath + ' > ' + (fs.existsSync(packagePath)));
+          // self.logger('[SFDC] packagePath DecompressZip .' + packagePath + ' > ' + metaPath + ' > ' + (fs.statSync(packagePath).size));
           if(!fs.existsSync(packagePath)) return reject(new Error('Metadata zip not found'));
-          const unzipper = new DecompressZip(packagePath)
-          unzipper.on('error', function (err) {
-            //self.logger('[SFDC] extract err.' + err);
+          self.extractMetaZip(packagePath, metaPath, 0, function(err, success) {
             if(err) return reject(err);
-          });
-          unzipper.on('extract', function (log) {
-            //self.logger('[SFDC]Finished extracting' + log);
-            rimraf(packagePath, function(){});
-            return resolve(true);
-          });
-          unzipper.extract({
-            path: metaPath,
-            filter: function (file) {
-              return file.type !== "SymbolicLink";
-            }
+            return resolve(success);
           });
         } else {
           return reject(new Error('Retrieve metadata failed'));
         }
       });
       retrieveResult.stream().pipe(zipstream);
+    });
+  }
+
+  // Extract metadata zip file to src folder
+  // Metadata api may zip file cost sevaral ms
+  extractMetaZip(sourceZipPath, targetPath, presize, callback) {
+    const self = this;
+    const fileinfo = fs.statSync(sourceZipPath);
+    if(fileinfo.size == 0) {
+      // Is written
+      return setTimeout(function(){
+        self.extractMetaZip(sourceZipPath, targetPath, presize, callback)
+      }, 500);
+    }
+    if(presize !== fileinfo.size) {
+      // Maybe written
+      presize = fileinfo.size;
+      return setTimeout(function(){
+        self.extractMetaZip(sourceZipPath, targetPath, presize, callback)
+      }, 500);
+    }
+    // Ready to extract
+    const unzipper = new DecompressZip(sourceZipPath)
+    unzipper.on('error', function (err) {
+      // console.log('[SFDC] extract err.' + err);
+      if(err) return callback(err);
+    });
+    unzipper.on('extract', function (log) {
+      // console.log('[SFDC]Finished extracting' + log);
+      rimraf(sourceZipPath, function(){});
+      return callback(null, true);
+    });
+    unzipper.extract({
+      path: targetPath,
+      filter: function (file) {
+        return file.type !== "SymbolicLink";
+      }
     });
   }
   
