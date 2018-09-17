@@ -14,8 +14,15 @@ Vue.component('app-newpipeline-detail-sfdc', {
       },
       metadataMap : null,
       metadataTypes : null,
+      metadataTypeOptions : null,
       metadataList : null,
       metaChecked : 0,
+      hasLabelTypes : ['all', 'CustomField', 'CustomObject', 'CustomTab', 'CompactLayout', 'Dashboard', 'Document', 
+                      'EmailTemplate', 'Group', 'ListView', 'RecordType', 'Report', 'Role', 'SharingReason', 'WorkflowAlert'],
+      hasObjectTypes : ['all', 'BusinessProcess', 'CustomField', 'CustomMetadata', 'CompactLayout', 'FieldSet', 'QuickAction', 'WebLink', 'ListView', 'Layout', 
+                      'RecordType', 'SharingReason', 'ValidationRule', 'WorkflowAlert', 'WorkflowRule', 'WorkflowFieldUpdate',
+                      // Folders
+                      'Dashboard', 'Report', 'EmailTemplate', 'Document'],
       allChecked : false
     }
   },
@@ -35,10 +42,11 @@ Vue.component('app-newpipeline-detail-sfdc', {
      */
     reload : function() {
       const self = this;
-      self.pipeline = { type : null, name : '' };
+      self.pipeline = { type : null, name : '', targetTypes : [] };
       self.search = { type : 'all', keyword : null };
       self.metadataMap = null;
       self.metadataTypes = null;
+      self.metadataTypeOptions = null;
       self.metadataList = null;
       self.metaChecked = 0;
 
@@ -56,9 +64,17 @@ Vue.component('app-newpipeline-detail-sfdc', {
       self.pipeline.targetTypes = [];
       for(let key in self.metadataMap) {
         let members = [];
+        let folders = [];
         for(let meta of self.metadataMap[key]) {
           if(meta.MetaChecked == true) {
-            const memberName = (meta.Object) ? meta.Object + '.' + meta.fullName : meta.fullName;
+            // Add Folder
+            if(['Dashboard', 'Report', 'EmailTemplate', 'Document'].indexOf(meta.type) >= 0
+              && meta.folder && folders.indexOf(meta.folder)
+            ) {
+              folders.push(meta.folder);
+              members.push(meta.folder);
+            }
+            const memberName = (meta.object) ? meta.object + '.' + meta.fullName : meta.fullName;
             members.push(memberName);
           }
         }
@@ -81,11 +97,12 @@ Vue.component('app-newpipeline-detail-sfdc', {
         { connection : self.connection }, 
         function(err, result) {
           // { components : components, types : {} }
-          //console.log('>>> result ', result);
+          console.log('>>> result ', result);
           app.hideLoading();
           if(err) return app.handleError(err);
           self.metadataMap = result.components;
           self.metadataTypes = result.types;
+          self.metadataTypeOptions = self.sortByLabel(result.types);
           self.metaChecked = 0;
           if(result && self.pipeline.targetTypes.length > 0) {
             self.initMetaCheck();
@@ -93,6 +110,23 @@ Vue.component('app-newpipeline-detail-sfdc', {
           self.searchMetadata();
         }
       );
+    },
+
+    // Sort type by label
+    sortByLabel : function(metadataTypes) {
+      if(metadataTypes == null) return null;
+      let types = [];
+      for(mtype in metadataTypes) {
+        types.push({ value : mtype, label : metadataTypes[mtype] });
+      }
+      types = types.sort(function(a, b){
+        var x = a.label;
+        var y = b.label;
+        if (x > y) return 1;
+        if (x < y) return -1;
+        return 0;
+      });
+      return types;
     },
     // Check on edit pipeline
     initMetaCheck : function() {
@@ -104,7 +138,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
       }
       for(let key in self.metadataMap) {
         for(let meta of self.metadataMap[key]) {
-          const memberName = (meta.Object) ? meta.Object + '.' + meta.fullName : meta.fullName;
+          const memberName = (meta.object) ? meta.object + '.' + meta.fullName : meta.fullName;
           if(types.hasOwnProperty(key) && types[key].indexOf(memberName) >= 0) {
             // Check target component
             meta['MetaChecked'] = true;
@@ -216,27 +250,27 @@ Vue.component('app-newpipeline-detail-sfdc', {
   },
   template: `
     <article class="slds-card new-pipeline-detail-sfdc">
-      <div class="slds-card__body slds-card__body_inner slds-m-around_small">
-        <div class="slds-form slds-form_horizontal">
+      <div class="slds-card__body slds-card__body_inner slds-m-top_small slds-m-bottom_small">
         <div class="slds-wrap slds-grid">
-            <div class="slds-size_1-of-3">
-              <div class="slds-form-element">
-                <label class="slds-form-element__label slds-p-right_small" for="ipt-pipeline-name">Pipeline Name</label>
-                <div class="slds-form-element__control">
-                  <input type="text" id="ipt-pipeline-name" v-model="pipeline.name" class="slds-input input-small" placeholder="Pipeline Name" />
-                </div>
-              </div><!-- .slds-form-element -->
-            </div><!-- .slds-size_1-of-3 -->  
-          </div><!-- .slds-grid -->  
+          <div class="md-wrap">
+            <div class="slds-form-element slds-grid">
+              <label class="slds-form-element__label slds-size_3-of-12" for="ipt-pipeline-name">Pipeline Name</label>
+              <div class="slds-form-element__control slds-size_9-of-12">
+                <input type="text" id="ipt-pipeline-name" v-model="pipeline.name" class="slds-input input-small" placeholder="Pipeline Name" />
+              </div>
+            </div><!-- .slds-form-element -->
+          </div><!-- .slds-size_1-of-3 -->  
+        </div><!-- .slds-grid -->  
+        <div class="slds-form slds-form_horizontal">
           <div v-if="metadataMap!=null" class="slds-wrap slds-grid pr10 mt1">
             <div class="slds-size_1-of-3">
               <div class="slds-form-element">
-                <label class="slds-form-element__label slds-p-right_small">Entity Type</label>
+                <label class="slds-form-element__label slds-size_3-of-12 slds-text-align_left">Entity Type</label>
                 <div class="slds-form-element__control">
                   <div class="slds-select_container input-small">
                     <select class="slds-select" v-model="search.type" v-on:change="selectEntityType()">
                       <option value="all" v-bind:seleced="search.type=='all'">All</option>
-                      <option v-for="metaType in Object.keys(metadataTypes)" v-bind:value="metaType" v-bind:seleced="search.type==metaType">{{ metadataTypes[metaType] }}</option>
+                      <option v-for="metaType in metadataTypeOptions" v-bind:value="metaType.value" v-bind:seleced="search.type==metaType.value">{{ metaType.label }}</option>
                     </select>
                   </div>
                 </div><!-- .slds-form-element__control -->
@@ -297,11 +331,14 @@ Vue.component('app-newpipeline-detail-sfdc', {
                   <th scope="col">
                     <div class="slds-truncate" title="Name">Name</div>
                   </th>
-                  <th scope="col" v-if="search.type=='all'">
-                    <div class="slds-truncate" title="Type">Object</div>
+                  <th scope="col" v-if="hasLabelTypes.indexOf(search.type)>=0">
+                    <div class="slds-truncate" title="Label">Label</div>
                   </th>
-                  <th scope="col">
-                    <div class="slds-truncate" title="Type">Type</div>
+                  <th scope="col" v-if="hasObjectTypes.indexOf(search.type)>=0">
+                    <div class="slds-truncate" title="Type">Object/Folder</div><!-- JP:種別 -->
+                  </th>
+                  <th scope="col" v-if="search.type=='all'">
+                    <div class="slds-truncate" title="Entity">Entity Type</div><!-- JP:種類 -->
                   </th>
                 </tr>
               </thead>
@@ -323,13 +360,16 @@ Vue.component('app-newpipeline-detail-sfdc', {
                     </div>
                   </th>
                   <td>
-                    <div class="slds-truncate">{{ row.label || row.fullName }}</div>
+                    <div class="slds-truncate">{{ row.customName || row.fullName }}</div>
+                  </td>
+                  <td v-if="hasLabelTypes.indexOf(search.type)>=0">
+                    <div class="slds-truncate">{{ row.label }}</div>
+                  </td>
+                  <td v-if="hasObjectTypes.indexOf(search.type)>=0">
+                    <div class="slds-truncate">{{ row.objectLabel || row.folderLabel }}</div>
                   </td>
                   <td v-if="search.type=='all'">
-                    <div class="slds-truncate">{{ row.ObjectLabel }}</div>
-                  </td>
-                  <td>
-                    <div class="slds-truncate">{{ (search.type=='all') ? metadataTypes[row.type] : (row.ObjectLabel || metadataTypes[row.type]) }}</div>
+                    <div class="slds-truncate">{{ metadataTypes[row.type] }}</div>
                   </td>
                 </tr>
               </tbody>

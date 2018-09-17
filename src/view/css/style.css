@@ -250,7 +250,7 @@
  * Pipeline
  */
 .pipeline-from-icon{
-  font-size: 2.0rem;
+  font-size: 2.5rem;
   color: #d8dde6;
 }
 .pr-to-icon {
@@ -273,6 +273,13 @@
 
 #pipeline-new .slds-select__label .slds-form-element__label{
   line-height: 2;
+}
+
+.new-pipeline-connect{
+  width: calc(50% - 50px);
+}
+.new-pipeline-connect-icon{
+  width: 100px;
 }
 
 .new-pipeline-connect .slds-icon{
@@ -347,6 +354,21 @@
 /* .new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label{
   width: 100px;
 } */
+.new-pipeline-detail-sfdc .md-wrap{
+  width: calc(50% - 50px);
+}
+
+.new-pipeline-detail-sfdc .md-wrap .slds-form-element__label{
+  margin-right: 0;
+}
+
+.new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label.slds-size_3-of-12{
+  width: 25%;
+}
+.new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label.slds-text-align_left{
+  text-align: left;
+}
+
 
 /**
  * pipeline-detail

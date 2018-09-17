@@ -169,7 +169,7 @@ var app = new Vue({
       //console.log('>>>>run pipeline', id);
       var self = this;
       self.request('pipeline-run', {id : id}, function(err, result){
-        console.log('>>>pipeline-run', err, result);
+        //console.log('>>>pipeline-run', err, result);
         // Will fire multiple time
         if(err) self.handleError(err);
         if(result && result.type != 'process') {

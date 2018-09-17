@@ -271,7 +271,8 @@ class Pipeline {
       })
       .then(function(zipPath) {
         // Do Deploy
-        return metadata.deploy(toConn, zipPath, {}, function(deployResult) {
+        // opt @see https://jsforce.github.io/jsforce/doc/Metadata.html#deploy
+        return metadata.deploy(toConn, zipPath, { rollbackOnError : true }, function(deployResult) {
           self.outputDeployProcessLog(pipelineLog, deployResult);
         });
       })

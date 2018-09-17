@@ -337,6 +337,7 @@ class Connect {
       ev.sender.send('sfdc-metadata-list-callback',utils.serialize(err), result);
     }
     try{
+      let objLabelMap = {};
       let metadataList = [];
       let folders = [];
       const connection = arg.connection;
@@ -347,6 +348,12 @@ class Connect {
           // Refresh Token for bitbucket
           self.restoreToken(connection, token);
         }
+        return sfdcApi.describeGlobal();
+      })
+      .then(function(objects) {
+        for(let obj of objects) {
+          objLabelMap[obj.name] = obj.label;
+        }
         return sfdcApi.describeMetadata();
       })
       .then(function(result) {
@@ -355,7 +362,7 @@ class Connect {
       })
       .then(function(result) {
         folders = result;
-        return sfdcApi.getMetadataDetailList(metadataList, folders);
+        return sfdcApi.getMetadataDetailList(metadataList, folders, objLabelMap);
       })
       .then(function(components) {
         // Set language label

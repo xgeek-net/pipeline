@@ -14,14 +14,7 @@ Vue.component('app-newpipeline', {
       }
     },
     created: function() {
-      const self = this;
-      let apiVersion = parseInt(self.setting.apiVersion || '37.0');
-      let apiMaxVersion = parseInt(self.setting.pfMaxApiVersion || '37.0');
-      for(let ver = apiVersion; ver <= apiMaxVersion; ver++) {
-        self.apiVersionList.push(ver + '.0');
-      }
-      self.pipeline.fromApiVersion = apiMaxVersion + '.0';
-      self.pipeline.toApiVersion = apiMaxVersion + '.0';
+      this.initApiVerList();
     },
     mounted: function () {
       const self = this;
@@ -43,7 +36,19 @@ Vue.component('app-newpipeline', {
         this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '' };
         this.validate = false;
         this.connection = null;
-        this.apiVersionList = [];
+        this.initApiVerList();
+      },
+      // Init Connection api version list
+      initApiVerList : function() {
+        const self = this;
+        self.apiVersionList = [];
+        let apiVersion = parseInt(self.setting.apiVersion || '37.0');
+        let apiMaxVersion = parseInt(self.setting.pfMaxApiVersion || '37.0');
+        for(let ver = apiVersion; ver <= apiMaxVersion; ver++) {
+          self.apiVersionList.push(ver + '.0');
+        }
+        self.pipeline.fromApiVersion = apiMaxVersion + '.0';
+        self.pipeline.toApiVersion = apiMaxVersion + '.0';
       },
       changeConnect : function(ev) {
         const self = this;
@@ -85,6 +90,7 @@ Vue.component('app-newpipeline', {
         }
         const valid = self.validateData(pipeline);
         if(valid != true) {
+          ev.target.removeAttribute('disabled');
           return app.handleError(valid);
         }
         app.showLoading();
@@ -149,7 +155,7 @@ Vue.component('app-newpipeline', {
     },
     template: `
       <div class="slds-grid slds-wrap" id="pipeline-new">
-        <div class="slds-size_5-of-12 new-pipeline-connect">
+        <div class="new-pipeline-connect">
           <article class="slds-card">
             <div class="slds-card__header slds-grid">
               <div class="slds-media__figure">
@@ -195,12 +201,12 @@ Vue.component('app-newpipeline', {
             <footer class="slds-card__footer"></footer>
           </article>
         </div><!-- .slds-size_5-of-12 -->
-        <div class="slds-size_1-of-12 mt4">
+        <div class="new-pipeline-connect-icon mt4">
           <div class="slds-align_absolute-center">
             <span class="pipeline-from-icon"><i class="fas fa-arrow-right"></i></span>
           </div>
         </div><!-- .slds-size_1-of-12 -->
-        <div class="slds-size_5-of-12 new-pipeline-connect">
+        <div class="new-pipeline-connect">
           <article class="slds-card ">
             <div class="slds-card__header slds-grid">
               <div class="slds-media__figure">
@@ -247,12 +253,12 @@ Vue.component('app-newpipeline', {
           </article>
         </div><!-- .slds-size_5-of-12 -->
 
-        <div class="slds-size_11-of-12 mt1">
+        <div class="slds-size_12-of-12 mt1">
           <app-newpipeline-detail-git v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type!='sfdc')" ref="gitdetail"></app-newpipeline-detail-git>
           <app-newpipeline-detail-sfdc v-bind:connection="connection" v-bind:record="record" v-if="(connection!=null && connection.type=='sfdc')" ref="sfdcdetail"></app-newpipeline-detail-sfdc>
         </div><!-- .slds-size_11-of-12 -->
 
-        <div class="slds-size_11-of-12 mt1" v-if="validate==true">
+        <div class="slds-size_12-of-12 mt1" v-if="validate==true">
           <div class="slds-wrap slds-text-align_right">
             <button class="slds-button slds-button_neutral" v-on:click="savePipeline">Save</button>
             <button class="slds-button slds-button_brand" v-on:click="runPipeline">Run Pipeline</button>
