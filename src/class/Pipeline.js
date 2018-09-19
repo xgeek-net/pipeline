@@ -71,7 +71,7 @@ class Pipeline {
       }
       // Change id
       const now = new Date();
-      let newPipeline = utils.popItems(pipeline, ['branch', 'commits', 'type', 'from', 'name', 'prs', 'to', '']);
+      let newPipeline = utils.popItems(pipeline, ['branch', 'commits', 'type', 'from', 'fromApiVersion', 'name', 'prs', 'to', 'toApiVersion', 'runTests', 'targetTypes']);
       newPipeline['id'] = uuidv4();
       newPipeline['status'] = 'ready';
       newPipeline['created_at'] = now.toISOString();
@@ -271,8 +271,9 @@ class Pipeline {
       })
       .then(function(zipPath) {
         // Do Deploy
-        // opt @see https://jsforce.github.io/jsforce/doc/Metadata.html#deploy
-        return metadata.deploy(toConn, zipPath, { rollbackOnError : true }, function(deployResult) {
+        // opts @see https://jsforce.github.io/jsforce/doc/Metadata.html#deploy
+        let opts = { rollbackOnError : true, runAllTests : (pipeline.runTests === true) };
+        return metadata.deploy(toConn, zipPath, opts, function(deployResult) {
           self.outputDeployProcessLog(pipelineLog, deployResult);
         });
       })

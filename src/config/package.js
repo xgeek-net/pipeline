@@ -363,14 +363,14 @@ module.exports = {
 
      }
   },
-  "datacategorygroups":{  
+  /*"datacategorygroups":{  
      "xmlName":"DataCategoryGroup",
      "label":"",
      "label_ja":"",
      "children":{  
 
      }
-  },
+  },*/
   "remoteSiteSettings":{  
      "xmlName":"RemoteSiteSetting",
      "label":"Remote Site",
@@ -383,62 +383,6 @@ module.exports = {
      "xmlName":"AuthProvider",
      "label":"Auth. Provider",
      "label_ja":"認証プロバイダ",
-     "children":{  
-
-     }
-  },
-  "leadSharingRules":{  
-     "xmlName":"LeadSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "campaignSharingRules":{  
-     "xmlName":"CampaignSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "caseSharingRules":{  
-     "xmlName":"CaseSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "contactSharingRules":{  
-     "xmlName":"ContactSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "opportunitySharingRules":{  
-     "xmlName":"OpportunitySharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "accountSharingRules":{  
-     "xmlName":"AccountSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "customObjectSharingRules":{  
-     "xmlName":"CustomObjectSharingRules",
-     "label":"",
-     "label_ja":"",
      "children":{  
 
      }
@@ -475,7 +419,7 @@ module.exports = {
 
      }
   },
-  "synonymDictionaries":{  
+  /*"synonymDictionaries":{  
      "xmlName":"SynonymDictionary",
      "label":"",
      "label_ja":"",
@@ -490,7 +434,7 @@ module.exports = {
      "children":{  
 
      }
-  },
+  },*/
   "aura":{  
      "xmlName":"AuraDefinitionBundle",
      "label":"Lightning Component Bundle",
@@ -501,8 +445,8 @@ module.exports = {
   },
   "sharingRules":{  
      "xmlName":"SharingRules",
-     "label":"",
-     "label_ja":"",
+     "label":"Sharing Rule",
+     "label_ja":"共有ルール",
      "children":{  
         "sharingTerritoryRules":"SharingTerritoryRule",
         "sharingOwnerRules":"SharingOwnerRule",

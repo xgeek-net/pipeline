@@ -6,7 +6,8 @@ Vue.component('app-newpipeline', {
           from : '',
           fromApiVersion : '',
           to : '',
-          toApiVersion : ''
+          toApiVersion : '',
+          runTests : false
         },
         validate : false,
         connection : null,
@@ -33,7 +34,7 @@ Vue.component('app-newpipeline', {
     },
     methods: {
       reload : function() {
-        this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '' };
+        this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '', runTests : false };
         this.validate = false;
         this.connection = null;
         this.initApiVerList();
@@ -50,7 +51,8 @@ Vue.component('app-newpipeline', {
         self.pipeline.fromApiVersion = apiMaxVersion + '.0';
         self.pipeline.toApiVersion = apiMaxVersion + '.0';
       },
-      changeConnect : function(ev) {
+      // Event on change from connect select
+      changeFromConnect : function(ev) {
         const self = this;
         if(self.pipeline.from == '') {
           self.validate = false;
@@ -66,9 +68,26 @@ Vue.component('app-newpipeline', {
         }
         const $detail = (self.$refs.gitdetail) ? self.$refs.gitdetail : self.$refs.sfdcdetail;
         if($detail) {
-          $detail.reload();
+          $detail.reload(self.connection);
         }
         self.validate = true;
+      },
+      // Event on change to connect select
+      changeToConnect : function(ev) {
+        const self = this;
+        for(let i in self.connections) {
+          const conn = self.connections[i];
+          if(conn.id == self.pipeline.to) {
+            // Default set runTests to true on production org
+            if(conn.orgType == 'production') self.pipeline.runTests = true;
+            break;
+          }
+        }
+      },
+      // Event on click runTests checkbox
+      checkRunTests : function(ev) {
+        const checked = ev.target.checked;
+        this.pipeline.runTests = checked;
       },
       /**
        * Save pipeline
@@ -84,6 +103,7 @@ Vue.component('app-newpipeline', {
           pipeline['to'] = self.pipeline.to;
           pipeline['toApiVersion'] = self.pipeline.toApiVersion;
           pipeline['fromApiVersion'] = self.pipeline.fromApiVersion;
+          pipeline['runTests'] = self.pipeline.runTests;
           pipeline['status'] = 'ready';
           pipeline['created_at'] = now.toISOString();
           pipeline['updated_at'] = now.toISOString();
@@ -177,7 +197,7 @@ Vue.component('app-newpipeline', {
               <div class="slds-form-element">
                 <div class="slds-form-element__control">
                   <div class="slds-select_container">
-                    <select class="slds-select" v-model="pipeline.from" v-on:change="changeConnect()">
+                    <select class="slds-select" v-model="pipeline.from" v-on:change="changeFromConnect()">
                       <option value="" selected="selected">--None--</option>
                       <option v-for="conn in connections" v-bind:value="conn.id" v-bind:seleced="pipeline.from==conn.id"> [{{ conn.type.toUpperCase() }}] {{ conn.name }}</option>
                     </select>
@@ -185,14 +205,26 @@ Vue.component('app-newpipeline', {
                 </div>
               </div><!-- .slds-form-element -->
               <div class="slds-form-element slds-grid mt1" v-if="(connection!=null && connection.type=='sfdc')">
-                <label class="slds-select__label slds-size_3-of-12">
+                <label class="slds-select__label slds-size_2-of-12">
                   <span class="slds-checkbox_faux"></span>
                   <span class="slds-form-element__label">API Version</span>
                 </label>
-                <div class="slds-form-element__control slds-size_9-of-12">
+                <div class="slds-form-element__control slds-size_4-of-12">
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.fromApiVersion">
                       <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.fromApiVersion==ver">{{ ver }}</option>
+                    </select>
+                  </div>
+                </div>
+                <label class="slds-select__label slds-size_2-of-12 txt-center">
+                  <span class="slds-checkbox_faux"></span>
+                  <span class="slds-form-element__label">Action</span>
+                </label>
+                <div class="slds-form-element__control slds-size_4-of-12">
+                  <div class="slds-select_container">
+                    <select class="slds-select" disabled="disabled">
+                      <option value="deploy">Deploy (Add/Update)</option>
+                      <option value="destruct">Destruct (Delete)</option>
                     </select>
                   </div>
                 </div>
@@ -228,7 +260,7 @@ Vue.component('app-newpipeline', {
               <div class="slds-form-element">
                 <div class="slds-form-element__control">
                   <div class="slds-select_container">
-                    <select class="slds-select" v-model="pipeline.to">
+                    <select class="slds-select" v-model="pipeline.to" v-on:change="changeToConnect()">
                       <option value="" selected="selected">--None--</option>
                       <option v-for="conn in connections" v-bind:value="conn.id" v-bind:seleced="pipeline.to==conn.id" v-if="(conn.type=='sfdc' && conn.id!=pipeline.from)">{{ conn.name }}</option>
                     </select>
@@ -236,16 +268,25 @@ Vue.component('app-newpipeline', {
                 </div>
               </div><!-- .slds-form-element -->
               <div class="slds-form-element slds-grid mt1">
-                <label class="slds-select__label slds-size_3-of-12">
+                <label class="slds-select__label slds-size_2-of-12">
                   <span class="slds-checkbox_faux"></span>
                   <span class="slds-form-element__label">API Version</span>
                 </label>
-                <div class="slds-form-element__control slds-size_9-of-12">
+                <div class="slds-form-element__control slds-size_4-of-12">
                   <div class="slds-select_container">
                     <select class="slds-select" v-model="pipeline.toApiVersion">
                       <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.toApiVersion==ver">{{ ver }}</option>
                     </select>
                   </div>
+                </div>
+                <div class="slds-form-element__control slds-size_6-of-12 slds-text-align_right">
+                  <span class="slds-checkbox">
+                    <input type="checkbox" name="options" id="chk-run-tests" v-bind:checked="pipeline.runTests" v-on:click="checkRunTests" value="1" />
+                    <label class="slds-checkbox__label" for="chk-run-tests">
+                      <span class="slds-checkbox_faux"></span>
+                      <span class="slds-form-element__label mr0">&nbsp;Run Tests</span>
+                    </label>
+                  </span>
                 </div>
               </div><!-- .slds-form-element -->
             </div>

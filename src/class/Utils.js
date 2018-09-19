@@ -141,7 +141,7 @@ const utils = {
   popItems : function(obj, keys) {
     let res = {};
     for(let key of keys) {
-      res[key] = obj[key];
+      if(obj.hasOwnProperty(key)) res[key] = obj[key];
     }
     return res;
   },

@@ -346,7 +346,7 @@ class SfdcApi {
           };
           if(type == 'CustomTab') {
             resetFunction = function(meta) {
-              meta['label'] = (objLabelMap.hasOwnProperty(meta.fullName)) ? objLabelMap[meta.fullName] : meta.fullName;
+              meta['customName'] = (objLabelMap.hasOwnProperty(meta.fullName)) ? objLabelMap[meta.fullName] : meta.fullName;
               return meta;
             };
           }
@@ -370,17 +370,17 @@ class SfdcApi {
             meta['object'] = objName;
             meta['objectLabel'] = (objLabelMap.hasOwnProperty(objName)) ? objLabelMap[objName] : objName;
             meta['customName'] = names[1]; // Case.Reply → Reply
-            meta['label'] = names[1];
             return meta;
           };
           break;
         case 'CustomObject' : 
         case 'MatchingRules' : 
+        case 'SharingRules' : 
           /*filterFunction = function(meta) {
             return (!meta.fullName.endsWith('__c') && !meta.fullName.endsWith('__mdt') && !meta.fullName.endsWith('__kav'));
           }*/
           resetFunction = function(meta) {
-            meta['label'] = (objLabelMap.hasOwnProperty(meta.fullName)) ? objLabelMap[meta.fullName] : meta.fullName;
+            meta['customName'] = (objLabelMap.hasOwnProperty(meta.fullName)) ? objLabelMap[meta.fullName] : meta.fullName;
             return meta;
           };
           break;
@@ -446,7 +446,7 @@ class SfdcApi {
         }
         for(let i = 0; i < targets.length; i++) {
           if(labelMap.hasOwnProperty(targets[i].id)) {
-            targets[i]['label'] = labelMap[targets[i].id];
+            targets[i]['customName'] = labelMap[targets[i].id];
           }
         }
         return callback(targets);
@@ -524,13 +524,14 @@ class SfdcApi {
                   // Filter standard field
                   continue;
                 }
+                if(cMeta.label) cMeta['customName'] = cMeta.label;
                 if(meta.fullName) cMeta['object'] = meta.fullName;
                 if(meta.label) cMeta['objectLabel'] = meta.label;
                 if(utils.isBlank(cMeta.ObjectLabel) && objLabelMap.hasOwnProperty(meta.fullName)) {
                   // Set Object Label for Workflow Alert
                   cMeta['objectLabel'] = objLabelMap[meta.fullName];
                 }
-                if(child.typeName == 'WorkflowAlert' && cMeta.description) cMeta['label'] = cMeta.description;
+                if(child.typeName == 'WorkflowAlert' && cMeta.description) cMeta['customName'] = cMeta.description;
                 if(child.typeName == 'WorkflowFieldUpdate' && cMeta.name) cMeta['customName'] = cMeta.name;
 
                 metadataMap[child.typeName].push(cMeta);

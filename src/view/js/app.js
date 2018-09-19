@@ -232,7 +232,7 @@ var app = new Vue({
     handleError : function(err) {
       let message = (typeof err == 'string') ? err : err.message;
       if(message && message.length > 0) {
-        this.showMessage({ type : 'error', message : message });
+        this.showMessage({ type : err.type || 'error', message : message });
       }
     }
   }
