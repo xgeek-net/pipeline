@@ -59,7 +59,9 @@ function createWindow() {
     setting.set('windowBounds', { width, height });
   });
   // App Menu
-  appMenu.initMenu();
+  if(process.env.NODE_ENV !== 'development') {
+    appMenu.initMenu();
+  }
 }
 
 app.on('ready', createWindow);

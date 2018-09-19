@@ -1,3 +1,4 @@
+// @see https://github.com/scolladon/sfdc-generate-package/blob/master/lib/utils/metadata.js
 module.exports = {  
   /*"installedPackages":{  
      "xmlName":"InstalledPackage",
@@ -9,7 +10,7 @@ module.exports = {
   "labels":{  
      "xmlName":"CustomLabels",
      "label":"Custom Label",
-     "label_ja":"カスタムラベル",
+     "label_ja":"カスタム表示ラベル",
      "children":{  
         "CustomLabels":"CustomLabel"
      }
@@ -91,13 +92,16 @@ module.exports = {
      "label":"Custom Object",
      "label_ja":"カスタムオブジェクト",
      "children":{  
+        // No necessary
         // "actionOverrides":{"typeName":"ActionOverride","name":"actionName"},
         "fields":{"typeName":"CustomField","name":"fullName","label":"Custom Field","label_ja":"カスタム項目"},
-        "businessProcesses":{"typeName":"BusinessProcess","name":"fullName","label":"","label_ja":""},
+        "businessProcesses":{"typeName":"BusinessProcess","name":"fullName","label":"Business Process","label_ja":"ビジネスプロセス"},
         "recordTypes":{"typeName":"RecordType","name":"fullName","label":"Record Type","label_ja":"レコードタイプ"},
         "webLinks":{"typeName":"WebLink","name":"fullName","label":"Button or Link","label_ja":"ボタンまたはリンク"},
         "validationRules":{"typeName":"ValidationRule","name":"fullName","label":"Validation Rule","label_ja":"入力規則"},
-        "namedFilters":{"typeName":"NamedFilter","name":"fullName","label":"","label_ja":""},
+        // Disabled after API v30.0
+        // @see https://developer.salesforce.com/docs/atlas.ja-jp.api_meta.meta/api_meta/namedfilter.htm
+        // "namedFilters":{"typeName":"NamedFilter","name":"fullName","label":"","label_ja":""},
         "sharingReasons":{"typeName":"SharingReason","name":"fullName","label":"Apex Sharing Reason","label_ja":"Apex 共有の理由"},
         "listViews":{"typeName":"ListView","name":"fullName","label":"List View","label_ja":"リストビュー"},
         "fieldSets":{"typeName":"FieldSet","name":"fullName","label":"Field Set","label_ja":"項目セット"},
@@ -130,8 +134,8 @@ module.exports = {
   },
   "analyticSnapshots":{  
      "xmlName":"AnalyticSnapshot",
-     "label":"",
-     "label_ja":"",
+     "label":"Reporting Snapshot",
+     "label_ja":"レポート作成スナップショット",
      "children":{  
 
      }
@@ -146,8 +150,8 @@ module.exports = {
   },
   "portals":{  
      "xmlName":"Portal",
-     "label":"",
-     "label_ja":"",
+     "label":"Portal",
+     "label_ja":"ポータル",
      "children":{  
 
      }
@@ -170,8 +174,8 @@ module.exports = {
   },
   "quickActions":{  
      "xmlName":"QuickAction",
-     "label":"",
-     "label_ja":"",
+     "label":"Action",
+     "label_ja":"アクション",
      "children":{  
 
      }
@@ -313,16 +317,16 @@ module.exports = {
   },
   "objectTranslations":{  
      "xmlName":"CustomObjectTranslation",
-     "label":"",
-     "label_ja":"",
+     "label":"Custom Object Translation",
+     "label_ja":"カスタムオブジェクトの翻訳",
      "children":{  
 
      }
   },
   "flows":{  
      "xmlName":"Flow",
-     "label":"",
-     "label_ja":"",
+     "label":"Flow",
+     "label_ja":"フロー",
      "children":{  
 
      }
@@ -359,14 +363,14 @@ module.exports = {
 
      }
   },
-  "datacategorygroups":{  
+  /*"datacategorygroups":{  
      "xmlName":"DataCategoryGroup",
      "label":"",
      "label_ja":"",
      "children":{  
 
      }
-  },
+  },*/
   "remoteSiteSettings":{  
      "xmlName":"RemoteSiteSetting",
      "label":"Remote Site",
@@ -383,66 +387,10 @@ module.exports = {
 
      }
   },
-  "leadSharingRules":{  
-     "xmlName":"LeadSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "campaignSharingRules":{  
-     "xmlName":"CampaignSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "caseSharingRules":{  
-     "xmlName":"CaseSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "contactSharingRules":{  
-     "xmlName":"ContactSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "opportunitySharingRules":{  
-     "xmlName":"OpportunitySharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "accountSharingRules":{  
-     "xmlName":"AccountSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
-  "customObjectSharingRules":{  
-     "xmlName":"CustomObjectSharingRules",
-     "label":"",
-     "label_ja":"",
-     "children":{  
-
-     }
-  },
   "communities":{  
      "xmlName":"Community",
-     "label":"",
-     "label_ja":"",
+     "label":"Zone",
+     "label_ja":"ゾーン",
      "children":{  
 
      }
@@ -457,21 +405,21 @@ module.exports = {
   },
   "connectedApps":{  
      "xmlName":"ConnectedApp",
-     "label":"",
-     "label_ja":"",
+     "label":"Connected App",
+     "label_ja":"接続アプリケーション",
      "children":{  
 
      }
   },
   "samlssoconfigs":{  
      "xmlName":"SamlSsoConfig",
-     "label":"",
-     "label_ja":"",
+     "label":"SAML Single Sign-On",
+     "label_ja":"SAML シングルサインオン",
      "children":{  
 
      }
   },
-  "synonymDictionaries":{  
+  /*"synonymDictionaries":{  
      "xmlName":"SynonymDictionary",
      "label":"",
      "label_ja":"",
@@ -481,12 +429,12 @@ module.exports = {
   },
   "settings":{  
      "xmlName":"Settings",
-     "label":"",
-     "label_ja":"",
+     "label":"Settings",
+     "label_ja":"設定",
      "children":{  
 
      }
-  },
+  },*/
   "aura":{  
      "xmlName":"AuraDefinitionBundle",
      "label":"Lightning Component Bundle",
@@ -497,8 +445,8 @@ module.exports = {
   },
   "sharingRules":{  
      "xmlName":"SharingRules",
-     "label":"",
-     "label_ja":"",
+     "label":"Sharing Rule",
+     "label_ja":"共有ルール",
      "children":{  
         "sharingTerritoryRules":"SharingTerritoryRule",
         "sharingOwnerRules":"SharingOwnerRule",
@@ -523,8 +471,8 @@ module.exports = {
   }, 
   "siteDotComSites":{  
      "xmlName":"SiteDotCom",
-     "label":"",
-     "label_ja":"",
+     "label":"Site.com",
+     "label_ja":"Site.com",
      "children":{  
 
      }

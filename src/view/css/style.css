@@ -9,6 +9,9 @@
   min-height: 24rem;
   margin-bottom: 4rem;
 }
+.mr0{
+  margin-right: 0;
+}
 .mt1{
   margin-top: 1rem;
 }
@@ -19,7 +22,7 @@
   margin-top: 2rem;
 }
 .mt4{
-  margin-top: 2rem;
+  margin-top: 3.3rem;
 }
 .slds-color-text-error{
   color: #c23934;
@@ -250,7 +253,7 @@
  * Pipeline
  */
 .pipeline-from-icon{
-  font-size: 2.0rem;
+  font-size: 2.5rem;
   color: #d8dde6;
 }
 .pr-to-icon {
@@ -272,7 +275,18 @@
 }
 
 #pipeline-new .slds-select__label .slds-form-element__label{
-  line-height: 2;
+  line-height: 2.5;
+}
+#pipeline-new .slds-select__label.txt-center {
+  text-align: center;
+  padding-left: 1rem;
+}
+
+.new-pipeline-connect{
+  width: calc(50% - 50px);
+}
+.new-pipeline-connect-icon{
+  width: 100px;
 }
 
 .new-pipeline-connect .slds-icon{
@@ -310,6 +324,17 @@
 .new-pipeline-detail .slds-form_horizontal .slds-form-element__label{
   padding-right: 0.5rem;
 }
+.new-pipeline-detail-sfdc .select-middle-col {
+  width: 178px;
+  margin-left: 1rem;
+}
+.new-pipeline-detail-sfdc .check-wide-col{
+  width: calc(41.66667% - 200px);
+}
+.new-pipeline-detail-sfdc .select-middle-col .input-small{
+  width: 175px;
+}
+
 .new-pipeline-detail .input-small,
 .new-pipeline-detail-sfdc .input-small{
   max-width: 366px;
@@ -330,8 +355,8 @@
 .slds-dropdown_actions a.slds-color-text-error:hover {
   color: #c23934;
 }
-.slds-form_horizontal .slds-form-element__control.w80 {
-  width: 80%;
+.slds-form_horizontal .slds-form-element__control.w275 {
+  width: 275px;
 }
 
 .metadata-select-table{
@@ -342,11 +367,26 @@
   overflow-y: auto;
 }
 .slds-button-group.inline-group .slds-button+.slds-button {
-  margin-left: -4px;
+  margin-left: -5px;
 }
 /* .new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label{
   width: 100px;
 } */
+.new-pipeline-detail-sfdc .md-wrap{
+  width: calc(50% - 50px);
+}
+
+.new-pipeline-detail-sfdc .md-wrap .slds-form-element__label{
+  margin-right: 0;
+}
+
+.new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label.slds-size_3-of-12{
+  width: 25%;
+}
+.new-pipeline-detail-sfdc .slds-form_horizontal .slds-form-element>.slds-form-element__label.slds-text-align_left{
+  text-align: left;
+}
+
 
 /**
  * pipeline-detail

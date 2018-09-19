@@ -15,6 +15,7 @@
     "salesforce-lightning-design-system": "^2.3.1",
     "vue": "^2.5.16",
     "font-awesome": "^5.0.13",
-    "moment": "^2.22.2"
+    "moment": "^2.22.2",
+    "js-xlsx": "^0.14.0"
   }
 }

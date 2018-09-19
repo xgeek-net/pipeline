@@ -153,6 +153,17 @@ class SfdcApi {
       }, 5000);
     });
   }
+
+  describeGlobal() {
+    const self = this;
+    return new Promise(function(resolve, reject) {
+      self.conn.describeGlobal(function(err, res) {
+        if(err) { return reject(err); }
+        return resolve(res.sobjects);
+      });
+    });
+    
+  }
  
   describeMetadata() {
     const self = this;
@@ -192,6 +203,7 @@ class SfdcApi {
         self.getMetadataList(type)
         .then(function(metadata) {
           for(let meta of metadata) {
+            if(meta.manageableState !== 'unmanaged' && meta.manageableState !== undefined) continue;
             folders.push(meta);
           }
           return completion(null);
@@ -201,12 +213,26 @@ class SfdcApi {
         });
       }, function(err){
         if(err) return reject(err);
-        return resolve(folders);
+        // Set Folder Name
+        self.conn.query('SELECT Id, Name FROM Folder', function(err, res) {
+          if(err) return reject(err);
+          let labelMap = {};
+          for(let i = 0; i < res.records.length; i++) {
+            const record = res.records[i];
+            labelMap[record.Id] = record.Name;
+          }
+          for(let i = 0; i < folders.length; i++) {
+            if(labelMap.hasOwnProperty(folders[i].id)) {
+              folders[i]['label'] = labelMap[folders[i].id];
+            }
+          }
+          return resolve(folders);
+        });
       }); // .async.eachSeries
     });
   }
 
-  getMetadataDetailList(metadataList, folders) {
+  getMetadataDetailList(metadataList, folders, objLabelMap) {
     const self = this;
     //const excepts = ['LightningComponentBundle'];
     return new Promise(function(resolve, reject) {
@@ -227,32 +253,43 @@ class SfdcApi {
         let xmlName = (meta.xmlName == 'EmailTemplate') ? 'EmailFolder' : meta.xmlName + 'Folder';
         for(let fd of folders) {
           if(fd.type !== xmlName) continue;
-          queues.push({type: meta.xmlName, folder: fd.fullName});
+          // attribute folderLabel is used for set folder name to metadata in filterMetadata()
+          queues.push({type: meta.xmlName, folder: fd.fullName, folderLabel : fd.label});
         }
       }
       let metadataDetailMap = {};
       // console.log('>>>> queues', queues);
       async.eachLimit(queues, 5, function(queue, completion) {
-        //console.log('>>>> queue', queue);
-        self.getMetadataList(queue)
+        // Layout metadata type does not accept folder attribute
+        const param = (queue.type == 'Layout') ? { type : queue.type } : { type : queue.type, folder : queue.folder };
+        self.getMetadataList(param)
         .then(function(metadata) {
-          //console.log('>>>> queue : ' + queue.type, metadata.length);
-          if(queue.type == 'CustomObject') {
-            let customObjects = [];
-            for(let meta of metadata) {
-              if(!meta.fullName.endsWith('__c')) {
-                // Filter standard object
-                continue;
-              }
-              customObjects.push(meta);
-            }
-            metadataDetailMap[queue.type] = customObjects;
-          } else {
+          return self.filterMetadata(queue, metadata, objLabelMap);
+        })
+        .then(function(metadata) {
+          if(metadataDetailMap[queue.type] && metadataDetailMap[queue.type].length > 0) {
+            // e.g. multiple dashboard folders
+            metadataDetailMap[queue.type].push(...metadata);
+          } else if(queue.type !== 'Workflow') {
+            // Workflow needs be filtered
             metadataDetailMap[queue.type] = metadata;
           }
+          // clear standard object (custom field of standard object need to be pulled)
+          if(queue.type == 'CustomObject') {
+            let customObjs = [];
+            for(let i = 0; i < metadata.length; i++) {
+              const meta = metadata[i];
+              if(!meta.fullName.endsWith('__c') && !meta.fullName.endsWith('__mdt') && !meta.fullName.endsWith('__kav')) {
+                continue;
+              }
+              customObjs.push(meta);
+            }
+            metadataDetailMap[queue.type] = customObjs;
+          }
+          
           if(queue.type == 'CustomObject' || queue.type == 'Workflow') {
             //TODO SharingRules
-            return self.readChildMetadata(metadata);
+            return self.readChildMetadata(metadata, objLabelMap);
           } else {
             return true;
           }
@@ -277,7 +314,149 @@ class SfdcApi {
     });
   }
 
-  readChildMetadata(metadata) {
+  // Filter unnecessary metadata, e.g : standard application
+  // Set metadata label with SOAP api query
+  filterMetadata(queue, metadata, objLabelMap) {
+    const self = this;
+    const type = queue.type;
+    return new Promise(function(resolve, reject) {
+      let filterFunction = function(meta) {
+        // escape standard and package metadata
+        return meta.manageableState !== 'unmanaged' && meta.manageableState !== undefined;
+      };
+      let resetFunction;
+      switch(type){
+        case 'ApexClass' : 
+        case 'ApexComponent' : 
+        case 'ApexPage' : 
+        case 'ApexTrigger' : 
+        case 'CustomApplication' : 
+        case 'CustomLabel' : 
+        case 'CustomField' : 
+        case 'CustomTab' : 
+        case 'Dashboard' :
+        case 'Document' : 
+        case 'EmailTemplate' :  
+        case 'ListView' :  
+        case 'ReportType' : 
+        case 'Report' :
+          filterFunction = function(meta) {
+            // escape standard and package metadata
+            return (utils.isNotBlank(meta.namespacePrefix));
+          };
+          if(type == 'CustomTab') {
+            resetFunction = function(meta) {
+              meta['customName'] = (objLabelMap.hasOwnProperty(meta.fullName)) ? objLabelMap[meta.fullName] : meta.fullName;
+              return meta;
+            };
+          }
+          if(type == 'Dashboard' || type == 'Document' || type == 'EmailTemplate' || type == 'Report') {
+            resetFunction = function(meta) {
+              const names = meta.fullName.split('/');
+              meta['customName'] = names[(names.length-1)];
+              meta['folder'] = queue.folder;
+              meta['folderLabel'] = queue.folderLabel;
+              return meta;
+            };
+          }
+          break;
+        case 'CustomMetadata' :
+        case 'QuickAction' : 
+          // Case.Reply → Reply , Case
+          resetFunction = function(meta) {
+            const names = meta.fullName.split('.');
+            if(names.length != 2) return meta;
+            const objName = (type == 'CustomMetadata') ? (names[0] + '__mdt') : names[0];
+            meta['object'] = objName;
+            meta['objectLabel'] = (objLabelMap.hasOwnProperty(objName)) ? objLabelMap[objName] : objName;
+            meta['customName'] = names[1]; // Case.Reply → Reply
+            return meta;
+          };
+          break;
+        case 'CustomObject' : 
+        case 'MatchingRules' : 
+        case 'SharingRules' : 
+          /*filterFunction = function(meta) {
+            return (!meta.fullName.endsWith('__c') && !meta.fullName.endsWith('__mdt') && !meta.fullName.endsWith('__kav'));
+          }*/
+          resetFunction = function(meta) {
+            meta['customName'] = (objLabelMap.hasOwnProperty(meta.fullName)) ? objLabelMap[meta.fullName] : meta.fullName;
+            return meta;
+          };
+          break;
+        case 'Layout' : 
+          // e.g. OpportunityLineItem-商談商品 ページレイアウト → 商談商品 ページレイアウト
+          resetFunction = function(meta) {
+            const names = meta.fullName.split('-');
+            if(names.length > 1) {
+              const objName = names[0];
+              meta['object'] = objName;
+              meta['objectLabel'] = (objLabelMap.hasOwnProperty(objName)) ? objLabelMap[objName] : objName;
+              names.shift();  // remove object name
+              meta['customName'] = names.join('-'); 
+            } 
+            return meta;
+          };
+          break;
+        case 'Group' :
+        case 'RecordType' :
+        case 'Role' :
+          // Needs requestMetaLabel
+          break;
+        default : 
+          break;
+      }
+
+      let targets = [];
+      for(let meta of metadata) {
+        if(filterFunction && filterFunction(meta)) {
+          // Filter standard object
+          continue;
+        }
+        if(resetFunction) {
+          meta = resetFunction(meta);
+        }
+        targets.push(meta);
+      }
+      self.requestMetaLabel(type, targets, resolve);
+    });
+  }
+
+  // Request metadata label, e.g. : dashboard 
+  requestMetaLabel(type, targets, callback) {
+    const self = this;
+    const labelQueryMap = {
+      'Group' : { 'field' : 'Name', 'query' : 'SELECT Id, Name FROM Group' },
+      'Document' : { 'field' : 'Name', 'query' : 'SELECT Id, Name FROM Document' },
+      'Dashboard' : { 'field' : 'Title', 'query' : 'SELECT Id, Title FROM Dashboard' },
+      'EmailTemplate' : { 'field' : 'Name', 'query' : 'SELECT Id, Name FROM EmailTemplate' },
+      'ListView' : { 'field' : 'Name', 'query' : 'SELECT Id, Name FROM ListView' },
+      'RecordType' : { 'field' : 'Name', 'query' : 'SELECT Id, Name FROM RecordType' },
+      'Report' : { 'field' : 'Name', 'query' : 'SELECT Id, Name FROM Report' },
+      'Role' : { 'field' : 'Name', 'query' : 'SELECT Id, Name FROM UserRole' }
+    }
+    if(labelQueryMap.hasOwnProperty(type)) {
+      var labelQuery = labelQueryMap[type];
+      self.conn.query(labelQuery.query, function(err, res) {
+        if(err) return reject(err);
+        let labelMap = {};
+        for(let i = 0; i < res.records.length; i++) {
+          const record = res.records[i];
+          labelMap[record.Id] = record[labelQuery.field];
+        }
+        for(let i = 0; i < targets.length; i++) {
+          if(labelMap.hasOwnProperty(targets[i].id)) {
+            targets[i]['customName'] = labelMap[targets[i].id];
+          }
+        }
+        return callback(targets);
+      });
+    } else {
+      return callback(targets);
+    }
+  }
+
+  readChildMetadata(metadata, objLabelMap) {
     const self = this;
     return new Promise(function(resolve, reject) {
       if(metadata.length == 0) {
@@ -345,8 +524,16 @@ class SfdcApi {
                   // Filter standard field
                   continue;
                 }
-                if(meta.fullName) cMeta['Object'] = meta.fullName;
-                if(meta.label) cMeta['ObjectLabel'] = meta.label;
+                if(cMeta.label) cMeta['customName'] = cMeta.label;
+                if(meta.fullName) cMeta['object'] = meta.fullName;
+                if(meta.label) cMeta['objectLabel'] = meta.label;
+                if(utils.isBlank(cMeta.ObjectLabel) && objLabelMap.hasOwnProperty(meta.fullName)) {
+                  // Set Object Label for Workflow Alert
+                  cMeta['objectLabel'] = objLabelMap[meta.fullName];
+                }
+                if(child.typeName == 'WorkflowAlert' && cMeta.description) cMeta['customName'] = cMeta.description;
+                if(child.typeName == 'WorkflowFieldUpdate' && cMeta.name) cMeta['customName'] = cMeta.name;
+
                 metadataMap[child.typeName].push(cMeta);
               }
             }
@@ -423,42 +610,35 @@ class SfdcApi {
           types: pipeline.targetTypes
         }
       });
-      const Raven = require('raven');
       retrieveResult.complete(function(err, result) {
         if(err) return reject(err);
-        if(result.success=='true') {
-          self.logger('[SFDC] Retrieve metadata Done.');
-          // self.logger('[SFDC] packagePath DecompressZip .' + packagePath + ' > ' + metaPath + ' > ' + (fs.statSync(packagePath).size));
-          if(!fs.existsSync(packagePath)) return reject(new Error('Metadata zip not found'));
-          self.extractMetaZip(packagePath, metaPath, 0, function(err, success) {
-            if(err) return reject(err);
-            return resolve(success);
-          });
-        } else {
+        if(result.success!='true') {
           return reject(new Error('Retrieve metadata failed'));
         }
+      });
+      zipstream.on('error', function(err){
+        return reject(err);
+      });
+      // Retrieve and zip done
+      zipstream.on('close', function(){
+        self.logger('[SFDC] Retrieve metadata Done.');
+        // self.logger('[SFDC] packagePath DecompressZip .' + packagePath + ' > ' + metaPath + ' > ' + (fs.statSync(packagePath).size));
+        if(!fs.existsSync(packagePath)) return reject(new Error('Metadata zip not found'));
+        self.extractMetaZip(packagePath, metaPath, function(err, success) {
+          if(err) return reject(err);
+          return resolve(success);
+        });
       });
       retrieveResult.stream().pipe(zipstream);
     });
   }
 
   // Extract metadata zip file to src folder
-  // Metadata api may zip file cost sevaral ms
-  extractMetaZip(sourceZipPath, targetPath, presize, callback) {
-    const self = this;
+  extractMetaZip(sourceZipPath, targetPath, callback) {
     const fileinfo = fs.statSync(sourceZipPath);
     if(fileinfo.size == 0) {
       // Is written
-      return setTimeout(function(){
-        self.extractMetaZip(sourceZipPath, targetPath, presize, callback)
-      }, 500);
-    }
-    if(presize !== fileinfo.size) {
-      // Maybe written
-      presize = fileinfo.size;
-      return setTimeout(function(){
-        self.extractMetaZip(sourceZipPath, targetPath, presize, callback)
-      }, 500);
+      return callback(new Error('Metadata zip not found'));
     }
     // Ready to extract
     const unzipper = new DecompressZip(sourceZipPath)

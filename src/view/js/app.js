@@ -169,7 +169,7 @@ var app = new Vue({
       //console.log('>>>>run pipeline', id);
       var self = this;
       self.request('pipeline-run', {id : id}, function(err, result){
-        console.log('>>>pipeline-run', err, result);
+        //console.log('>>>pipeline-run', err, result);
         // Will fire multiple time
         if(err) self.handleError(err);
         if(result && result.type != 'process') {
@@ -232,7 +232,7 @@ var app = new Vue({
     handleError : function(err) {
       let message = (typeof err == 'string') ? err : err.message;
       if(message && message.length > 0) {
-        this.showMessage({ type : 'error', message : message });
+        this.showMessage({ type : err.type || 'error', message : message });
       }
     }
   }

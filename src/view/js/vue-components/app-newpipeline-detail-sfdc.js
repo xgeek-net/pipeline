@@ -9,14 +9,36 @@ Vue.component('app-newpipeline-detail-sfdc', {
       },
       search : {
         type : 'all',
+        object : 'all',
         keyword : null,
         showChecked : false
       },
       metadataMap : null,
       metadataTypes : null,
+      metadataTypeOptions : null,
+      metadataObjectOptions : null,
       metadataList : null,
       metaChecked : 0,
-      allChecked : false
+      allChecked : false,
+      // Const
+      excelHandler : new ExcelHandler(),
+      EXCEL_TYPES : [
+        'application/vnd.ms-excel', 
+        'application/msexcel',
+        'application/x-msexcel',
+        'application/x-ms-excel',
+        'application/x-excel',
+        'application/x-dos_ms_excel',
+        'application/xls',
+        'application/x-xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ],
+      OBJECT_TYPES : ['all', 'BusinessProcess', 'CustomField', 'CustomMetadata', 'CompactLayout', 'FieldSet', 'QuickAction', 'WebLink', 'ListView', 'Layout', 
+                      'RecordType', 'SharingReason', 'ValidationRule', 'WorkflowAlert', 'WorkflowRule', 'WorkflowFieldUpdate',
+                      // Folders
+                      'Dashboard', 'Report', 'EmailTemplate', 'Document'],
+      CHILD_TYPES : ['CustomField', 'BusinessProcess', 'RecordType', 'WebLink', 'ValidationRule', 'SharingReason', 'ListView', 'FieldSet', 'CompactLayout',
+                      'WorkflowAlert', 'WorkflowTask', 'WorkflowOutboundMessage', 'WorkflowFieldUpdate', 'WorkflowRule', 'WorkflowTimeTrigger', 'WorkflowActionReference']
     }
   },
   mounted: function () {
@@ -33,16 +55,18 @@ Vue.component('app-newpipeline-detail-sfdc', {
      * Reload component when connection changed
      * Called from parent component
      */
-    reload : function() {
+    reload : function(conn) {
       const self = this;
-      self.pipeline = { type : null, name : '' };
-      self.search = { type : 'all', keyword : null };
+      self.pipeline = { type : null, name : '', targetTypes : [] };
+      self.search = { type : 'all', object : 'all', keyword : null, showChecked : false };
       self.metadataMap = null;
       self.metadataTypes = null;
+      self.metadataTypeOptions = null;
+      self.metadataObjectOptions = null;
       self.metadataList = null;
       self.metaChecked = 0;
-
-      if(self.connection) {
+      if(conn) {
+        self.connection = conn;
         self.listMetadataList();
       }
     },
@@ -56,9 +80,18 @@ Vue.component('app-newpipeline-detail-sfdc', {
       self.pipeline.targetTypes = [];
       for(let key in self.metadataMap) {
         let members = [];
+        let folders = [];
         for(let meta of self.metadataMap[key]) {
           if(meta.MetaChecked == true) {
-            const memberName = (meta.Object) ? meta.Object + '.' + meta.fullName : meta.fullName;
+            // Add Folder
+            if(['Dashboard', 'Report', 'EmailTemplate', 'Document'].indexOf(meta.type) >= 0
+              && meta.folder && folders.indexOf(meta.folder)
+            ) {
+              folders.push(meta.folder);
+              members.push(meta.folder);
+            }
+            const childTypes = self.CHILD_TYPES;
+            const memberName = (childTypes.indexOf(meta.type) >= 0 && meta.object) ? meta.object + '.' + meta.fullName : meta.fullName;
             members.push(memberName);
           }
         }
@@ -70,7 +103,11 @@ Vue.component('app-newpipeline-detail-sfdc', {
       return self.pipeline;
     },
     selectEntityType : function(ev) {
+      this.search.object = 'all';
       this.search.keyword = '';
+      this.searchMetadata();
+    },
+    selectCustomObject : function(ev) {
       this.searchMetadata();
     },
     listMetadataList : function(ev) {
@@ -81,11 +118,13 @@ Vue.component('app-newpipeline-detail-sfdc', {
         { connection : self.connection }, 
         function(err, result) {
           // { components : components, types : {} }
-          //console.log('>>> result ', result);
+          console.log('>>> result ', result);
           app.hideLoading();
           if(err) return app.handleError(err);
           self.metadataMap = result.components;
           self.metadataTypes = result.types;
+          self.metadataTypeOptions = self.sortByLabel(result.types);
+          self.metadataObjectOptions = self.getObjectOptions(self.metadataMap.CustomField);
           self.metaChecked = 0;
           if(result && self.pipeline.targetTypes.length > 0) {
             self.initMetaCheck();
@@ -94,6 +133,143 @@ Vue.component('app-newpipeline-detail-sfdc', {
         }
       );
     },
+
+    // Export metadata to Excel
+    handleExport : function(ev) {
+      const self = this;
+      ev.target.setAttribute('disabled','disabled');
+      let data = { 'Metadata' : [['TYPE', 'NAME', 'OBJECT/FOLDER', 'REMARKS']], 'Reference' : [['TYPE']] };
+      for(let key in self.metadataMap) {
+        for(let meta of self.metadataMap[key]) {
+          if(meta.MetaChecked !== true) continue;
+          const objLabel = meta.objectLabel || meta.folderLabel;
+          let line = [];
+          line.push(self.metadataTypes[meta.type]); // Entity Type
+          line.push(meta.customName || meta.fullName);  // Name
+          line.push(objLabel || '');  // Object / Folder
+          line.push((meta.customName) ? meta.fullName : '');  // Remark(API Name)
+          data.Metadata.push(line);
+        }
+      }
+      for(let metaType of self.metadataTypeOptions) {
+        if(metaType == 'all') continue;
+        let line = [metaType.label];
+        data.Reference.push(line);
+      }
+      self.excelHandler.write(data);
+      ev.target.removeAttribute('disabled');
+    },
+
+    // Import metadata from Excel
+    handleUploadFile : function(ev) {
+      const self = this;
+      ev.target.setAttribute('disabled','disabled');
+      const files = ev.target.files;
+
+      if(!files || self.excelHandler.SUPPORT_TYPES.indexOf(files[0].type) < 0) {
+        ev.target.removeAttribute('disabled');
+        if(self.$refs.file) self.$refs.file.value = '';
+        return app.handleError('Excel file is required.');
+      }
+      self.excelHandler.read(files[0], function(err, lines) {
+        //console.log('>>>>line', err, lines);
+        // Clear file value
+        if(self.$refs.file) self.$refs.file.value = '';
+        if(err) {
+          ev.target.removeAttribute('disabled');
+          return app.handleError(err);
+        }
+        if(!lines || lines.length == 0 || !lines[0].hasOwnProperty('NAME') || !lines[0].hasOwnProperty('TYPE')) {
+          ev.target.removeAttribute('disabled');
+          return app.handleError('Data is not found.');
+        }
+        let typeMap = {}; // 'Apexクラス' : 'ApexClass'
+        for(mtype in self.metadataTypes) {
+          typeMap[self.metadataTypes[mtype]] = mtype;
+        }
+        // Set all check off
+        for(let key in self.metadataMap) {
+          for(let i = 0; i < self.metadataMap[key].length; i++) {
+            self.metadataMap[key][i]['MetaChecked'] = false;
+          }
+        }
+
+        let warings = [];
+        self.metaChecked = 0;
+        for(let line of lines) {
+          const rowNum = line.__rowNum__;
+          if(!typeMap.hasOwnProperty(line.TYPE)) {
+            warings.push('Line ' + rowNum + ': TYPE "' + line.TYPE + '" is not found.');
+            continue;
+          }
+          const metaType = typeMap[line.TYPE];
+          let exist = false;
+          for(let i = 0; i < self.metadataMap[metaType].length; i++) {
+            const meta = self.metadataMap[metaType][i];
+            const name = (line.NAME) ? line.NAME.trim() : null;
+            const objectLabel = (line['OBJECT/FOLDER']) ? line['OBJECT/FOLDER'].trim() : null;
+            if((meta.customName && name === meta.customName) || name === meta.fullName) {
+              if((meta.objectLabel && objectLabel == meta.objectLabel) || !meta.objectLabel) {
+                exist = true;
+                self.metadataMap[metaType][i]['MetaChecked'] = true;
+                self.metaChecked++;
+                // console.log('>>>>Checked', self.metadataMap[metaType][i]);
+              }
+            }
+          }
+          if(exist == false) {
+            warings.push('Line ' + rowNum + ': NAME "' + line.NAME + '" is not found.');
+            continue;
+          }
+        }
+        if(warings.length > 0) {
+          app.handleError({ type : 'warning', message : warings.join('<br />') })
+        }
+
+        // Show Checked
+        self.search = { type : 'all', object : 'all', keyword : null, showChecked : true };
+        self.searchMetadata();
+        ev.target.removeAttribute('disabled');
+      });
+    },
+
+    // Sort type by label
+    sortByLabel : function(metadataTypes) {
+      if(metadataTypes == null) return null;
+      let types = [];
+      for(mtype in metadataTypes) {
+        types.push({ value : mtype, label : metadataTypes[mtype] });
+      }
+      types = types.sort(function(a, b){
+        const x = a.label;
+        const y = b.label;
+        if (x > y) return 1;
+        if (x < y) return -1;
+        return 0;
+      });
+      return types;
+    },
+    // Get all object from field metadata
+    getObjectOptions : function(fields) {
+      if(!fields || fields.length == 0) return null;
+      let objects = [];
+      let values = [];
+      for(f of fields) {
+        if(values.indexOf(f.object) >= 0) continue;
+        // Filter duplicate
+        values.push(f.object);
+        objects.push({ value : f.object, label : f.objectLabel });
+      }
+      objects = objects.sort(function(a, b){
+        const x = a.label;
+        const y = b.label;
+        if (x > y) return 1;
+        if (x < y) return -1;
+        return 0;
+      });
+      return objects;
+    },
+
     // Check on edit pipeline
     initMetaCheck : function() {
       const self = this;
@@ -104,7 +280,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
       }
       for(let key in self.metadataMap) {
         for(let meta of self.metadataMap[key]) {
-          const memberName = (meta.Object) ? meta.Object + '.' + meta.fullName : meta.fullName;
+          const memberName = (meta.object) ? meta.object + '.' + meta.fullName : meta.fullName;
           if(types.hasOwnProperty(key) && types[key].indexOf(memberName) >= 0) {
             // Check target component
             meta['MetaChecked'] = true;
@@ -127,9 +303,19 @@ Vue.component('app-newpipeline-detail-sfdc', {
             willShow = true;
           } else {
             keyword = keyword.toUpperCase();
-            if((meta.label && meta.label.toUpperCase().indexOf(keyword) >= 0) || 
-              (meta.fullName && meta.fullName.toUpperCase().indexOf(keyword) >= 0)) {
+            if(meta.customName) {
+              // Match customName(Label) first
+              if(meta.customName.toUpperCase().indexOf(keyword) >= 0) willShow = true;
+            } else if(meta.fullName && meta.fullName.toUpperCase().indexOf(keyword) >= 0) {
               willShow = true;
+            }
+          }
+          // Filter by object (only CustomField)
+          if(metaType == 'CustomField' && self.search.object != 'all') {
+            if(meta.object == self.search.object && willShow) {
+              willShow = true;
+            } else {
+              willShow = false;
             }
           }
           // Filter by check
@@ -157,9 +343,11 @@ Vue.component('app-newpipeline-detail-sfdc', {
         _pushMetadaList(self.search.type, self.metadataMap[self.search.type]);
       }
     },
+    // Event on click check all checkbox
     checkAll : function(ev) {
       const self = this;
       const checked = ev.target.checked;
+      self.allChecked = checked;
       let metaList = [];
       for(let i = 0; i < self.metadataList.length; i++) {
         const meta = self.metadataList[i];
@@ -171,6 +359,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
       self.metadataList = metaList;
       self.metaChecked = self.countChecked();
     },
+    // Event on click row checkbox
     checkMetadata : function(index, ev) {
       const self = this;
       const checked = ev.target.checked;
@@ -195,10 +384,12 @@ Vue.component('app-newpipeline-detail-sfdc', {
     },
     showOnlyChecked : function(ev) {
       const self = this;
-      self.search.showChecked = ev.target.checked;
+      const checked = ev.target.checked;
+      self.search.showChecked = checked;
       // Clear search condition
-      if(self.search.showChecked == true) {
+      if(checked == true) {
         self.search.type = 'all';
+        self.search.object = 'all';
         self.search.keyword = '';
       }
       self.searchMetadata();
@@ -216,61 +407,78 @@ Vue.component('app-newpipeline-detail-sfdc', {
   },
   template: `
     <article class="slds-card new-pipeline-detail-sfdc">
-      <div class="slds-card__body slds-card__body_inner slds-m-around_small">
+      <div class="slds-card__body slds-card__body_inner slds-m-top_small slds-m-bottom_small">
+        <div class="slds-form slds-form_horizontal slds-wrap slds-grid">
+          <div class="slds-size_1-of-3">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-size_3-of-12 slds-text-align_left" for="ipt-pipeline-name">Pipeline Name</label>
+              <div class="slds-form-element__control slds-size_9-of-12">
+                <input type="text" id="ipt-pipeline-name" v-model="pipeline.name" class="slds-input input-small" placeholder="Pipeline Name" />
+              </div>
+            </div><!-- .slds-form-element -->
+          </div><!-- .slds-size_1-of-3 -->  
+          <div class="slds-size_2-of-3">
+            <div class="slds-wrap slds-text-align_right">
+              <input type="file" ref="file" class="slds-hide" v-on:change="handleUploadFile">
+              <div class="slds-button-group inline-group" role="group">
+                <button class="slds-button slds-button_neutral" v-bind:disabled="metadataList==null || metaChecked==0" v-on:click="handleExport">
+                  <svg class="slds-button__icon slds-button__icon_left">
+                    <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#download"></use>
+                  </svg>Export</button>
+                <button class="slds-button slds-button_neutral" v-bind:disabled="metadataList==null" v-on:click="$refs.file.click()">
+                  <svg class="slds-button__icon slds-button__icon_left">
+                    <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#upload"></use>
+                  </svg>Import</button>
+              </div>
+            </div>
+
+          </div><!-- .slds-size_1-of-3 --> 
+        </div><!-- .slds-grid -->  
         <div class="slds-form slds-form_horizontal">
-        <div class="slds-wrap slds-grid">
-            <div class="slds-size_1-of-3">
-              <div class="slds-form-element">
-                <label class="slds-form-element__label slds-p-right_small" for="ipt-pipeline-name">Pipeline Name</label>
-                <div class="slds-form-element__control">
-                  <input type="text" id="ipt-pipeline-name" v-model="pipeline.name" class="slds-input input-small" placeholder="Pipeline Name" />
-                </div>
-              </div><!-- .slds-form-element -->
-            </div><!-- .slds-size_1-of-3 -->  
-          </div><!-- .slds-grid -->  
           <div v-if="metadataMap!=null" class="slds-wrap slds-grid pr10 mt1">
             <div class="slds-size_1-of-3">
               <div class="slds-form-element">
-                <label class="slds-form-element__label slds-p-right_small">Entity Type</label>
+                <label class="slds-form-element__label slds-size_3-of-12 slds-text-align_left">Entity Type</label>
                 <div class="slds-form-element__control">
                   <div class="slds-select_container input-small">
                     <select class="slds-select" v-model="search.type" v-on:change="selectEntityType()">
                       <option value="all" v-bind:seleced="search.type=='all'">All</option>
-                      <option v-for="metaType in Object.keys(metadataTypes)" v-bind:value="metaType" v-bind:seleced="search.type==metaType">{{ metadataTypes[metaType] }}</option>
+                      <option v-for="metaType in metadataTypeOptions" v-bind:value="metaType.value" v-bind:seleced="search.type==metaType.value">{{ metaType.label }}</option>
                     </select>
                   </div>
                 </div><!-- .slds-form-element__control -->
               </div><!-- .slds-form-element -->
             </div>  
-            <div class="slds-size_1-of-3 text-left">
+            <!-- show  -->
+            <div class="text-left slds-size_3-of-12 select-middle-col" v-if="search.type=='CustomField' && metadataObjectOptions != null">
+              <div class="slds-form-element__control">
+                <div class="slds-select_container input-small">
+                  <select class="slds-select" v-model="search.object" v-on:change="selectCustomObject()">
+                    <option value="all" v-bind:seleced="search.object=='all'">All</option>
+                    <option v-for="objMeta in metadataObjectOptions" v-bind:value="objMeta.value" v-bind:seleced="search.object==objMeta.value">{{ objMeta.label }}</option>
+                  </select>
+                </div>
+              </div><!-- .slds-form-element__control -->
+            </div>
+            <div class="text-left" v-bind:class="{ 'slds-size_3-of-12' : (search.type=='CustomField' && metadataObjectOptions != null), 'slds-size_6-of-12' : (search.type!='CustomField' || metadataObjectOptions == null) }">
               <div class="slds-form-element slds-m-left_medium">
-                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right w80">
+                <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right w275">
                   <svg class="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default">
                     <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#search"></use>
                   </svg>
                   <input type="text" id="ipt-keyword" v-model="search.keyword" v-on:keyup="searchMetadata" class="slds-input input-small" placeholder="Search Component" />
                 </div>
               </div><!-- .slds-form-element -->
-            </div>  
-            <div class="slds-size_1-of-3">
+            </div> 
+            <div class="slds-size_2-of-12" v-bind:class="{ 'check-wide-col' : (search.type=='CustomField' && metadataObjectOptions != null) }">
               <div class="slds-wrap slds-text-align_right">
                 <span class="slds-checkbox">
-                  <input type="checkbox" name="options" id="chk-show-checked" v-on:click="showOnlyChecked" value="1" />
+                  <input type="checkbox" name="options" id="chk-show-checked" v-bind:checked="search.showChecked" v-on:click="showOnlyChecked" value="1" />
                   <label class="slds-checkbox__label" for="chk-show-checked">
                     <span class="slds-checkbox_faux"></span>
-                    <span class="slds-form-element__label">&nbsp;Show Checked ({{ metaChecked }})</span>
+                    <span class="slds-form-element__label mr0">&nbsp;Checked ({{ metaChecked }})</span>
                   </label>
                 </span>
-                <div class="slds-button-group inline-group" role="group">
-                  <button class="slds-button slds-button_neutral" disabled="disabled" v-on:click="listMetadataList">
-                    <svg class="slds-button__icon slds-button__icon_left">
-                      <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#download"></use>
-                    </svg>Export</button>
-                  <button class="slds-button slds-button_neutral" disabled="disabled" v-on:click="listMetadataList">
-                    <svg class="slds-button__icon slds-button__icon_left">
-                      <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#upload"></use>
-                    </svg>Import</button>
-                </div>
               </div>
             </div>
           </div><!-- .slds-grid -->  
@@ -297,11 +505,11 @@ Vue.component('app-newpipeline-detail-sfdc', {
                   <th scope="col">
                     <div class="slds-truncate" title="Name">Name</div>
                   </th>
-                  <th scope="col" v-if="search.type=='all'">
-                    <div class="slds-truncate" title="Type">Object</div>
+                  <th scope="col" v-if="OBJECT_TYPES.indexOf(search.type)>=0">
+                    <div class="slds-truncate" title="Type">Object/Folder</div><!-- JP:種別 -->
                   </th>
-                  <th scope="col">
-                    <div class="slds-truncate" title="Type">Type</div>
+                  <th scope="col" v-if="search.type=='all'">
+                    <div class="slds-truncate" title="Entity">Entity Type</div><!-- JP:種類 -->
                   </th>
                 </tr>
               </thead>
@@ -323,13 +531,13 @@ Vue.component('app-newpipeline-detail-sfdc', {
                     </div>
                   </th>
                   <td>
-                    <div class="slds-truncate">{{ row.label || row.fullName }}</div>
+                    <div class="slds-truncate">{{ row.customName || row.fullName }}</div>
+                  </td>
+                  <td v-if="OBJECT_TYPES.indexOf(search.type)>=0">
+                    <div class="slds-truncate">{{ row.objectLabel || row.folderLabel }}</div>
                   </td>
                   <td v-if="search.type=='all'">
-                    <div class="slds-truncate">{{ row.ObjectLabel }}</div>
-                  </td>
-                  <td>
-                    <div class="slds-truncate">{{ (search.type=='all') ? metadataTypes[row.type] : (row.ObjectLabel || metadataTypes[row.type]) }}</div>
+                    <div class="slds-truncate">{{ metadataTypes[row.type] }}</div>
                   </td>
                 </tr>
               </tbody>
