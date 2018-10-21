@@ -393,7 +393,7 @@ class SfdcApi {
               meta['object'] = objName;
               meta['objectLabel'] = (objLabelMap.hasOwnProperty(objName)) ? objLabelMap[objName] : objName;
               names.shift();  // remove object name
-              meta['customName'] = names.join('-'); 
+              meta['customName'] = decodeURIComponent(names.join('-')); 
             } 
             return meta;
           };
