@@ -3,11 +3,15 @@ const fs = require('fs');
 const path = require('path');
 const makeDir = require('make-dir');
 const rimraf = require('rimraf');
+const xmlbuilder = require('xmlbuilder');
 const archiver = require('archiver');
 const sgp = require('sfdc-generate-package');
 
 const SfdcApi = require('./SfdcApi.js');
 const Connect = require('./Connect.js');
+
+const PACKAGE_XML_FILE_NAME = 'package.xml';
+const DESTRUCTIVE_XML_FILE_NAME = 'destructiveChanges.xml';
 
 class Metadata {
   constructor(opts) {
@@ -109,6 +113,37 @@ class Metadata {
   }
 
   /**
+   * Generate package.xml and destructiveChanges.xml for Destruct
+   * @param {String} metaPath - pipeline cache path
+   */
+  createDestructiveChanges(targetPath, opts) {
+    opts = opts || {};
+    const metaPath = path.join(targetPath, 'metadata', 'src');
+    
+    return new Promise(function(resolve, reject) {
+      // Rename to destructiveChanges.xml
+      fs.renameSync(metaPath + '/' + PACKAGE_XML_FILE_NAME, metaPath + '/' + DESTRUCTIVE_XML_FILE_NAME);
+      // Generate blank package.xml
+      const xml = xmlbuilder.create('Package')
+      .att('xmlns', 'http://soap.sforce.com/2006/04/metadata')
+      .dec('1.0', 'UTF-8')
+      .ele('version')
+        .t(opts.version || '40.0');
+      const xmlContent = xml.end({ pretty: true, indent: '  ', newline: '\n' });
+      fs.writeFileSync(metaPath + '/' + PACKAGE_XML_FILE_NAME, xmlContent);
+
+      // Remove metadata files
+      fs.readdirSync(metaPath).filter(function (file) {
+        if(fs.statSync(metaPath+'/'+file).isDirectory()) {
+          rimraf.sync(metaPath+'/'+file);
+        }
+        return resolve();
+      });
+    });
+    
+  }
+
+  /**
    * Archive metadata package zip 
    * @param {String} targetPath (zip file root path('output/' )
    * @param {String} opts { filename : 'MyPackage.zip' }
@@ -161,7 +196,7 @@ class Metadata {
       })
       .catch(function(err){
         return reject(err);
-      })
+      });
     });
   }
 
