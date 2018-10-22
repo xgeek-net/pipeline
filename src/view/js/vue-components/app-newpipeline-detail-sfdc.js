@@ -280,7 +280,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
       }
       for(let key in self.metadataMap) {
         for(let meta of self.metadataMap[key]) {
-          const memberName = (meta.object) ? meta.object + '.' + meta.fullName : meta.fullName;
+          const memberName = (meta.object && key !== 'Layout') ? meta.object + '.' + meta.fullName : meta.fullName;
           if(types.hasOwnProperty(key) && types[key].indexOf(memberName) >= 0) {
             // Check target component
             meta['MetaChecked'] = true;

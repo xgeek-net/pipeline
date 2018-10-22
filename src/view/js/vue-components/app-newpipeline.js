@@ -7,10 +7,12 @@ Vue.component('app-newpipeline', {
           fromApiVersion : '',
           to : '',
           toApiVersion : '',
+          action : 'deploy',
           runTests : false
         },
         validate : false,
         connection : null,
+        actionList : [ {value : 'deploy', label : 'Deploy (Add/Update)'}, {value : 'destruct', label : 'Destruct (Delete)'} ],
         apiVersionList : []
       }
     },
@@ -34,7 +36,7 @@ Vue.component('app-newpipeline', {
     },
     methods: {
       reload : function() {
-        this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '', runTests : false };
+        this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '', action : 'deploy', runTests : false };
         this.validate = false;
         this.connection = null;
         this.initApiVerList();
@@ -103,6 +105,7 @@ Vue.component('app-newpipeline', {
           pipeline['to'] = self.pipeline.to;
           pipeline['toApiVersion'] = self.pipeline.toApiVersion;
           pipeline['fromApiVersion'] = self.pipeline.fromApiVersion;
+          pipeline['action'] = self.pipeline.action;
           pipeline['runTests'] = self.pipeline.runTests;
           pipeline['status'] = 'ready';
           pipeline['created_at'] = now.toISOString();
@@ -149,7 +152,7 @@ Vue.component('app-newpipeline', {
         if(!pipeline.from || pipeline.from.length == 0) {
           return 'CONNECTION (FROM) is required';
         }
-        if(!pipeline.to || pipeline.to.length == 0) {
+        if(pipeline.action != 'destruct' && (!pipeline.to || pipeline.to.length == 0)) {
           return 'CONNECTION (TO) is required';
         }
         if(!pipeline.name || pipeline.name.length == 0) {
@@ -222,9 +225,8 @@ Vue.component('app-newpipeline', {
                 </label>
                 <div class="slds-form-element__control slds-size_4-of-12">
                   <div class="slds-select_container">
-                    <select class="slds-select" disabled="disabled">
-                      <option value="deploy">Deploy (Add/Update)</option>
-                      <option value="destruct">Destruct (Delete)</option>
+                    <select class="slds-select" v-model="pipeline.action">
+                      <option v-for="act in actionList" v-bind:value="act.value" v-bind:seleced="pipeline.action==act.value">{{ act.label }}</option>
                     </select>
                   </div>
                 </div>
@@ -233,12 +235,12 @@ Vue.component('app-newpipeline', {
             <footer class="slds-card__footer"></footer>
           </article>
         </div><!-- .slds-size_5-of-12 -->
-        <div class="new-pipeline-connect-icon mt4">
+        <div class="new-pipeline-connect-icon mt4" v-if="pipeline.action!='destruct'">
           <div class="slds-align_absolute-center">
             <span class="pipeline-from-icon"><i class="fas fa-arrow-right"></i></span>
           </div>
         </div><!-- .slds-size_1-of-12 -->
-        <div class="new-pipeline-connect">
+        <div class="new-pipeline-connect" v-if="pipeline.action!='destruct'">
           <article class="slds-card ">
             <div class="slds-card__header slds-grid">
               <div class="slds-media__figure">
@@ -302,7 +304,7 @@ Vue.component('app-newpipeline', {
         <div class="slds-size_12-of-12 mt1" v-if="validate==true">
           <div class="slds-wrap slds-text-align_right">
             <button class="slds-button slds-button_neutral" v-on:click="savePipeline">Save</button>
-            <button class="slds-button slds-button_brand" v-on:click="runPipeline">Run Pipeline</button>
+            <button class="slds-button" v-bind:class="{'slds-button_brand': pipeline.action!='destruct', 'slds-button_destructive': pipeline.action=='destruct'}" v-on:click="runPipeline">Run Pipeline</button>
           </div>
         </div><!-- .slds-size_11-of-12 -->
       </div><!-- #pipeline-new -->

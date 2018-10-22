@@ -254,15 +254,27 @@ class Pipeline {
           // Refresh Token for bitbucket
           connect.restoreToken(fromConn, token);
         }
+        if(pipeline.action == 'destruct') {
+          // Destruct metadata
+          return Promise.resolve(true);
+        }
         return metadata.checkConnect(toConn);
       })
       .then(function(success) {
         pipelineLog('[SF.api] Authorize : ' + success);
         return client.getFiles(pipeline, fromConn, pipelineLog);
+        //return Promise.resolve(true);
       })
       .then(function(success) {
         // Generate package.xml file
         return metadata.createPackageXml(pPath, { version : pipeline.toApiVersion });
+      })
+      .then(function() {
+        if(pipeline.action == 'destruct') {
+          // Generate destructiveChanges.xml, package.xml files
+          return metadata.createDestructiveChanges(pPath, { version : pipeline.toApiVersion });
+        }
+        return Promise.resolve(true);
       })
       .then(function() {
         pipelineLog('[Metadata] Generate package.xml Done.');
@@ -270,16 +282,26 @@ class Pipeline {
         return metadata.archive(pPath);
       })
       .then(function(zipPath) {
-        // Do Deploy
         // opts @see https://jsforce.github.io/jsforce/doc/Metadata.html#deploy
-        let opts = { rollbackOnError : true, runAllTests : (pipeline.runTests === true) };
-        return metadata.deploy(toConn, zipPath, opts, function(deployResult) {
-          self.outputDeployProcessLog(pipelineLog, deployResult);
-        });
+        let opts = { rollbackOnError : true };
+        if(pipeline.action == 'destruct') {
+          // Do Destruct
+          opts['purgeOnDelete'] = true;
+          return metadata.deploy(fromConn, zipPath, opts, function(deployResult) {
+            self.outputDeployProcessLog(pipelineLog, deployResult);
+          });
+        } else {
+          // Do Deploy
+          opts['runAllTests'] = (pipeline.runTests === true);
+          return metadata.deploy(toConn, zipPath, opts, function(deployResult) {
+            self.outputDeployProcessLog(pipelineLog, deployResult);
+          });
+        }
       })
       .then(function(deployResult) {
         // Save deploy result
-        deployResult['url'] = toConn.instanceUrl + '/changemgmt/monitorDeploymentsDetails.apexp?asyncId=' + deployResult.id
+        const targetConn = (pipeline.action == 'destruct') ? fromConn : toConn;
+        deployResult['url'] = targetConn.instanceUrl + '/changemgmt/monitorDeploymentsDetails.apexp?asyncId=' + deployResult.id
         self.outputDeployLog(pipelineLog, deployResult);
         const now = new Date();
         const endTime = now.toISOString();
