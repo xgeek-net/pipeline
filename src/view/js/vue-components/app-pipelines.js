@@ -108,7 +108,7 @@ Vue.component('app-pipelines', {
               <td class="main-col">
                 <div class="slds-truncate pipeline-name">
                   <a v-on:click="openDetail(row.id)">{{ row.name }}</a><br />
-                  <p class="pipeline-desc slds-m-top_xx-small" v-if="(connectionmap[row.from] && connectionmap[row.to])">
+                  <p class="pipeline-desc slds-m-top_xx-small" v-if="connectionmap[row.from]">
                     <i class="fab fa-github type-icon-small" v-if="connectionmap[row.from].type=='github'"></i>
                     <i class="fab fa-bitbucket type-icon-small" v-if="connectionmap[row.from].type=='bitbucket'"></i>
                     <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="connectionmap[row.from].type=='sfdc'"> 
@@ -121,16 +121,19 @@ Vue.component('app-pipelines', {
                     <span v-if="row.type=='branch'">{{ row.branch.name }}</span>
                     <span v-if="row.type=='commit'">#{{ (row.commits.length > 1) ? row.commits[0].sha.substr(0, 10) + '...' : row.commits[0].sha.substr(0, 10) }}</span>
                     &nbsp;
-                    <i class="fas fa-arrow-right type-icon-small"></i>
-                    &nbsp;
-                    <i class="fab fa-github type-icon-small" v-if="connectionmap[row.to].type=='github'"></i>
-                    <i class="fab fa-bitbucket type-icon-small" v-if="connectionmap[row.to].type=='bitbucket'"></i>
-                    <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="connectionmap[row.to].type=='sfdc'"> 
-                      <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
-                        <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
-                      </svg>
+                    <i class="fas fa-times type-icon-small" v-if="!connectionmap[row.to]"></i>
+                    <i class="fas fa-arrow-right type-icon-small" v-if="connectionmap[row.to]"></i>
+                    <span v-if="connectionmap[row.to]">
+                      &nbsp;
+                      <i class="fab fa-github type-icon-small" v-if="connectionmap[row.to].type=='github'"></i>
+                      <i class="fab fa-bitbucket type-icon-small" v-if="connectionmap[row.to].type=='bitbucket'"></i>
+                      <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="connectionmap[row.to].type=='sfdc'"> 
+                        <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
+                        </svg>
+                      </span>
+                      {{ connectionmap[row.to].name }}
                     </span>
-                    {{ connectionmap[row.to].name }}
                   </p><!-- .pipeline-desc -->
                 </div>
               </td>
