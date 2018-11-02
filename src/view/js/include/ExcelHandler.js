@@ -27,30 +27,75 @@ ExcelHandler.prototype.read = function(file, callback) {
 
 // Export data to excel
 ExcelHandler.prototype.write = function(data, fileName) {
-  fileName = fileName || 'Pipeline.xlsx';
-  function s2ab(s) {
-    var buf = new ArrayBuffer(s.length);
-    var view = new Uint8Array(buf);
-    for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-    return buf;
-  }
-  const wb = XLSX.utils.book_new();
-  for(let sheetName in data) {
-    const ws = XLSX.utils.aoa_to_sheet(data[sheetName]);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  }
-  // const ws = XLSX.utils.aoa_to_sheet(data['Reference']);
-  // XLSX.utils.book_append_sheet(wb, ws, 'Reference');
-
-  const fileContent = XLSX.write(wb, {bookType:'xlsx', bookSST:true, type: 'binary'});
-  let link = document.createElement("A");
-  const blob = new Blob([s2ab(fileContent)],{type:""})
-  link.href = window.URL.createObjectURL(blob);
-  link.download = fileName;
-  link.target = '_blank';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const self = this;
+  fileName = fileName || 'Pipeline';
+  XlsxPopulate
+  .fromBlankAsync()
+  .then(function(workbook) {
+    // Create sheets
+    workbook.sheet(0).name('Metadata');
+    workbook.addSheet('Reference');
+    for(let sheetName in data) {
+      const sheet = workbook.sheet(sheetName);
+      let columnCount = 0;
+      let lineCount = 0;
+      for(let l = 0; l < data[sheetName].length; l++) {
+        let line = data[sheetName][l];
+        let styles = {
+          'border' : {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" }
+          },
+          'wrapText' : true};
+        if(l == 0) {
+          lineCount = data[sheetName].length;
+          columnCount = line.length;
+        }
+        for(let c = 0; c < line.length; c++) {
+          // l0-c0 to A1, l0-c1 to B1
+          let val = line[c];
+          let cellNo = String.fromCharCode(65 + c) + (l + 1);
+          sheet.cell(cellNo).value(val).style(styles);
+          if(l == 0) {
+            let fillStyle = (c < 3) ? {'fill' : '4285f4'} : {'fill' : 'a5a5a5'};
+            sheet.cell(cellNo).style(fillStyle);
+          } else {
+            if(c == 4 && val.length > 0) {
+              sheet.cell(cellNo).value(moment(val).format('YYYY/MM/DD HH:mm'))
+            }
+          }
+        }
+      }
+      // Rejust cell width to fit data
+      for(let c = 0; c < columnCount; c++) {
+        let cellChar = String.fromCharCode(65 + c);
+        // A1:A20
+        const maxLength = sheet.range(cellChar + '1:' + cellChar + lineCount)
+        .reduce(function(max, cell) {
+          const value = cell.value();
+          if (value === undefined) return max;
+          // set length to 2x if has japanese string
+          const vLen = self.getBytes(value.toString());
+          return Math.max(max, vLen);
+        }, 0);
+        sheet.column(cellChar).width(maxLength + 5);
+      }
+    }
+    return workbook.outputAsync();
+  })
+  .then(function(blob) {
+    let link = document.createElement('A');
+    //const blob = new Blob([s2ab(fileContent)],{type:""})
+    link.href = window.URL.createObjectURL(blob);
+    link.download = fileName + '.xlsx';;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+  
 }
 
 // Read and convert xlsx to json 
@@ -112,4 +157,17 @@ ExcelHandler.prototype.handleCodePoints = function(array) {
     index += CHUNK_SIZE;
   }
   return result;
+}
+// 'abcde' → 5, 'あいうえお' → 10
+ExcelHandler.prototype.getBytes = function(txt) {
+  var length = 0;
+  for (var i = 0; i < txt.length; i++) {
+    var c = txt.charCodeAt(i);
+    if ((c >= 0x0 && c < 0x81) || (c === 0xf8f0) || (c >= 0xff61 && c < 0xffa0) || (c >= 0xf8f1 && c < 0xf8f4)) {
+      length += 1;
+    } else {
+      length += 2;
+    }
+  }
+  return length;
 }

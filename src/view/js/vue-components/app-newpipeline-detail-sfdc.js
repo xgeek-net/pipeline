@@ -20,6 +20,9 @@ Vue.component('app-newpipeline-detail-sfdc', {
       metadataList : null,
       metaChecked : 0,
       allChecked : false,
+      sortByField : 'NAME',
+      sortByASC : true,
+      showModifiedColumn : false,
       // Const
       excelHandler : new ExcelHandler(),
       EXCEL_TYPES : [
@@ -64,6 +67,9 @@ Vue.component('app-newpipeline-detail-sfdc', {
       self.metadataTypeOptions = null;
       self.metadataObjectOptions = null;
       self.metadataList = null;
+      self.sortByField = 'NAME';
+      self.sortByASC = true;
+      self.showModifiedColumn = false;
       self.metaChecked = 0;
       if(conn) {
         self.connection = conn;
@@ -134,29 +140,48 @@ Vue.component('app-newpipeline-detail-sfdc', {
       );
     },
 
+    // Sort result list
+    handleSort : function(fieldName, sortBy) {
+      const self = this;
+      if(self.metadataList == null || self.metadataList.length == 0) return;
+      if(self.sortByField == fieldName && self.sortBy == sortBy) return;
+      self.sortByField = fieldName;
+      self.sortByASC = sortBy;
+      self.metadataList = self.sortList(self.metadataList);
+    },
+
     // Export metadata to Excel
     handleExport : function(ev) {
       const self = this;
       ev.target.setAttribute('disabled','disabled');
-      let data = { 'Metadata' : [['TYPE', 'NAME', 'OBJECT/FOLDER', 'REMARKS']], 'Reference' : [['TYPE']] };
+      let data = { 'Metadata' : [['TYPE', 'NAME', 'OBJECT/FOLDER', 'REMARKS', 'LASTMODIFIEDDATE', 'LASTMODIFIEDBY']], 'Reference' : [['TYPE']] };
+      let targets = [];
       for(let key in self.metadataMap) {
         for(let meta of self.metadataMap[key]) {
           if(meta.MetaChecked !== true) continue;
-          const objLabel = meta.objectLabel || meta.folderLabel;
-          let line = [];
-          line.push(self.metadataTypes[meta.type]); // Entity Type
-          line.push(meta.customName || meta.fullName);  // Name
-          line.push(objLabel || '');  // Object / Folder
-          line.push((meta.customName) ? meta.fullName : '');  // Remark(API Name)
-          data.Metadata.push(line);
+          targets.push(meta);
         }
       }
+      // sort again
+      targets = self.sortList(targets);
+      for(let meta of targets) {
+        const objLabel = meta.objectLabel || meta.folderLabel;
+        let line = [];
+        line.push(self.metadataTypes[meta.type]); // Entity Type
+        line.push(meta.customName || meta.fullName);  // Name
+        line.push(objLabel || '');  // Object / Folder
+        line.push((meta.customName) ? meta.fullName : '');  // Remark(API Name)
+        line.push(meta.lastModifiedDate || '');  // lastModifiedDate
+        line.push(meta.lastModifiedByName || '');  // lastModifiedByName
+        data.Metadata.push(line);
+      }
+
       for(let metaType of self.metadataTypeOptions) {
         if(metaType == 'all') continue;
         let line = [metaType.label];
         data.Reference.push(line);
       }
-      self.excelHandler.write(data);
+      self.excelHandler.write(data, self.pipeline.name);
       ev.target.removeAttribute('disabled');
     },
 
@@ -241,13 +266,39 @@ Vue.component('app-newpipeline-detail-sfdc', {
         types.push({ value : mtype, label : metadataTypes[mtype] });
       }
       types = types.sort(function(a, b){
-        const x = a.label;
-        const y = b.label;
+        const x = a.label.toUpperCase();
+        const y = b.label.toUpperCase();
         if (x > y) return 1;
         if (x < y) return -1;
         return 0;
       });
       return types;
+    },
+    // sort list by field and sortBy
+    sortList : function(metadataList) {
+      const self = this;
+      metadataList = metadataList.sort(function(a, b){
+        let x, y;
+        if(self.sortByField == 'NAME') {
+          x = a.customName || a.fullName;
+          y = b.customName || b.fullName;
+        } else if(self.sortByField == 'OBJECT') {
+          x = a.objectLabel || a.folderLabel;
+          y = a.objectLabel || a.folderLabel;
+        } else if(self.sortByField == 'ENTITY') {
+          x = self.metadataTypes[a.type];
+          y = self.metadataTypes[b.type];
+        } else if(self.sortByField == 'lastModifiedDate' || self.sortByField == 'lastModifiedByName') {
+          x = a[self.sortByField] || '';
+          y = b[self.sortByField] || '';
+        }
+        x = (x) ? x.toUpperCase() : ''; 
+        y = (y) ? y.toUpperCase() : '';
+        if (x > y) return (self.sortByASC) ? 1 : -1;
+        if (x < y) return (self.sortByASC) ? -1 : 1;
+        return 0;
+      });
+      return metadataList;
     },
     // Get all object from field metadata
     getObjectOptions : function(fields) {
@@ -261,8 +312,8 @@ Vue.component('app-newpipeline-detail-sfdc', {
         objects.push({ value : f.object, label : f.objectLabel });
       }
       objects = objects.sort(function(a, b){
-        const x = a.label;
-        const y = b.label;
+        const x = a.label.toUpperCase();
+        const y = b.label.toUpperCase();
         if (x > y) return 1;
         if (x < y) return -1;
         return 0;
@@ -292,6 +343,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
     searchMetadata : function() {
       const self = this;
       self.allChecked = true;
+      self.showModifiedColumn = false;
       self.metadataList = [];
       const _pushMetadaList = function(metaType, targets) {
         for(let i = 0; i < targets.length; i++) {
@@ -332,8 +384,14 @@ Vue.component('app-newpipeline-detail-sfdc', {
             // Set to false if MetaChecked is false
             self.allChecked = meta.MetaChecked;
           }
+          if(meta.lastModifiedDate && self.showModifiedColumn == false) {
+            // Show lastModifiedDate and lastModifiedByName Columns
+            self.showModifiedColumn = true;
+          }
           self.metadataList.push(meta);
         }
+        // Sort default 
+        self.handleSort('NAME', true);
       }
       if(self.search.type == 'all') {
         for(let key in self.metadataMap) {
@@ -502,14 +560,60 @@ Vue.component('app-newpipeline-detail-sfdc', {
                       </div><!-- .slds-form-element -->
                     </div>
                   </th>
-                  <th scope="col">
-                    <div class="slds-truncate" title="Name">Name</div>
+                  <th scope="col" class="slds-is-sortable" v-bind:class="{'sort-active' : (sortByField=='NAME')}">
+                    <a class="slds-th__action slds-text-link_reset slds-text-title_caps" href="javascript:void(0);" v-on:click="handleSort('NAME', !sortByASC)" role="button">
+                      <span class="slds-truncate" title="Name">Name</span>
+                      <span class="slds-icon_container">
+                        <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowup" v-if="sortByASC"></use>  
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowdown" v-if="sortByASC==false"></use>  
+                        </svg>
+                      </span>
+                    </a>
                   </th>
-                  <th scope="col" v-if="OBJECT_TYPES.indexOf(search.type)>=0">
-                    <div class="slds-truncate" title="Type">Object/Folder</div><!-- JP:種別 -->
+                  <th scope="col" class="slds-is-sortable" v-bind:class="{'sort-active' : (sortByField=='OBJECT')}" v-if="OBJECT_TYPES.indexOf(search.type)>=0">
+                    <a class="slds-th__action slds-text-link_reset slds-text-title_caps" href="javascript:void(0);" v-on:click="handleSort('OBJECT', !sortByASC)" role="button">
+                      <span class="slds-truncate" title="Object/Folder">Object/Folder</span>
+                      <span class="slds-icon_container">
+                        <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowup" v-if="sortByASC"></use>  
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowdown" v-if="sortByASC==false"></use>  
+                        </svg>
+                      </span>
+                    </a>
                   </th>
-                  <th scope="col" v-if="search.type=='all'">
-                    <div class="slds-truncate" title="Entity">Entity Type</div><!-- JP:種類 -->
+                  <th scope="col" class="slds-is-sortable" v-bind:class="{'sort-active' : (sortByField=='ENTITY')}" v-if="search.type=='all'">
+                    <a class="slds-th__action slds-text-link_reset slds-text-title_caps" href="javascript:void(0);" v-on:click="handleSort('ENTITY', !sortByASC)" role="button">
+                      <span class="slds-truncate" title="Entity">Entity Type</span>
+                      <span class="slds-icon_container">
+                        <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowup" v-if="sortByASC"></use>  
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowdown" v-if="sortByASC==false"></use>  
+                        </svg>
+                      </span>
+                    </a>
+                  </th>
+                  <th scope="col" class="slds-is-sortable" v-bind:class="{'sort-active' : (sortByField=='lastModifiedDate')}" v-if="showModifiedColumn">
+                    <a class="slds-th__action slds-text-link_reset slds-text-title_caps" href="javascript:void(0);" v-on:click="handleSort('lastModifiedDate', !sortByASC)" role="button">
+                      <span class="slds-truncate" title="lastModifiedDate">LastModifiedDate</span>
+                      <span class="slds-icon_container">
+                        <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowup" v-if="sortByASC"></use>  
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowdown" v-if="sortByASC==false"></use>  
+                        </svg>
+                      </span>
+                    </a>
+                  </th>
+                  <th scope="col" class="slds-is-sortable" v-bind:class="{'sort-active' : (sortByField=='lastModifiedByName')}" v-if="showModifiedColumn">
+                    <a class="slds-th__action slds-text-link_reset slds-text-title_caps" href="javascript:void(0);" v-on:click="handleSort('lastModifiedByName', !sortByASC)" role="button">
+                      <span class="slds-truncate" title="lastModifiedByName">lastModifiedByName</span>
+                      <span class="slds-icon_container">
+                        <svg class="slds-icon slds-icon_x-small slds-icon-text-default slds-is-sortable__icon" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowup" v-if="sortByASC"></use>  
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#arrowdown" v-if="sortByASC==false"></use>  
+                        </svg>
+                      </span>
+                    </a>
                   </th>
                 </tr>
               </thead>
@@ -538,6 +642,12 @@ Vue.component('app-newpipeline-detail-sfdc', {
                   </td>
                   <td v-if="search.type=='all'">
                     <div class="slds-truncate">{{ metadataTypes[row.type] }}</div>
+                  </td>
+                  <td v-if="showModifiedColumn">
+                    <div class="slds-truncate">{{ (row.lastModifiedDate) ? moment(row.lastModifiedDate).format('YYYY/MM/DD HH:mm') : '' }}</div>
+                  </td>
+                  <td v-if="showModifiedColumn">
+                    <div class="slds-truncate">{{ row.lastModifiedByName || '' }}</div>
                   </td>
                 </tr>
               </tbody>
