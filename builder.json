@@ -21,6 +21,7 @@
     "!src/view/components/font-awesome/advanced-options/*",
     "!src/view/components/font-awesome/svg-with-js/*",
     "!src/view/components/font-awesome/use-on-desktop/*",
+    "!src/view/components/xlsx-populate/examples/*",
     "!src/view/components/js-xlsx/demos/*",
     "!src/view/components/js-xlsx/docbits/*",
     "!src/view/components/js-xlsx/test_files/*",
