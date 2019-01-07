@@ -468,6 +468,9 @@ class SfdcApi {
       let metaType;
       if(!Array.isArray(metadata)) console.log('[ERROR]', metadata);
       for(let meta of metadata) {
+        // Filter object which has not fields, 
+        // to fix sf:UNKNOWN_EXCEPTION: UNKNOWN_EXCEPTION bug
+        if(!objLabelMap.hasOwnProperty(meta.fullName)) continue;
         metaType = meta.type;
         fullNames.push(meta.fullName);
       }

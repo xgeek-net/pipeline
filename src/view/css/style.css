@@ -98,6 +98,14 @@
 #sidebar .sidebar-body .menu-button .slds-icon {
   fill: #16325c;
 }
+#sidebar .sidebar-body .menu.fix-bottom {
+  position: absolute;
+  bottom: 5px;
+}
+#sidebar .sidebar-body .menu.fix-bottom .github-button{
+  font-size: 1.4rem;
+}
+
 /**
  * #main
  */
@@ -443,23 +451,107 @@
 .pipeline-detail .detail-header .status .duration{
   margin-right: 0.5rem;
 }
-.pipeline-detail .detail-body{
+/** .detail-process-panel */
+.pipeline-detail .detail-process-panel{
+  margin: 0.5rem;
+  height: 200px;
+  background-color: #F4F6F9;
+  color: #514f4d;
+  font-size: 0.9rem;
+  line-height: 1.5rem;
+}
+.pipeline-detail .detail-process-panel .slds-card__body {
+  margin-bottom: 0px;
+}
+.pipeline-detail .detail-process-panel .process-detail,
+.pipeline-detail .detail-process-panel .component-progress,
+.pipeline-detail .detail-process-panel .testclass-progress {
+  padding: 18px 5px 18px 18px;
+}
+.pipeline-detail .detail-process-panel .progressbar__label {
+  line-height: 1.2;
+}
+.pipeline-detail .detail-process-panel .process-detail label {
+  color: #16325c;
+}
+.pipeline-detail .detail-process-panel .component-progress {
+  border-left: 1px solid #d8dde6;
+  height: 100%;
+}
+.pipeline-detail .detail-process-panel .circle {
+  width: 120px;
+  height: 120px;
+  text-align: center;
+  margin: 0 auto;
+}
+.pipeline-detail .detail-process-panel .circle > svg {
+  width: 100%;
+  display: block;
+}
+.pipeline-detail .detail-process-panel h3.title {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+}
+
+/** .detail-process-panel */
+.pipeline-detail .detail-component-panel {
+  margin: 0.5rem;
+  background-color: #F4F6F9;
+  color: #514f4d;
+  height: calc(100% - 224px);   /* 200px + 24px */
+  overflow-y: auto;
+}
+.pipeline-detail .detail-component-panel .slds-card__header {
+  padding-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pipeline-detail .detail-component-panel .slds-truncate {
+  white-space: normal;
+  min-height: 1rem;
+}
+
+.pipeline-detail .pipeline-log{
+  position: relative;
   display: block;
   height: calc(100% - 50px);
-  padding: 0.5rem 1rem;
-  line-height: 1.25rem;
-  overflow-y: scroll;
+  overflow: hidden;
 }
-.pipeline-detail .detail-body p{
+.pipeline-detail .pipeline-log.collapsed {
+  height: 110px;
+}
+.pipeline-detail .pipeline-log > .btn-collapse {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  padding: 3px;
+}
+.pipeline-detail .pipeline-log p{
   word-wrap: break-word;
   word-break: break-all;
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0.5rem 1rem;
+  line-height: 1.25rem;
 }
-.pipeline-detail .detail-body p > a,
-.pipeline-detail .detail-body p > a:hover,
-.pipeline-detail .detail-body p > a:focus{
+.pipeline-detail .pipeline-log p > a,
+.pipeline-detail .pipeline-log p > a:hover,
+.pipeline-detail .pipeline-log p > a:focus{
   color: #dce5f5;
   text-decoration: underline;
 }
+/* Detail body */
+.pipeline-detail .detail-body {
+  height: calc(100% - 160px);
+  overflow: hidden;
+  border-bottom: 1px solid #d8dde6;
+}
+.pipeline-detail .detail-body .btn-export-metadata {
+  margin-top: 0.5rem;
+}
+
 #main .pipeline-detail .pipeline-status.success{
   color: #4bc076;
 }

@@ -48,6 +48,9 @@ Vue.component('app-sidebar', {
             </span>
           </a>
         </li>
+        <li class="menu fix-bottom">
+          <a class="github-button" href="https://github.com/xgeek-net/pipeline" target="_blank"><i class="fab fa-github"></i></a>
+        </li>
       </ul><!-- .sidebar-body -->
     </div><!-- #sidebar -->
   `

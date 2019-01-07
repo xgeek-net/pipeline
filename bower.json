@@ -17,6 +17,7 @@
     "font-awesome": "^5.0.13",
     "moment": "^2.22.2",
     "js-xlsx": "^0.14.0",
-    "xlsx-populate": "^1.17.0"
+    "xlsx-populate": "^1.17.0",
+    "progressbar.js": "^1.0.1"
   }
 }

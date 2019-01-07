@@ -173,19 +173,58 @@ class Pipeline {
       ev.sender.send('data-pipeline-log-callback',utils.serialize(err), result);
     }
     try{
-      let index = 1;
-      
+      let pipeline = this.storage.get(arg.id);
+      if(pipeline.deployResult && pipeline.deployResult.done != true) {
+        // Uncompleted deploy, clean cache and reload
+        this.storage.getAll({ cache : false }); 
+        pipeline = this.storage.get(arg.id);
+      }
       const metadata = new Metadata();
       const pPath = metadata.getPipelineFolder();
-      const logPath = path.join(pPath, arg.id, 'pipeline.log');
+      const logPath = path.join(pPath, pipeline.id, 'pipeline.log');
       if(!fs.existsSync(logPath)) {
         return callback(null);
       }
       fs.readFile(logPath, 'utf-8', function(err, data) {
         //console.log('>>> getPipelineLog' + index, (new Date()));
-        index++;
         if(err) return callback(err);
-        const result = data;
+        // read deployResult
+        const drPath = path.join(pPath, pipeline.id, 'deployResult.json');
+        let deployResult = {};
+        if(fs.existsSync(drPath)) {
+          deployResult = JSON.parse(fs.readFileSync(drPath));
+        }
+        const result = { body : data, deployResult : deployResult };
+        return callback(null, result);
+      });
+    }catch(err) {
+      console.error('[ERROR]', err);
+      Raven.captureException(err);
+      return callback(err);
+    }
+  }
+
+  /**
+   * Export pipeline metadata zip file
+   * @param {Object} ev 
+   * @param {Object} arg 
+   */
+  exportMetadata(ev, arg) {
+    const callback = function(err, result) {
+      ev.sender.send('data-pipeline-export-metadata-callback',utils.serialize(err), result);
+    }
+    try{
+      const metadata = new Metadata();
+      const pPath = metadata.getPipelineFolder();
+      const packagePath = path.join(pPath, arg.id, 'package.zip');
+      if(!fs.existsSync(packagePath)) {
+        return callback(null);
+      }
+      fs.readFile(packagePath, 'base64', function(err, data) {
+        //new Buffer(data).toString('base64')
+        //console.log('>>> getPipelineLog' + index, (new Date()));
+        if(err) return callback(err);
+        const result = { data : data };
         return callback(null, result);
       });
     }catch(err) {
@@ -229,6 +268,7 @@ class Pipeline {
       const pPath = metadata.mkdirPipelineFolder(pipeline.id);
 
       const logPath = path.join(pPath, 'pipeline.log');
+      const deployResultPath = path.join(pPath, 'deployResult.json');
       const pipelineLog = function(line) {
         line = moment().format('HH:mm:ss') + ' ' + line + '\n';
         fs.appendFileSync(logPath, line);
@@ -288,12 +328,14 @@ class Pipeline {
           // Do Destruct
           opts['purgeOnDelete'] = true;
           return metadata.deploy(fromConn, zipPath, opts, function(deployResult) {
+            deployResult = self.saveDeployResult(deployResultPath, fromConn, deployResult);
             self.outputDeployProcessLog(pipelineLog, deployResult);
           });
         } else {
           // Do Deploy
           opts['runAllTests'] = (pipeline.runTests === true);
           return metadata.deploy(toConn, zipPath, opts, function(deployResult) {
+            deployResult = self.saveDeployResult(deployResultPath, toConn, deployResult);
             self.outputDeployProcessLog(pipelineLog, deployResult);
           });
         }
@@ -301,7 +343,7 @@ class Pipeline {
       .then(function(deployResult) {
         // Save deploy result
         const targetConn = (pipeline.action == 'destruct') ? fromConn : toConn;
-        deployResult['url'] = targetConn.instanceUrl + '/changemgmt/monitorDeploymentsDetails.apexp?asyncId=' + deployResult.id
+        deployResult = self.saveDeployResult(deployResultPath, targetConn, deployResult);
         self.outputDeployLog(pipelineLog, deployResult);
         const now = new Date();
         const endTime = now.toISOString();
@@ -366,16 +408,51 @@ class Pipeline {
    * @param {Object} deployResult 
    */
   outputDeployLog(pipelineLog, deployResult) {
-    pipelineLog('[Metadata] Deploy Done : ');
-    //pipelineLog('           Id: ' + deployResult.id);
-    pipelineLog('           Success: ' + deployResult.success);
-    pipelineLog('           Components Total: ' + deployResult.numberComponentsTotal);
-    pipelineLog('           Components Error: ' + deployResult.numberComponentErrors);
-    pipelineLog('           Components Deployed: ' + deployResult.numberComponentsDeployed);
-    pipelineLog('           Tests Total: ' + deployResult.numberTestsTotal);
-    pipelineLog('           Tests Error: ' + deployResult.numberTestErrors);
-    pipelineLog('           Tests Completed: ' + deployResult.numberTestsCompleted);
+    pipelineLog('[Metadata] Deploy done');
     pipelineLog('[Metadata] Deploy result: @see ' + deployResult.url);
+  }
+
+  /**
+   * Set component type label to deploy result and export to json file
+   */
+  saveDeployResult(filePath, targetConn, deployResult) {
+    // Set Entity Label to deployResult
+    const sfdcApi = new SfdcApi(targetConn);
+    const componentLables = sfdcApi.getComponentLabels(targetConn.language);
+    deployResult['instanceUrl'] = targetConn.instanceUrl;
+    deployResult['url'] = targetConn.instanceUrl + '/changemgmt/monitorDeploymentsDetails.apexp?asyncId=' + deployResult.id
+
+    const getStatus = function(cmp) {
+      let status = 'No Change';
+      if(cmp.changed == 'true') status = 'Updated';
+      if(cmp.created == 'true') status = 'Created';
+      if(cmp.deleted == 'true') status = 'Deleted';
+      if(cmp.problem && cmp.problemType) {
+        status = 'Error: ' + cmp.problem + ' (line ' + (cmp.lineNumber || 0) + ', column ' + (cmp.columnNumber || 0) + ')';
+      }
+      return status;
+    }
+
+    if(deployResult.details && deployResult.details.componentSuccesses) {
+      for(let i = 0; i < deployResult.details.componentSuccesses.length; i++) {
+        let componentType = deployResult.details.componentSuccesses[i].componentType;
+        if(utils.isBlank(componentType)) continue;
+        if(!componentLables.hasOwnProperty(componentType)) continue;
+        deployResult.details.componentSuccesses[i]['componentTypeLabel'] = componentLables[componentType];
+        deployResult.details.componentSuccesses[i]['status'] = getStatus(deployResult.details.componentSuccesses[i]);
+      }
+    }
+    if(deployResult.details && deployResult.details.componentFailures) {
+      for(let i = 0; i < deployResult.details.componentFailures.length; i++) {
+        let componentType = deployResult.details.componentFailures[i].componentType;
+        if(utils.isBlank(componentType)) continue;
+        if(!componentLables.hasOwnProperty(componentType)) continue;
+        deployResult.details.componentFailures[i]['componentTypeLabel'] = componentLables[componentType];
+        deployResult.details.componentSuccesses[i]['status'] = getStatus(deployResult.details.componentSuccesses[i]);
+      }
+    }
+    fs.writeFileSync(filePath, JSON.stringify(deployResult));
+    return deployResult;
   }
 
 }
