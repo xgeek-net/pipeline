@@ -119,6 +119,9 @@ ipc.on('data-pipelines', (event, arg) => {
 ipc.on('data-pipeline-log', (event, arg) => {
   pipeline.getPipelineLog(event, arg);
 });
+ipc.on('data-pipeline-export-metadata', (event, arg) => {
+  pipeline.exportMetadata(event, arg);
+});
 ipc.on('pipeline-run', (event, arg) => {
   pipeline.runPipeline(event, arg);
 });
