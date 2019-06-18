@@ -8,6 +8,7 @@ const Storage = require('./Storage.js');
 const Connect = require('./Connect.js');
 const GithubApi = require('./GithubApi.js');
 const BitbucketApi = require('./BitbucketApi.js');
+const GitApi = require('./GitApi.js');
 const SfdcApi = require('./SfdcApi.js');
 const Metadata = require('./Metadata.js');
 const utils = require('./Utils.js');
@@ -29,16 +30,14 @@ class Pipeline {
       //console.log('>>>> pipeline', pipeline);
       if(pipeline.id) {
         const metadata = new Metadata();
-        metadata.rmPipelineCache(pipeline.id, function() {
-          // Edit pipeline
-          pipeline['started_at'] = '';
-          pipeline['completed_at'] = '';
-          pipeline['duration'] = '';
-          //console.log('>>>> set pipeline', pipeline);
-          self.setPipeline(pipeline.id, pipeline);
-          return callback(null, {id : pipeline.id});
-        });
-        return;
+        metadata.rmPipelineCache(pipeline.id);
+        // Edit pipeline
+        pipeline['started_at'] = '';
+        pipeline['completed_at'] = '';
+        pipeline['duration'] = '';
+        //console.log('>>>> set pipeline', pipeline);
+        self.setPipeline(pipeline.id, pipeline);
+        return callback(null, {id : pipeline.id});
       }
       // New pipeline
       let pipelines = self.storage.getAll({ cache : false }); 
@@ -71,7 +70,11 @@ class Pipeline {
       }
       // Change id
       const now = new Date();
-      let newPipeline = utils.popItems(pipeline, ['branch', 'commits', 'type', 'from', 'fromApiVersion', 'name', 'prs', 'to', 'toApiVersion', 'runTests', 'targetTypes']);
+      let cloneOpts = ['branch', 'commits', 'type', 'from', 'fromApiVersion', 'name', 'prs', 'to', 'toApiVersion', 'checkOnly', 'runTests', 'targetTypes'];
+      if(pipeline.type != 'sfdc') {
+        cloneOpts.push('path');
+      }
+      let newPipeline = utils.popItems(pipeline, cloneOpts);
       newPipeline['id'] = uuidv4();
       newPipeline['status'] = 'ready';
       newPipeline['created_at'] = now.toISOString();
@@ -103,12 +106,10 @@ class Pipeline {
       for(let i in pipelines) {
         if(pipelines[i].id == arg.id) {
           pipeline = pipelines[i];
-          metadata.rmPipelineCache(pipeline.id, function() {
-            pipelines.splice(i, 1);
-            self.storage.setAll(pipelines);
-            return callback(null, {id : arg.id});
-          });
-          break;
+          metadata.rmPipelineCache(pipeline.id);
+          pipelines.splice(i, 1);
+          self.storage.setAll(pipelines);
+          return callback(null, {id : arg.id});
         }
       }
       if(pipeline == null) {
@@ -286,6 +287,8 @@ class Pipeline {
         client = new BitbucketApi(fromConn);
       } else if(fromConn.type == 'sfdc') {
         client = new SfdcApi(fromConn);
+      } else if(fromConn.type == 'git') {
+        client = new GitApi(fromConn);
       }
       // TODO sfdc api check token not exist
       client.checkToken(fromConn)
@@ -334,6 +337,7 @@ class Pipeline {
         } else {
           // Do Deploy
           opts['runAllTests'] = (pipeline.runTests === true);
+          opts['checkOnly'] = (pipeline.checkOnly === true);
           return metadata.deploy(toConn, zipPath, opts, function(deployResult) {
             deployResult = self.saveDeployResult(deployResultPath, toConn, deployResult);
             self.outputDeployProcessLog(pipelineLog, deployResult);

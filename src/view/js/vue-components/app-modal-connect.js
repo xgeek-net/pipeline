@@ -4,16 +4,24 @@ Vue.component('app-modal-connect', {
     return {
       form : {
         reposId : '',
-        name : ''
-      }
+        name : '',
+        git_type : 'https',
+        git_url : '',
+        git_username : '',
+        git_password : ''
+      },
+      git_auth_open : true
     }
   },
   methods: {
     closeModal : function(ev) {
       app.closeModal();
     },
+    toggleAuthSection : function(ev) {
+      this.git_auth_open = !(this.git_auth_open);
+    },
     saveData : function(ev) {
-      // TODO Validation
+      const self = this;
       const data = Object.assign(this.modal.data, this.form);
       const now = new Date();
       let params = {
@@ -25,6 +33,15 @@ Vue.component('app-modal-connect', {
         created_at : now.toISOString(),
         updated_at : now.toISOString()
       };
+      // Validation form data
+      const valid = self.validateData(data);
+      if(valid != true) {
+        ev.target.removeAttribute('disabled');
+        return app.handleError(valid);
+      }
+      const $btn = ev.target;
+      $btn.setAttribute('disabled','disabled');
+
       if(data.type == 'sfdc') {
         params['accessToken'] = data.accessToken;
         params['refreshToken'] = data.refreshToken;
@@ -35,6 +52,12 @@ Vue.component('app-modal-connect', {
         params['orgType'] = data.orgType;
         params['orgId'] = data.orgId;
         params['userId'] = data.userId;
+      } else if(data.type == 'git') {
+        // Remote git
+        params['git_type'] = data.git_type;
+        params['git_url'] = data.git_url;
+        params['username'] = data.git_username;
+        params['password'] = data.git_password;
       } else {
         // Github or Bitbucket
         let repos;
@@ -60,8 +83,19 @@ Vue.component('app-modal-connect', {
         }
       }
 
-      app.saveConnect(params);
+      app.saveConnect(params, function() {
+        $btn.removeAttribute('disabled');
+      });
     },
+    validateData : function(data) {
+      if(data.type == 'git' && (!data.git_url || data.git_url.length == 0)) {
+        return 'URL is required.';
+      }
+      if(!data.name || data.name.length == 0) {
+        return 'Connection name is required.';
+      }
+      return true;
+    }
   },
   template: `
     <div class="slds-modal__container">
@@ -80,7 +114,7 @@ Vue.component('app-modal-connect', {
           <div class="slds-spinner__dot-b"></div>
         </div><!-- .slds-spinner -->
         <div class="slds-grid slds-wrap" v-if="modal.data!=null">
-          <div class="slds-size_2-of-2">
+          <div class="slds-size_2-of-2" v-if="modal.data.type!='git'">
             <div class="slds-m-around_x-small">
               <span class="slds-avatar slds-avatar_circle slds-m-right_x-small">
                 <span class="slds-icon_container slds-icon-standard-user">
@@ -91,7 +125,7 @@ Vue.component('app-modal-connect', {
             </div><!-- .slds-m-around_x-small -->
           </div><!-- .slds-size_2-of-2 -->
 
-          <div class="slds-size_2-of-2" v-if="modal.data.type!='sfdc'">
+          <div class="slds-size_2-of-2" v-if="modal.data.type=='github' || modal.data.type=='bitbucket'">
             <div class="slds-m-around_x-small">
               <div class="slds-form-element">
                 <label class="slds-form-element__label">Repositories</label>
@@ -107,6 +141,17 @@ Vue.component('app-modal-connect', {
             </div><!-- .slds-m-around_x-small -->
           </div><!-- .slds-size_2-of-2 -->
 
+          <div class="slds-size_2-of-2" v-if="modal.data.type=='git'">
+            <div class="slds-m-around_x-small">
+              <div class="slds-form-element">
+                <label class="slds-form-element__label">Repository URL</label>
+                <div class="slds-form-element__control">
+                  <input type="text" class="slds-input" v-model="form.git_url" placeholder="https://yourdomain/repository.git" />
+                </div>
+              </div><!-- .slds-form-element -->
+            </div><!-- .slds-m-around_x-small -->
+          </div><!-- .slds-size_2-of-2 -->
+
           <div class="slds-size_2-of-2">
             <div class="slds-m-around_x-small">
               <div class="slds-form-element">
@@ -117,6 +162,40 @@ Vue.component('app-modal-connect', {
               </div><!-- .slds-form-element -->
             </div><!-- .slds-m-around_x-small -->
           </div><!-- .slds-size_2-of-2 -->
+
+          <div class="slds-section slds-size_2-of-2" v-bind:class="{'slds-is-open': git_auth_open}" v-if="modal.data.type=='git'">
+            <h3 class="slds-section__title">
+              <button aria-controls="git-authentication" aria-expanded="true" class="slds-button slds-section__title-action" v-on:click="toggleAuthSection">
+                <svg class="slds-section__title-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true">
+                  <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#switch"></use>
+                </svg>
+                <span class="slds-truncate" title="Authentication">Authentication</span>
+              </button>
+            </h3>
+            <div class="slds-section__content" id="git-authentication">
+              <div class="slds-size_2-of-2">
+                <div class="slds-m-around_x-small">
+                  <div class="slds-form-element">
+                    <label class="slds-form-element__label">Username</label>
+                    <div class="slds-form-element__control">
+                      <input type="text" class="slds-input" v-model="form.git_username" placeholder="" />
+                    </div>
+                  </div><!-- .slds-form-element -->
+                </div><!-- .slds-m-around_x-small -->
+              </div><!-- .slds-size_2-of-2 -->
+
+              <div class="slds-size_2-of-2">
+                <div class="slds-m-around_x-small">
+                  <div class="slds-form-element">
+                    <label class="slds-form-element__label">Password</label>
+                    <div class="slds-form-element__control">
+                      <input type="password" class="slds-input" v-model="form.git_password" placeholder="" />
+                    </div>
+                  </div><!-- .slds-form-element -->
+                </div><!-- .slds-m-around_x-small -->
+              </div><!-- .slds-size_2-of-2 -->
+            </div>
+          </div>
 
         </div><!-- .slds-grid -->
 

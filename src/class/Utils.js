@@ -29,6 +29,15 @@ const utils = {
     };
   },
 
+  /**
+   * Get local storage path, returns test folder in mocha test
+   */
+  getUserDataPath : function() {
+    if(process.env.NODE_ENV === 'test') return path.join(__dirname, '../../test/cache');
+    const userDataPath = (electron.app || electron.remote.app).getPath('userData');
+    return userDataPath;
+  },
+
   isBlank : function(obj) {
     if(typeof obj === 'undefined' || obj === null) {
         return true;

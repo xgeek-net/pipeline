@@ -2,15 +2,18 @@ Vue.component('pipeline-detail', {
   props: ['pipeline'],
   data : function () {
     return {
+      loading : true,
       refPipeline : null,
       refIntervalId : null,
       refDeployComponents : null,
+      runTestFailures : null,
       deployResult : null,
       body : '',
       request : 0,
       logCollapsed : true,
       componentCircle : null,
-      testclassCircle : null
+      testclassCircle : null,
+      showedTabName : 'component'
     }
   },
   created: function () {
@@ -21,7 +24,9 @@ Vue.component('pipeline-detail', {
   },
   mounted: function() {
     // Set circle progress
-    this.initCircle();
+    if(!this.componentCircle && !this.testclassCircle) {
+      this.initCircle();
+    }
   },
   updated: function () {
     const self = this;
@@ -62,10 +67,12 @@ Vue.component('pipeline-detail', {
       const self = this;
       self.logCollapsed = !self.logCollapsed;
     },
+    openTab : function(tabName) {
+      this.showedTabName = tabName;
+    },
     // @see https://progressbarjs.readthedocs.io/en/latest/api/shape/#setprogress
     initCircle : function() {
       const self = this;
-      if(self.componentCircle != null || self.testclassCircle != null) return;
       self.componentCircle = new ProgressBar.Circle('#component-circle', self.getProgressStyle('success'));
       self.testclassCircle = new ProgressBar.Circle('#testclass-circle', self.getProgressStyle());
     },
@@ -117,11 +124,24 @@ Vue.component('pipeline-detail', {
     // Show process circle chart for deploy result
     loadDeployResult : function() {
       const self = this;
-      if(!self.deployResult) return;
+      if(!self.deployResult) {
+        self.refDeployComponents = null;
+        self.runTestFailures = null;
+        if(self.testclassCircle) self.testclassCircle.destroy();
+        if(self.componentCircle) self.componentCircle.destroy();
+        self.initCircle();
+        return;
+      }
       
+      // Array or null
+      self.runTestFailures = (self.deployResult.details && self.deployResult.details.runTestResult  && self.deployResult.details.runTestResult.failures)
+                             ? self.deployResult.details.runTestResult.failures : null;
+      if(self.runTestFailures) self.runTestFailures = (Array.isArray(self.runTestFailures)) ? self.runTestFailures : [self.runTestFailures];
+
       // Sort by contentType
       const pushComponents = function(targets) {
-        if(!targets || targets.length == 0) return;
+        if(!targets) return;
+        if(!Array.isArray(targets)) targets = [targets];
         for(let cmp of targets) {
           if(!cmp.componentType || cmp.componentType.length == 0) continue;
           if(!components.hasOwnProperty(cmp.componentType)) {
@@ -143,7 +163,7 @@ Vue.component('pipeline-detail', {
           self.refDeployComponents.push(cmp);
         }
       }
-
+      // Set Component Circle
       if(deployResult.numberComponentsTotal > 0) {
         // Change success to error color
         if(deployResult.numberComponentErrors > 0 && self.componentCircle._opts.color !== '#c23934') {
@@ -155,6 +175,7 @@ Vue.component('pipeline-detail', {
         let numTxt = self.getProgressText(deployResult.numberComponentsTotal, deployResult.numberComponentErrors, deployResult.numberComponentsDeployed);
         self.componentCircle.setText(numTxt);
       }
+      // Set Testclass Circle
       if(deployResult.numberTestsTotal > 0) {
         // Change to success color
         if(deployResult.numberTestErrors > 0 && self.testclassCircle._opts.color !== '#04844b') {
@@ -179,7 +200,7 @@ Vue.component('pipeline-detail', {
         if(err) app.handleError(err);
         //console.log('>>>> loadBody Callback', self.pipeline.id, result);
         result = result || {};
-        self.deployResult = result.deployResult || self.deployResult;
+        self.deployResult = (result.deployResult && result.deployResult.id) ? result.deployResult : null;
         self.loadDeployResult();
 
         let logBody = result.body || '';
@@ -189,11 +210,15 @@ Vue.component('pipeline-detail', {
           return '<a href="h' + href + '" target="_blank">' + url + '</a>';
         }
         self.body = logBody.replace(regexp_url, regexp_makeLink);
-        if(self.refPipeline.completed_at && self.refPipeline.completed_at.length > 0 && 
-          self.refIntervalId) {
+
+        self.refPipeline = self.pipeline;
+        if(self.refPipeline.completed_at && self.refPipeline.completed_at.length > 0) {
+          self.loading = false;
           // Cancel loop if completed
-          clearInterval(self.refIntervalId);
-          self.refIntervalId = null;
+          if(self.refIntervalId) {
+            clearInterval(self.refIntervalId);
+            self.refIntervalId = null;
+          }
         }
         
       });
@@ -255,7 +280,7 @@ Vue.component('pipeline-detail', {
         </div>
       </div><!-- .detail-header -->
       <div class="detail-body slds-size_2-of-2" v-bind:class="{ 'slds-hide': !logCollapsed}" id="pipeline-detail-body">
-        <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand" v-if="!deployResult || !deployResult.id">
+        <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand" v-if="loading">
           <span class="slds-assistive-text">Loading</span>
           <div class="slds-spinner__dot-a"></div>
           <div class="slds-spinner__dot-b"></div>
@@ -267,7 +292,11 @@ Vue.component('pipeline-detail', {
                 <li><label>Name: </label>
                   <a v-bind:href="deployResult.url" v-if="deployResult && deployResult.url" target="_blank">{{ deployResult.id }}</a>
                 </li>
-                <li><label>Status: </label>{{ (refPipeline.status == 'successful') ? 'Successed' : ((refPipeline.status == 'failed') ? 'Failed' : 'Processing') }}</li>
+                <li><label>Status: </label>
+                  <span class="success" v-if="refPipeline.status == 'successful'">Successed</span>
+                  <span class="error" v-if="refPipeline.status == 'failed'">Failed</span>
+                  <span class="" v-if="refPipeline.status != 'successful' && refPipeline.status != 'failed' ">Processing</span>
+                </li>
                 <li><label>Deployed By: </label>
                   <a v-bind:href="deployResult.instanceUrl + '/' + deployResult.createdBy" v-if="deployResult && deployResult.createdBy" target="_blank">{{ deployResult.createdByName }}</a>
                 </li>
@@ -293,62 +322,114 @@ Vue.component('pipeline-detail', {
           </div>
         </article>
 
-        <article class="slds-card detail-component-panel">
-          <div class="slds-card__header slds-grid">
-            <header class="slds-media slds-media_center slds-has-flexi-truncate">
-              <div class="slds-media__body">
-                <h2 class="slds-card__header-title">
-                  <span class="slds-text-heading_small">Components<span v-if="deployResult && deployResult.numberComponentsTotal"> ({{ deployResult.numberComponentsTotal }})</span></span>
-                </h2>
-              </div>
-            </header>
-          </div>
-          <div class="slds-card__body">
-            <table class="slds-table slds-table_bordered slds-no-row-hover slds-table_cell-buffer">
-              <thead>
-                <tr class="slds-line-height_reset">
-                  <th scope="col" style="width: 3.25rem;">
-                    <div class="slds-truncate" title="NO">#</div>
-                  </th>
-                  <th scope="col">
-                    <div class="slds-truncate" title="Name">Name</div>
-                  </th>
-                  <!-- 
-                  TODO show Label
-                  <th scope="col">
-                    <div class="slds-truncate" title="Object/Folder">Object/Folder</div>
-                  </th> -->
-                  <th scope="col">
-                    <div class="slds-truncate" title="Username">Entity Type</div>
-                  </th>
-                  <th scope="col">
-                    <div class="slds-truncate" title="Status">Status</div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody v-if="refDeployComponents">
-                <tr class="slds-line-height_reset" v-for="(row, index) in refDeployComponents">
-                  <th scope="row">
-                    <div class="slds-truncate">{{ index+1 }}</div>
-                  </th>
-                  <td>
-                    <div class="slds-truncate">
-                      <a v-bind:href="deployResult.instanceUrl + '/' + row.id" target="_blank" v-if="row.id && deployResult">{{ row.fullName }}</a>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="slds-truncate">{{ row.componentTypeLabel || row.componentType }}</div>
-                  </td>
-                  <td>
-                    <div class="slds-truncate">
-                    <i v-bind:class="{ 'far fa-check-circle': pipeline.status=='true', 
-                      'fas fa-minus-circle': pipeline.status=='false' }"></i> {{ row.status }}</div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </article>
+        
+      <div class="slds-tabs_default slds-tabs_card detail-tabs">
+        <ul class="slds-tabs_default__nav" role="tablist">
+          <li class="slds-tabs_default__item"  v-bind:class="{ 'slds-is-active': showedTabName=='component'}">
+            <a class="slds-tabs_default__link" v-on:click="openTab('component')">Components <span v-if="deployResult && deployResult.numberComponentsTotal"> ({{ deployResult.numberComponentsTotal }})</span></a>
+          </li>
+          <li class="slds-tabs_default__item"  v-bind:class="{ 'slds-is-active': showedTabName=='testclass'}" v-if="deployResult && deployResult.numberTestsTotal">
+            <a class="slds-tabs_default__link" v-on:click="openTab('testclass')">Apex Test Failures <span v-if="deployResult && deployResult.numberTestErrors"> ({{ deployResult.numberTestErrors }})</span></a>
+          </li>
+        </ul>
+        <div class="slds-tabs_default__content" v-bind:class="{ 'slds-show': showedTabName=='component', 'slds-hide': showedTabName!='component'}">
+          <article class="slds-card detail-component-panel">
+            <div class="slds-card__body">
+              <table class="slds-table slds-table_bordered slds-no-row-hover slds-table_cell-buffer">
+                <thead>
+                  <tr class="slds-line-height_reset">
+                    <th scope="col" style="width: 3.25rem;">
+                      <div class="slds-truncate" title="NO">#</div>
+                    </th>
+                    <th scope="col">
+                      <div class="slds-truncate" title="Name">Name</div>
+                    </th>
+                    <!-- 
+                    TODO show Label
+                    <th scope="col">
+                      <div class="slds-truncate" title="Object/Folder">Object/Folder</div>
+                    </th> -->
+                    <th scope="col">
+                      <div class="slds-truncate" title="Username">Entity Type</div>
+                    </th>
+                    <th scope="col">
+                      <div class="slds-truncate" title="Status">Status</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody v-if="deployResult && refDeployComponents">
+                  <tr class="slds-line-height_reset" v-for="(row, index) in refDeployComponents">
+                    <th scope="row">
+                      <div class="slds-truncate">{{ index+1 }}</div>
+                    </th>
+                    <td>
+                      <div class="slds-truncate">
+                        <a v-bind:href="deployResult.instanceUrl + '/' + row.id" target="_blank" v-if="row.id && deployResult">{{ row.fullName }}</a>
+                        <span v-if="!row.id && deployResult">{{ row.fullName }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="slds-truncate">{{ row.componentTypeLabel || row.componentType }}</div>
+                    </td>
+                    <td>
+                      <div class="slds-truncate success" v-if="row.success=='true'">
+                        <i class="fas fa-check-circle" />&nbsp;
+                        <span>{{ row.status }}</span>
+                      </div>
+                      <div class="slds-truncate error" v-if="row.success=='false'">
+                        <i class="fas fa-minus-circle" />&nbsp;
+                        <span class="detail">{{ row.problem || 'Error' }}</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div><!-- .slds-tabs_default__content -->
+
+        <div class="slds-tabs_default__content" v-bind:class="{ 'slds-show': showedTabName=='testclass', 'slds-hide': showedTabName!='testclass'}">
+          <article class="slds-card detail-component-panel">
+            <div class="slds-card__body">
+              <table class="slds-table slds-table_bordered slds-no-row-hover slds-table_cell-buffer">
+                <thead>
+                  <tr class="slds-line-height_reset">
+                    <th scope="col" style="width: 3.25rem;">
+                      <div class="slds-truncate" title="NO">#</div>
+                    </th>
+                    <th scope="col">
+                      <div class="slds-truncate" title="Class Name">Class</div>
+                    </th>
+                    <th scope="col">
+                      <div class="slds-truncate" title="Error Message">Error Message</div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody v-if="deployResult && runTestFailures">
+                  <tr class="slds-line-height_reset" v-for="(row, index) in runTestFailures">
+                    <th scope="row">
+                      <div class="slds-truncate">{{ index+1 }}</div>
+                    </th>
+                    <td>
+                      <div class="slds-truncate">
+                        <a v-bind:href="deployResult.instanceUrl + '/' + row.id" target="_blank" v-if="row.id && deployResult">{{ row.name }}</a>
+                        <span v-if="!row.id && deployResult">{{ row.name }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="slds-truncate error">
+                        <i class="fas fa-minus-circle" />&nbsp;
+                        <span class="detail">{{ row.message || 'Error' }}</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div><!-- .slds-tabs_default__content -->
+      </div><!-- .slds-tabs_card -->
+
       </div>
       <div class="pipeline-log slds-size_2-of-2" v-bind:class="{ 'collapsed': logCollapsed}">
         <button class="slds-button slds-button_icon slds-button_icon-inverse btn-collapse" title="Collapse" v-on:click="collapseLog">

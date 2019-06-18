@@ -4,7 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pipeline</title>
   <link rel="stylesheet" href="components/salesforce-lightning-design-system/assets/styles/salesforce-lightning-design-system.min.css">
-  <link rel="stylesheet" href="components/font-awesome/web-fonts-with-css/css/fontawesome-all.min.css">
+  <link rel="stylesheet" href="components/font-awesome/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,16 +17,12 @@
 
     <app-sidebar v-bind:menu="page.menu" v-if="(page.status=='mounted')"></app-sidebar>
     <main id="main" class="slds-grid slds-wrap" v-if="(page.status=='mounted')">
-      <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand" v-if="page.loading">
-        <span class="slds-assistive-text">Loading</span>
-        <div class="slds-spinner__dot-a"></div>
-        <div class="slds-spinner__dot-b"></div>
-      </div><!-- .slds-spinner -->
+      <!-- loading -->
+      <app-spinner v-if="page.loading"></app-spinner>
       <div class="slds-backdrop slds-backdrop_open page-loading-mockup" v-if="page.loading"></div>
+      <!-- title -->
+      <app-header v-bind:title="page.title" v-if="(page.status=='mounted')"></app-header>
 
-      <header class="masthead slds-size_2-of-2">
-        <h1 class="">{{ page.title }}</h1>
-      </header>
       <div class="container slds-size_2-of-2 slds-m-around_small slds-m-top_medium">
         <app-newpipeline v-bind:connections="connections" v-bind:record="pipeline" v-bind:setting="setting" v-if="page.menu=='newpipeline'" ref="newpipeline"></app-newpipeline>
         <app-connections v-bind:connections="connections" v-if="page.menu=='connections'"></app-connections>
@@ -40,6 +36,8 @@
     </section><!-- .slds-modal -->  
     <div class="slds-backdrop slds-backdrop_open" v-if="modal.show"></div>
 
+    <app-notification v-bind:setting="setting" v-if="needUpdate"></app-notification>
+
   </div><!-- #app -->
 
   <script type="text/javascript" src="components/vue/dist/vue.min.js"></script>
@@ -47,9 +45,12 @@
   <script type="text/javascript" src="components/xlsx-populate/browser/xlsx-populate.min.js"></script>
   <script type="text/javascript" src="components/js-xlsx/dist/xlsx.full.min.js"></script>
   <script type="text/javascript" src="components/progressbar.js/dist/progressbar.min.js"></script>
+  <script type="text/javascript" src="components/crypto-js/crypto-js.js"></script>
   <script type="text/javascript" src="js/include/ExcelHandler.js"></script>
   <script type="text/javascript" src="js/include/master.js"></script>
   <script type="text/javascript" src="js/include/ga.js"></script>
+  <script type="text/javascript" src="js/vue-components/app-spinner.js"></script>
+  <script type="text/javascript" src="js/vue-components/app-header.js"></script>
   <script type="text/javascript" src="js/vue-components/app-message.js"></script>
   <script type="text/javascript" src="js/vue-components/app-sidebar.js"></script>
   <script type="text/javascript" src="js/vue-components/app-newpipeline-detail-git.js"></script>
@@ -59,6 +60,7 @@
   <script type="text/javascript" src="js/vue-components/app-pipeline-detail.js"></script>
   <script type="text/javascript" src="js/vue-components/app-pipelines.js"></script>
   <script type="text/javascript" src="js/vue-components/app-modal-connect.js"></script>
+  <script type="text/javascript" src="js/vue-components/app-notification.js"></script>
   <script type="text/javascript" src="js/app.js"></script>
 </body>
 </html>

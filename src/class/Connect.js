@@ -4,11 +4,14 @@ const BrowserWindow = electron.BrowserWindow;
 const url = require('url');
 const qs = require('querystring');
 const uuidv4 = require('uuid/v4');
+const Crypto = require('crypto-js');
 const Raven = require('raven');
 
+const CLIENT = require('../config/client');
 const Storage = require('./Storage.js');
 const GithubApi = require('./GithubApi.js');
 const BitbucketApi = require('./BitbucketApi.js');
+const GitApi = require('./GitApi.js');
 const SfdcApi = require('./SfdcApi.js');
 const utils = require('./Utils.js');
 
@@ -20,16 +23,38 @@ class Connect {
   }
 
   newConnect(ev, arg) {
+    const self = this;
     const callback = function(err, result) {
       ev.sender.send('data-new-connection-callback',err, result);
     }
     try{
-      let connections = this.storage.getAll({ cache : false }); 
+      let connections = self.storage.getAll({ cache : false }); 
       if(!connections) connections = [];
       let connect = arg.connect;
       connect['id'] = uuidv4();
+      if(connect.password) {
+        connect['password'] = Crypto.AES.encrypt(connect.password, CLIENT.SECRET_KEY).toString();
+      }
       connections.push(arg.connect);
-      this.storage.setAll(connections);
+      if(connect.type == 'git') {
+        // Clone repository from remote git
+        const Git = new GitApi(connect);
+        Git.getRepos()
+        .then(function(repo) {
+          if(repo) {
+            self.storage.setAll(connections);
+            repo = null;
+            Git.clearRepos();
+            return callback(null, connections);
+          }
+        })
+        .catch(function (err) {
+          return callback({ message : 'Git authentication failed.' });
+        });
+        return;
+      }
+      // Save connection directly when github, bitbucket or sfdc
+      self.storage.setAll(connections);
       return callback(null, connections);
     }catch(err) {
       console.error('[ERROR]', err);
@@ -251,6 +276,8 @@ class Connect {
       } else if(connection.type == 'bitbucket') {
         gitApi = new BitbucketApi(connection);
         username = connection.username;
+      } else if(connection.type == 'git') {
+        gitApi = new GitApi(connection);
       }
       gitApi.checkToken(connection)
       .then(function(token) {
@@ -258,6 +285,10 @@ class Connect {
           // Refresh Token for bitbucket
           self.restoreToken(connection, token);
         }
+        if(connection.type == 'git') {
+          return gitApi.getBranches();
+        }
+        // Github / Bitbucket
         return gitApi.getBranches(username, connection.repos.name)
       })
       .then(function(branches) {
@@ -282,7 +313,6 @@ class Connect {
     }
     try{
       let {connection, branch} = opt;
-      //console.log('>>>> getBranches ', connection, branch);
       let gitApi;
       let username;
       if(connection.type == 'github') {
@@ -291,6 +321,8 @@ class Connect {
       } else if(connection.type == 'bitbucket') {
         gitApi = new BitbucketApi(connection);
         username = connection.username;
+      } else if(connection.type == 'git') {
+        gitApi = new GitApi(connection);
       }
       gitApi.checkToken(connection)
       .then(function(token) {
@@ -298,10 +330,13 @@ class Connect {
           // Refresh Token for bitbucket
           self.restoreToken(connection, token);
         }
+        if(connection.type == 'git') {
+          return gitApi.getCommits(branch.name);
+        }
+        // Github / Bitbucket
         return gitApi.getCommits(username, connection.repos.name, branch);
       })
       .then(function(commits) {
-        //console.log('>>>> get pull requests ', commits);
         return callback(null, commits);
       })
       .catch(function(err){

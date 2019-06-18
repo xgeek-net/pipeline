@@ -1,6 +1,5 @@
-const electron = require('electron');
 const fs = require('fs');
-const rimraf = require('rimraf');
+const fse = require('fs-extra');
 const jsforce = require('jsforce');
 const async = require('async');
 const path = require('path');
@@ -247,7 +246,7 @@ class SfdcApi {
           let metaType = meta.xmlName;
           if(metaTargets.indexOf(metaType) < 0) continue;
           if(metaType == 'CustomLabels') metaType = 'CustomLabel';
-          queues.push({type: metaType, folder:null});
+          queues.push({type: metaType});
           continue;
         }
         let xmlName = (meta.xmlName == 'EmailTemplate') ? 'EmailFolder' : meta.xmlName + 'Folder';
@@ -260,8 +259,8 @@ class SfdcApi {
       let metadataDetailMap = {};
       // console.log('>>>> queues', queues);
       async.eachLimit(queues, 5, function(queue, completion) {
-        // Layout metadata type does not accept folder attribute
-        const param = (queue.type == 'Layout') ? { type : queue.type } : { type : queue.type, folder : queue.folder };
+        // Clear folder attribute if folder is null
+        const param = (queue.folder) ? { type : queue.type, folder : queue.folder } : { type : queue.type };
         self.getMetadataList(param)
         .then(function(metadata) {
           return self.filterMetadata(queue, metadata, objLabelMap);
@@ -360,6 +359,7 @@ class SfdcApi {
             };
           }
           break;
+        case 'ApprovalProcess' :
         case 'CustomMetadata' :
         case 'QuickAction' : 
           // Case.Reply → Reply , Case
@@ -594,7 +594,7 @@ class SfdcApi {
     self.logger('[SFDC] Retrieve from ' + connection.name + ':');
     return new Promise(function(resolve, reject) {
       // { "ApexClass" : [ "thisclass", "thatclass" ], "ApexPage" : "*" }
-      const userDataPath = (electron.app || electron.remote.app).getPath('userData');
+      const userDataPath = utils.getUserDataPath();
       const pipelinePath = path.join(userDataPath, 'pipeline', pipeline.id);
       const metaPath = path.join(pipelinePath, 'metadata', 'src');
       if(!fs.existsSync(metaPath)) {
@@ -651,7 +651,7 @@ class SfdcApi {
     });
     unzipper.on('extract', function (log) {
       // console.log('[SFDC]Finished extracting' + log);
-      rimraf(sourceZipPath, function(){});
+      fse.ensureDirSync(sourceZipPath, '0777');
       return callback(null, true);
     });
     unzipper.extract({

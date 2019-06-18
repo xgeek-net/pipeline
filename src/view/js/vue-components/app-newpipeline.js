@@ -8,7 +8,8 @@ Vue.component('app-newpipeline', {
           to : '',
           toApiVersion : '',
           action : 'deploy',
-          runTests : false
+          runTests : false,
+          checkOnly : false
         },
         validate : false,
         connection : null,
@@ -36,7 +37,7 @@ Vue.component('app-newpipeline', {
     },
     methods: {
       reload : function() {
-        this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '', action : 'deploy', runTests : false };
+        this.pipeline = { from : '', fromApiVersion : '', to : '', toApiVersion : '', action : 'deploy', checkOnly : false, runTests : false };
         this.validate = false;
         this.connection = null;
         this.initApiVerList();
@@ -86,6 +87,11 @@ Vue.component('app-newpipeline', {
           }
         }
       },
+      // Event on click checkOnly checkbox
+      checkOnly : function(ev) {
+        const checked = ev.target.checked;
+        this.pipeline.checkOnly = checked;
+      },
       // Event on click runTests checkbox
       checkRunTests : function(ev) {
         const checked = ev.target.checked;
@@ -106,6 +112,7 @@ Vue.component('app-newpipeline', {
           pipeline['toApiVersion'] = self.pipeline.toApiVersion;
           pipeline['fromApiVersion'] = self.pipeline.fromApiVersion;
           pipeline['action'] = self.pipeline.action;
+          pipeline['checkOnly'] = self.pipeline.checkOnly;
           pipeline['runTests'] = self.pipeline.runTests;
           pipeline['status'] = 'ready';
           pipeline['created_at'] = now.toISOString();
@@ -208,28 +215,40 @@ Vue.component('app-newpipeline', {
                 </div>
               </div><!-- .slds-form-element -->
               <div class="slds-form-element slds-grid mt1" v-if="(connection!=null && connection.type=='sfdc')">
-                <label class="slds-select__label slds-size_2-of-12">
-                  <span class="slds-checkbox_faux"></span>
-                  <span class="slds-form-element__label">API Version</span>
-                </label>
-                <div class="slds-form-element__control slds-size_4-of-12">
-                  <div class="slds-select_container">
-                    <select class="slds-select" v-model="pipeline.fromApiVersion">
-                      <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.fromApiVersion==ver">{{ ver }}</option>
-                    </select>
-                  </div>
-                </div>
-                <label class="slds-select__label slds-size_2-of-12 txt-center">
-                  <span class="slds-checkbox_faux"></span>
-                  <span class="slds-form-element__label">Action</span>
-                </label>
-                <div class="slds-form-element__control slds-size_4-of-12">
-                  <div class="slds-select_container">
-                    <select class="slds-select" v-model="pipeline.action">
-                      <option v-for="act in actionList" v-bind:value="act.value" v-bind:seleced="pipeline.action==act.value">{{ act.label }}</option>
-                    </select>
-                  </div>
-                </div>
+                <table>
+                  <tr>
+                    <td style="width: 2.5rem;">
+                      <label class="slds-select__label">
+                        <span class="slds-checkbox_faux"></span>
+                        <span class="slds-form-element__label">API</span>
+                      </label>
+                    </td>
+                    <td>
+                      <div class="slds-form-element__control">
+                        <div class="slds-select_container">
+                          <select class="slds-select" v-model="pipeline.fromApiVersion">
+                            <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.fromApiVersion==ver">{{ ver }}</option>
+                          </select>
+                        </div>
+                      </div>
+                    </td>
+                    <td style="width: 4.5rem; text-align: right;">
+                      <label class="slds-select__label txt-center">
+                        <span class="slds-checkbox_faux"></span>
+                        <span class="slds-form-element__label">Action</span>
+                      </label>
+                    </td>
+                    <td>
+                      <div class="slds-form-element__control">
+                        <div class="slds-select_container">
+                          <select class="slds-select" v-model="pipeline.action">
+                            <option v-for="act in actionList" v-bind:value="act.value" v-bind:seleced="pipeline.action==act.value">{{ act.label }}</option>
+                          </select>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
               </div><!-- .slds-form-element -->
             </div>
             <footer class="slds-card__footer"></footer>
@@ -270,26 +289,47 @@ Vue.component('app-newpipeline', {
                 </div>
               </div><!-- .slds-form-element -->
               <div class="slds-form-element slds-grid mt1">
-                <label class="slds-select__label slds-size_2-of-12">
-                  <span class="slds-checkbox_faux"></span>
-                  <span class="slds-form-element__label">API Version</span>
-                </label>
-                <div class="slds-form-element__control slds-size_4-of-12">
-                  <div class="slds-select_container">
-                    <select class="slds-select" v-model="pipeline.toApiVersion">
-                      <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.toApiVersion==ver">{{ ver }}</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="slds-form-element__control slds-size_6-of-12 slds-text-align_right">
-                  <span class="slds-checkbox">
-                    <input type="checkbox" name="options" id="chk-run-tests" v-bind:checked="pipeline.runTests" v-on:click="checkRunTests" value="1" />
-                    <label class="slds-checkbox__label" for="chk-run-tests">
-                      <span class="slds-checkbox_faux"></span>
-                      <span class="slds-form-element__label mr0">&nbsp;Run Tests</span>
-                    </label>
-                  </span>
-                </div>
+                <table>
+                  <tr>
+                    <td style="width: 2.5rem;">
+                      <label class="slds-select__label">
+                        <span class="slds-checkbox_faux"></span>
+                        <span class="slds-form-element__label">API</span>
+                      </label>
+                    </td>
+                    <td>
+                      <div class="slds-form-element__control">
+                        <div class="slds-select_container">
+                          <select class="slds-select" v-model="pipeline.toApiVersion">
+                            <option v-for="ver in apiVersionList" v-bind:value="ver" v-bind:seleced="pipeline.toApiVersion==ver">{{ ver }}</option>
+                          </select>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="slds-form-element__control slds-text-align_right">
+                        <span class="slds-checkbox">
+                          <input type="checkbox" name="options" id="chk-run-tests" v-bind:checked="pipeline.runTests" v-on:click="checkRunTests" value="1" />
+                          <label class="slds-checkbox__label" for="chk-run-tests">
+                            <span class="slds-checkbox_faux"></span>
+                            <span class="slds-form-element__label mr0">Run Tests</span>
+                          </label>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="slds-form-element__control slds-text-align_right">
+                        <span class="slds-checkbox">
+                          <input type="checkbox" name="options" id="chk-check-only" v-bind:checked="pipeline.checkOnly" v-on:click="checkOnly" value="1" />
+                          <label class="slds-checkbox__label" for="chk-check-only">
+                            <span class="slds-checkbox_faux"></span>
+                            <span class="slds-form-element__label mr0">Check Only</span>
+                          </label>
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
               </div><!-- .slds-form-element -->
             </div>
             <footer class="slds-card__footer"></footer>

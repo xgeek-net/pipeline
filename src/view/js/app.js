@@ -10,6 +10,7 @@ var app = new Vue({
     modal : { show : false, loading : false, title : '', data : null },
     message : null,
     setting : null,
+    needUpdate : false,
     newConnection : null,
     connections : [],
     connectionMap : {},
@@ -83,6 +84,12 @@ var app = new Vue({
     closeMessage : function() {
       this.message = null;
     },
+    showNotification : function() {
+      this.needUpdate = true;
+    },
+    hideNotification : function() {
+      this.needUpdate = false;
+    },
     request : function(apiName, params, callback, opts) {
       const self = this;
       opts = opts || {};
@@ -105,8 +112,14 @@ var app = new Vue({
     loadSetting : function() {
       const self = this;
       self.request('data-setting', {}, function(err, setting) {
+        console.log('>>> setting', setting);
         if(err) self.handleError(err);
         self.setting = setting;
+        // Check update
+        if(setting.appVersion && setting.appLatestVersion 
+          && setting.appVersion != setting.appLatestVersion) {
+          self.showNotification();
+        }
       });
     },
     /** Reload connection list from local storage */
@@ -120,11 +133,15 @@ var app = new Vue({
         if(opt.callback) opt.callback();
       });
     },
-    saveConnect: function(data) {
+    saveConnect: function(data, callback) {
       const self = this;
       self.modal.loading = true;
       self.request('data-new-connection', {connect : data}, function(err, connections) {
-        if(err) self.handleError(err);
+        self.modal.loading = false;
+        if(err) {
+          self.handleError(err);
+          return callback(false);
+        }
         self.connections = connections;
         self.connectionMap = self.convertMap(connections);
         //console.log('>>> save result', connections);
@@ -230,9 +247,11 @@ var app = new Vue({
       return recMap;
     },
     handleError : function(err) {
+      const self = this;
       let message = (typeof err == 'string') ? err : err.message;
       if(message && message.length > 0) {
-        this.showMessage({ type : err.type || 'error', message : message });
+        self.showMessage({ type : err.type || 'error', message : message });
+        setTimeout(function(){ self.closeMessage(); }, 5000);
       }
     }
   }
