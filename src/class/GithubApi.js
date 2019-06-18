@@ -314,6 +314,7 @@ class GithubApi {
   getFilesFromSha(repos, branchName, filepath) {
     const self = this;
     const metadata = new Metadata();
+    const rootDir = self.pipeline.path;
     return new Promise(function(resolve, reject) {
       // TODO Muitlple pages
       repos.getSha(branchName, filepath, function(err, result) {
@@ -334,41 +335,36 @@ class GithubApi {
               return;
             } 
             // is file
-            let filename = path.basename(file.path);
-            let filedir = path.dirname(file.path);
-            filename = utils.getFileName(filename);
+            let fileName = file.path;
+            if(rootDir) fileName = fileName.replace(path.join(rootDir, '/'), '');
+            let fileNameOnly = path.basename(fileName);
+            let filedir = path.dirname(fileName);
+            fileNameOnly = utils.getFileName(fileNameOnly);
+
             // ignore blank file, file out of src folder, cached file
-            if(utils.isBlank(filename) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(file.path) >= 0) {
+            if(utils.isBlank(fileNameOnly) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(fileName) >= 0) {
               self.logger('        > ' + file.path + ' (Ignored)');
               return callback(null);
             }
-            self.cacheFiles.push(file.filename);
+            self.cacheFiles.push(fileName);
 
-            // TODO move to metadata as a common function
-            const metadata = new Metadata();
-            metadata.makeDir(self.pipeline.id, file.path)
-            .then(function(localPath) {
-              
-              const fileContentUri = path.join('repos', repos.__fullname, 'contents', file.path);
-              self.fileApiCall(fileContentUri, { ref : branchName })
-              .then(function(response) {
-                if(utils.isBlank(response.status) || response.status != 200) {
-                  self.logger('        > ' + file.path + ' (ERROR: not found)');
-                  return callback(null);
-                }
-                let contentLength = 0;
-                response.data.on('data', function(content) {
-                  if(utils.isNotBlank(content)) contentLength += content.length;
-                });
-                metadata.saveFileStream(localPath, response.data, function(success) {
-                  self.logger('        > ' + file.path + ' (Size: ' + contentLength + ')');
-                  return callback(null);
-                })
+            const localPath = metadata.makeDir(self.pipeline.id, fileName)
+            const fileContentUri = path.join('repos', repos.__fullname, 'contents', file.path);
+            self.fileApiCall(fileContentUri, { ref : branchName })
+            .then(function(response) {
+              if(utils.isBlank(response.status) || response.status != 200) {
+                self.logger('        > ' + file.path + ' (ERROR: not found)');
+                return callback(null);
+              }
+              let contentLength = 0;
+              response.data.on('data', function(content) {
+                if(utils.isNotBlank(content)) contentLength += content.length;
               });
-            })
-            .catch(function(err) {
-              return callback(err);
-            }); // .metadata.makeDir
+              metadata.saveFileStream(localPath, response.data, function(success) {
+                self.logger('        > ' + file.path + ' (Size: ' + contentLength + ')');
+                return callback(null);
+              })
+            });
           }, function(err){
             //console.log('>>>> getFilesFromCommits DONE');
             if(err) { return reject(err); }
@@ -422,19 +418,22 @@ class GithubApi {
   fetchFilesContent(repos, files) {
     const self = this;
     const metadata = new Metadata();
+    const rootDir = self.pipeline.path;
     return new Promise(function(resolve, reject) {
       //console.log('>>>> download files', files.length);
       async.eachLimit(files, 10, function(file, callback) {
         //console.log('>>>> download', file.filename);
-        let filename = path.basename(file.filename);
-        let filedir = path.dirname(file.filename);
-        filename = utils.getFileName(filename);
+        let fileName = file.filename;
+        if(rootDir) fileName = fileName.replace(path.join(rootDir, '/'), '');
+        let fileNameOnly = path.basename(fileName);
+        let filedir = path.dirname(fileName);
+        fileNameOnly = utils.getFileName(fileNameOnly);
         // ignore blank file, file out of src folder, cached file
-        if(utils.isBlank(filename) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(file.filename) >= 0) {
+        if(utils.isBlank(fileNameOnly) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(fileName) >= 0) {
           self.logger('        > ' + file.filename + ' (Ignored)');
           return callback(null);
         }
-        self.cacheFiles.push(file.filename);
+        self.cacheFiles.push(fileName);
 
         const urlObj = url.parse(file.contents_url);
         const params = qs.parse(urlObj.query);
@@ -442,29 +441,26 @@ class GithubApi {
 
         // TODO move to metadata as a common function
         const metadata = new Metadata();
-        metadata.makeDir(self.pipeline.id, file.filename)
-        .then(function(localPath) {
-          
-          const fileContentUri = path.join('repos', repos.__fullname, 'contents', file.filename);
-          self.fileApiCall(fileContentUri, { ref : ref })
-          .then(function(response) {
-            if(utils.isBlank(response.status) || response.status != 200) {
-              self.logger('        > ' + file.filename + ' (ERROR: not found)');
-              return callback(null);
-            }
-            let contentLength = 0;
-            response.data.on('data', function(content) {
-              if(utils.isNotBlank(content)) contentLength += content.length;
-            });
-            metadata.saveFileStream(localPath, response.data, function(success) {
-              self.logger('        > ' + file.filename + ' (Size: ' + contentLength + ')');
-              return callback(null);
-            })
+        const localPath = metadata.makeDir(self.pipeline.id, fileName);
+        const fileContentUri = path.join('repos', repos.__fullname, 'contents', file.filename);
+        self.fileApiCall(fileContentUri, { ref : ref })
+        .then(function(response) {
+          if(utils.isBlank(response.status) || response.status != 200) {
+            self.logger('        > ' + file.filename + ' (ERROR: not found)');
+            return callback(null);
+          }
+          let contentLength = 0;
+          response.data.on('data', function(content) {
+            if(utils.isNotBlank(content)) contentLength += content.length;
           });
+          metadata.saveFileStream(localPath, response.data, function(success) {
+            self.logger('        > ' + file.filename + ' (Size: ' + contentLength + ')');
+            return callback(null);
+          })
         })
         .catch(function(err) {
           return callback(err);
-        }); // .metadata.makeDir
+        });
       }, function(err){
         //console.log('>>>> download completed', err);
         if(err) { return reject(err); }

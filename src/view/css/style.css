@@ -39,6 +39,9 @@
 .pr10{
   padding-right: 10px;
 }
+.slds-spinner{
+  z-index: 999;
+}
 /**
  * #sidebar
  */
@@ -208,6 +211,12 @@
 #main .app-table .pipeline-desc .type-icon .slds-icon{
   fill: rgba(150,148,146,0.8);
 }
+#main .app-table .pipeline-name .slds-badge {
+  font-size: 8px;
+  font-weight: 400;
+  padding: 0.15rem 0.35rem;
+  background-color: #6488e3;
+}
 /**
  * Connections
  */
@@ -256,7 +265,9 @@
 .slds-modal__content{
   min-height: 150px;
 }
-
+.slds-modal__content .slds-spinner{
+  z-index: 999;
+}
 /**
  * Pipeline
  */
@@ -302,6 +313,9 @@
 }
 .new-pipeline-connect .slds-card__header-title{
   font-size: 1rem;
+}
+.new-pipeline-connect .slds-select {
+  font-size: 13px;
 }
 .new-pipeline-detail .slds-form_horizontal .slds-form-element {
   height: auto;
@@ -350,6 +364,11 @@
 .new-pipeline-detail .remark{
   color: #706e6b;
 }
+.new-pipeline-detail .describe{
+  font-size: 90%;
+  color: #706e6b;
+}
+
 .new-pipeline-detail .pr-table{
   border-top: none;
 }
@@ -474,6 +493,12 @@
 .pipeline-detail .detail-process-panel .process-detail label {
   color: #16325c;
 }
+.pipeline-detail .detail-process-panel .process-detail .success {
+  color: #4bc076;
+}
+.pipeline-detail .detail-process-panel .process-detail .error {
+  color: #d4504c;
+}
 .pipeline-detail .detail-process-panel .component-progress {
   border-left: 1px solid #d8dde6;
   height: 100%;
@@ -495,21 +520,59 @@
 }
 
 /** .detail-process-panel */
+.pipeline-detail .detail-tabs {
+  height: calc(100% - 224px);   /* 200px + 24px */
+}
+.pipeline-detail .detail-tabs .slds-tabs_default__nav{
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  background: #fff;
+  border-top-left-radius: .25rem;
+  border-top-right-radius: .25rem;
+}
+.pipeline-detail .detail-tabs .slds-tabs_default__nav .slds-tabs_default__item:first-child{
+  border-top-left-radius: .25rem;
+}
+.pipeline-detail .detail-tabs .slds-tabs_default__nav .slds-tabs_default__link {
+  height: 2.2rem;
+  line-height: 2.2rem;
+}
+.pipeline-detail .detail-tabs .slds-tabs_default__content {
+  padding-top: 0.0rem;
+  height: calc(100% - 20px);
+}
+
 .pipeline-detail .detail-component-panel {
-  margin: 0.5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
   background-color: #F4F6F9;
   color: #514f4d;
-  height: calc(100% - 224px);   /* 200px + 24px */
+  height: 100%;
   overflow-y: auto;
-}
-.pipeline-detail .detail-component-panel .slds-card__header {
-  padding-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 0;
 }
 
 .pipeline-detail .detail-component-panel .slds-truncate {
   white-space: normal;
   min-height: 1rem;
+}
+
+.pipeline-detail .detail-component-panel .success .fas{
+  color: #4bc076;
+}
+.pipeline-detail .detail-component-panel .error .fas{
+  color: #d4504c;
+}
+.pipeline-detail .detail-component-panel .error{
+  overflow: visible;
+  position: relative;
+}
+.pipeline-detail .detail-component-panel .error .detail {
+  color: #d4504c;
+  font-size: 90%;
+  line-height: 1.0rem;
 }
 
 .pipeline-detail .pipeline-log{
@@ -558,6 +621,26 @@
 #main .pipeline-detail .pipeline-status.error{
   color: #d4504c;
 }
+.notify-messages{
+  z-index: 32;
+  width: 400px;
+  position: fixed;
+  right: 15px;
+  bottom: 10px;
+  border-radius: 3px;
+  box-shadow: 0 20px 32px -8px rgba(9,30,66,0.25), 0 0 1px rgba(9,30,66,0.31);
+  padding: 16px;
+  background: #fff;
+}
+.notify-messages .slds-media__body {
+  padding-right: 1rem;
+}
+.notify-messages .close-button{
+  position: absolute;
+  right: 8px;
+  top: 9px;
+}
+
 
 /**
  * Loading

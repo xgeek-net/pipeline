@@ -5,6 +5,7 @@ Vue.component('app-newpipeline-detail-git', {
       pipeline : {
         type : null,
         name : '',
+        path : '',
         prs : [],
         branch : {},
         commits : []
@@ -31,7 +32,7 @@ Vue.component('app-newpipeline-detail-git', {
      */
     reload : function() {
       const self = this;
-      self.pipeline = { type : null, name : '', prs : [], branch : '', commits : [] };
+      self.pipeline = { type : null, name : '', path : '', prs : [], branch : '', commits : [] };
       self.pullrequests = null;
       self.pullrequestMap = null;
       self.branches = null;
@@ -106,7 +107,6 @@ Vue.component('app-newpipeline-detail-git', {
         self.connection,
         function(err, branches) {
           app.hideLoading();
-          //console.log('>>> git-branches callback ',err, branches);
           if(err) return app.handleError(err);
           self.branches = branches;
           self.branchMap = {};
@@ -163,7 +163,6 @@ Vue.component('app-newpipeline-detail-git', {
         function(err, commits) {
           app.hideLoading();
           if(err) return app.handleError(err);
-          //console.log('>>> git-branch-commits callback ',err, commits);
           self.commits = commits;
           self.commitMap = {};
           let checkedCommits = [];
@@ -209,9 +208,19 @@ Vue.component('app-newpipeline-detail-git', {
           </div><!-- .slds-form-element -->
 
           <div class="slds-form-element">
+            <label class="slds-form-element__label" for="ipt-pipeline-path">Root Path</label>
+            <div class="slds-form-element__control">
+              <input type="text" id="ipt-pipeline-path" v-model="pipeline.path" class="slds-input input-small" placeholder="Metadata src folder path (option)" />
+              <p class="describe slds-m-top_xxx-small">Normally, you have to assign nothing if src folder is the root directory in git repository.<br />
+                e.g. set "sfdc/" when src folder is commited as path "sfdc/src".
+              </p>
+            </div>
+          </div><!-- .slds-form-element -->
+
+          <div class="slds-form-element">
             <label class="slds-form-element__label">Source Type</label>
             <div class="slds-form-element__control">
-              <div class="slds-visual-picker slds-visual-picker_medium">
+              <div class="slds-visual-picker slds-visual-picker_medium" v-if="connection.type!='git'">
                 <input type="radio" id="visual-picker-source-type-pr" v-bind:checked="pipeline.type=='pr'" value="1" name="sourcetype" v-on:click="listPullRequests()" />
                 <label for="visual-picker-source-type-pr">
                   <span class="slds-visual-picker__figure slds-visual-picker__text slds-align_absolute-center">
@@ -320,9 +329,13 @@ Vue.component('app-newpipeline-detail-git', {
                       </div>
                     </td>
                   </tr>
+                  <tr class="slds-hint-parent" v-if="pullrequests.length == 0">
+                    <td>No open Pull Request found. </td>
+                  </tr>
                 </tbody>
               </table>
             </div><!-- .slds-form-element__control -->
+
           </div><!-- .slds-form-element -->
 
           <div class="slds-form-element pipeline-prs" v-if="pipeline.type=='branch' || pipeline.type=='commit'">
@@ -365,6 +378,8 @@ Vue.component('app-newpipeline-detail-git', {
                             <span class="slds-avatar slds-avatar_small slds-avatar_circle slds-m-right_x-small">
                               <span class="slds-icon_container slds-icon-standard-user">
                                 <img v-bind:src='c.author.avatar' />
+                                <img v-bind:src='c.author.avatar' v-if="connection.type!='git'" />
+                                <img v-bind:src="'https://www.gravatar.com/avatar/' + CryptoJS.MD5(c.author.loginname).toString()" v-if="connection.type=='git'" />
                               </span>
                             </span>
                           </div>

@@ -83,16 +83,16 @@ Vue.component('app-pipelines', {
               <th scope="col" class="main-col">
                 <div class="slds-truncate" title="Pipeline">Pipeline</div>
               </th>
-              <th scope="col" class="sub-col" style="width: 10rem;">
+              <th scope="col" class="sub-col" style="width: 7rem;">
                 <div class="slds-truncate" title="Status">Status</div>
               </th>
-              <th scope="col" class="sub-col">
+              <th scope="col" class="sub-col" style="width: 9rem;">
                 <div class="slds-truncate" title="Created">Created</div>
               </th>
-              <th scope="col" class="sub-col">
+              <th scope="col" class="sub-col" style="width: 9rem;">
                 <div class="slds-truncate" title="Started">Started</div>
               </th>
-              <th scope="col" class="sub-col">
+              <th scope="col" class="sub-col" style="width: 6rem;">
                 <div class="slds-truncate" title="Duration">Duration</div>
               </th>
               <th scope="col" class="sub-col" style="width: 9rem;">
@@ -107,19 +107,20 @@ Vue.component('app-pipelines', {
               </th>
               <td class="main-col">
                 <div class="slds-truncate pipeline-name">
-                  <a v-on:click="openDetail(row.id)">{{ row.name }}</a><br />
+                  <a v-on:click="openDetail(row.id)">{{ row.name }}</a>&nbsp;<span class="slds-badge" v-if="row.checkOnly">Check Only</span><br />
                   <p class="pipeline-desc slds-m-top_xx-small" v-if="connectionmap[row.from]">
                     <i class="fab fa-github type-icon-small" v-if="connectionmap[row.from].type=='github'"></i>
                     <i class="fab fa-bitbucket type-icon-small" v-if="connectionmap[row.from].type=='bitbucket'"></i>
+                    <i class="fab fa-git-square type-icon-small" v-if="connectionmap[row.from].type=='git'"></i>
                     <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="connectionmap[row.from].type=='sfdc'"> 
                       <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
                         <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
                       </svg>
                     </span>
                     <span v-if="row.type=='changeset'">{{ connectionmap[row.from].name }}</span>
-                    <span v-if="row.type=='pr'">#{{ (row.prs.length > 1) ? row.prs[0].number + '...' : row.prs[0].number }}</span>
-                    <span v-if="row.type=='branch'">{{ row.branch.name }}</span>
-                    <span v-if="row.type=='commit'">#{{ (row.commits.length > 1) ? row.commits[0].sha.substr(0, 10) + '...' : row.commits[0].sha.substr(0, 10) }}</span>
+                    <span v-if="row.type=='pr'">{{ connectionmap[row.from].name }}#{{ (row.prs.length > 1) ? row.prs[0].number + '...' : row.prs[0].number }}</span>
+                    <span v-if="row.type=='branch'">{{ connectionmap[row.from].name }}#{{ row.branch.name }}</span>
+                    <span v-if="row.type=='commit'">{{ connectionmap[row.from].name }}#{{ (row.commits.length > 1) ? row.commits[0].sha.substr(0, 6) + '...' : row.commits[0].sha.substr(0, 6) }}</span>
                     &nbsp;
                     <i class="fas fa-times type-icon-small" v-if="!connectionmap[row.to]"></i>
                     <i class="fas fa-arrow-right type-icon-small" v-if="connectionmap[row.to]"></i>
@@ -159,9 +160,14 @@ Vue.component('app-pipelines', {
                 <div class="slds-truncate actions-col">
                   <ul class="slds-grid slds-button-group">
                     <li class="popover-col">
-                      <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-if="row.status!='processing'" v-on:click="rerunPipeline(row.id, $event)">
+                      <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-if="row.status!='processing' && row.status!='ready'" v-on:click="rerunPipeline(row.id, $event)">
                         <svg class="slds-button__icon" aria-hidden="true">
                           <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#redo"></use>
+                        </svg>
+                      </button>
+                      <button class="slds-button slds-button_icon slds-button_icon-border-filled" v-if="row.status=='ready'" v-on:click="rerunPipeline(row.id, $event)">
+                        <svg class="slds-button__icon" aria-hidden="true">
+                          <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#right"></use>
                         </svg>
                       </button>
                       <button class="slds-button slds-button_icon slds-button_icon-border-filled" disabled="disabled" v-if="row.status=='processing'" v-on:click="rerunPipeline(row.id, $event)">
@@ -171,7 +177,7 @@ Vue.component('app-pipelines', {
                         </div>
                       </button>
                       <div class="slds-popover slds-popover--tooltip slds-nubbin_bottom-right">
-                        <div class="slds-popover__body">Rerun</div>
+                        <div class="slds-popover__body">{{ (row.status=='ready') ? 'Run' : 'Rerun' }}</div>
                       </div>
                     </li>
                     <li class="popover-col slds-button_middle">

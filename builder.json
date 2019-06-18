@@ -12,15 +12,18 @@
     "!.gitignore",
     "!package.json",
     "!package-lock.json",
+    "!test/*",
     "!node_modules/electron-builder/*",
     "!node_modules/electron-builder-squirrel-windows/*",
     "!node_modules/electron-packager/*",
     "!node_modules/electron-prebuilt/*",
     "!src/view/bower.json",
     "!src/view/.bowerrc",
-    "!src/view/components/font-awesome/advanced-options/*",
-    "!src/view/components/font-awesome/svg-with-js/*",
-    "!src/view/components/font-awesome/use-on-desktop/*",
+    "!src/view/components/font-awesome/js/*",
+    "!src/view/components/font-awesome/js-packages/*",
+    "!src/view/components/font-awesome/less/*",
+    "!src/view/components/font-awesome/metadata/*",
+    "!src/view/components/font-awesome/scss/*",
     "!src/view/components/xlsx-populate/examples/*",
     "!src/view/components/js-xlsx/demos/*",
     "!src/view/components/js-xlsx/docbits/*",
@@ -48,6 +51,6 @@
     "target": [
       "squirrel"
     ],
-    "artifactName" : "Pipeline-${version}.${ext}"
+    "artifactName" : "Pipeline-${version}-setup.${ext}"
   }
 }

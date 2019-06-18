@@ -36,7 +36,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
         'application/x-xls',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       ],
-      OBJECT_TYPES : ['all', 'BusinessProcess', 'CustomField', 'CustomMetadata', 'CompactLayout', 'FieldSet', 'QuickAction', 'WebLink', 'ListView', 'Layout', 
+      OBJECT_TYPES : ['all', 'ApprovalProcess', 'BusinessProcess', 'CustomField', 'CustomMetadata', 'CompactLayout', 'FieldSet', 'QuickAction', 'WebLink', 'ListView', 'Layout', 
                       'RecordType', 'SharingReason', 'ValidationRule', 'WorkflowAlert', 'WorkflowRule', 'WorkflowFieldUpdate',
                       // Folders
                       'Dashboard', 'Report', 'EmailTemplate', 'Document'],
@@ -331,7 +331,7 @@ Vue.component('app-newpipeline-detail-sfdc', {
       }
       for(let key in self.metadataMap) {
         for(let meta of self.metadataMap[key]) {
-          const memberName = (meta.object && key !== 'Layout') ? meta.object + '.' + meta.fullName : meta.fullName;
+          const memberName = (meta.object && key !== 'Layout' && key !== 'ApprovalProcess') ? meta.object + '.' + meta.fullName : meta.fullName;
           if(types.hasOwnProperty(key) && types[key].indexOf(memberName) >= 0) {
             // Check target component
             meta['MetaChecked'] = true;

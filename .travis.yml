@@ -3,6 +3,12 @@ dist: trusty
 language: node_js
 os:
   - osx
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libstdc++-4.9-dev
 cache: 
   directories:
     - node_modules
@@ -14,11 +20,21 @@ before_install:
   - nvm use --delete-prefix $NODE_VERSION
   - node --version
   - echo $CLIENT_SECRET | base64 -D > src/config/client.js
+  - echo $MOCHA_SECRET | base64 -D > test/token.js
+  # Prepare NodeGit
+  - export npm_config_target=3.1.9
+  - export npm_config_arch=x64
+  - export npm_config_target_arch=x64
+  - export npm_config_disturl=https://atom.io/download/electron
+  - export npm_config_runtime=electron
+  - export npm_config_build_from_source=true
 install:
   - npm install
 #before_script:
 script:
-  - npm test
+  - NODE_ENV=test npm run coveralls
+after_success:
+  - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
 before_deploy:
   - brew update
   - brew install bower
@@ -28,7 +44,7 @@ before_deploy:
 deploy:
   provider: releases
   api_key:
-    secure: ba8pvNLRmvxI8exeGzDVdRSU7oZ91JfYAXBb5XDyBIu3oQ5hWBWDT0o2dM9XyLMwM3lSbtJD+Tqprvi0o9xpk6ruJqThh6vbboE/TOSWZS8lWJUVwvWxDB/ldo6CJq45fFTJPj/WxTtkN5XszTmIUU/1YpaicJ5KsjKqNGh+IVEeCJ9kd8lG6PKI2JOuHbVr9VmxQcHLRAOMnCXCT+kg09jYdnJjpQqz36IyoNwYio/92IZoPpH+oWxoXRSQLiV9sXBEhyz6Zz/yOEftOoEdOpenBy9T4PWVjHNtidqjeRj6RhiehDu7VKyd0iVZRvycW9DYaDGY0KMKlfWiPlaGrqZM4WsrvciiOTvAN2xBwD4Ro78uUoEvx1icnBAmxtYU3EL2HiZYaQWABr7Aksg6z1pbABXimxBJ7nuOGd+ORbjNMjJUi051r4r8YIat95vBVy5C0ZNSdXrfg5tOQbPUVOObzPtz7RHHe0fuBx2ZzxWHCZvh2KtWdgN5/U+aHOv1Lk4reDghTqXg25uQdB1sClBxAz3xJDA6ZNVGzaiTtjutobOBDomHQt+FMx7A00CVgMjEhFQRrkAxWA5CEaMXJjRKTGJ0BycX2do387+hNCnJFd2K+Qy2gxkRaYbdndlNPmEkW4JIYsWNc4f2j9I4+bCEd24KoQrASN/VlIJUDv4=
+    secure: "mDS3fYMdhOW/aTUdW70pKNZ2ybAgfPKqcl3zNlP7+mVXnp0BqUmL7PqHubNVJlLNPTiuLt1czDWhxdrR1nJM1FUTfoEtnnuyck3UOjhekQXAohctc4KmC7x/2r3HWCCOsT4FOAcproTT/c8VfCaCVY7ycnKqHUOE1bm+QWJKmbjgkuy4W9SPDRMkQhNIuVvW8uY8tHEwKD6Nt21W8of9qLgLJ8Z6fUNa3XXVFzWj0IhNUXXYWY3MdMLPrbKKIzjpkrLftlSSn6BopyOXZMCa8RqYmOznMmjOy4Z7aGW0LeKy8ZNM6BLm5MBiCYJFTpmqUij2JsqX6KQyO957AmuO5fNs0sEjZjifFbnncoRIIHzfmu1H0BasIibhr+VZhY98Ad48xhsYhOObK0T09jus94uoDxhIb+gcmz+vWFzWiPIsiPU7BSrCQSENhQfvVXh9B5QN3wc6Ez5CWlz3RKxBLVxQaEcbtBCM8wMvDdU40jAuf8ZTu02QKa1XQVKGsAa/FKE+8K8/DgJYaxqSWznHDp2YMOlW1sfVEPxEs24B6nQvocQjWXjUBjD3MF3i+zwgZQXu1AQkmD2/rEracXi1Wr44XbTL4NW6ThnQYbxRWVI4gPLdhkGPlyuTp/vzHaIW+64IqT4F8j1PeKHR2neX3pWARHlnUKlthmbm/w7u+Gg="
   file:
     - build/dist/Pipeline-$TRAVIS_TAG-mac.zip
     - build/dist/Pipeline-$TRAVIS_TAG.dmg
@@ -36,4 +52,4 @@ deploy:
   on:
     repo: xgeek-net/pipeline
     tags: true
-    all_branches: true
+    branch: master

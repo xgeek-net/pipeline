@@ -1,4 +1,6 @@
 const client = {
+  /** Crypto secret key */
+  SECRET_KEY : process.env.SECRET_KEY,
   /** Sentry api client */
   RAVEN_CLIENT_ID : process.env.RAVEN_CLIENT_ID,
   RAVEN_RELEASE_KEY : process.env.RAVEN_RELEASE_KEY,

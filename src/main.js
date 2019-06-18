@@ -34,6 +34,8 @@ let mainWindow;
 function createWindow() {
   const bounds = utils.getAppWinBounds();
   mainWindow = new BrowserWindow(bounds);
+  // Hide menu
+  mainWindow.setAutoHideMenuBar(true);
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'view/index.html'),
     protocol: 'file:',

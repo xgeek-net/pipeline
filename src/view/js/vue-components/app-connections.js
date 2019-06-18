@@ -16,6 +16,7 @@ Vue.component('app-connections', {
         }
       );
     },
+    /* TODO Fix Bitbucket OAuth issue
     newBitbucketConnect : function(ev) {
       this.connDropdownOpen = false;
       app.showModal({ title : 'Bitbucket' });
@@ -26,6 +27,14 @@ Vue.component('app-connections', {
           app.showModal({ loading : false, data : result });
         }
       );
+    },
+    */
+    // Add Git Repository (HTTP Only)
+    newGitConnect : function(ev) {
+      this.connDropdownOpen = false;
+      app.showModal({ title : 'Git Repository', loading : false, 
+        data : { type : 'git', git_type : 'https' }
+      });
     },
     newSfdcConnect : function(orgType) {
       this.connDropdownOpen = false;
@@ -85,13 +94,22 @@ Vue.component('app-connections', {
                       </span>
                     </a>
                   </li>
+                  <!-- TODO Fix Bitbucket OAuth issue
                   <li class="slds-dropdown__item" role="presentation">
                     <a href="javascript:void(0);" role="menuitem" tabindex="1" v-on:click="newBitbucketConnect">
-                      <span class="slds-truncate" title="Github">
+                      <span class="slds-truncate" title="Bitbucket">
                         <i class="fab fa-bitbucket type-icon-medium slds-m-right_x-small"></i> Bitbucket
                       </span>
                     </a>
                   </li>
+                  -->
+                  <li class="slds-dropdown__item" role="presentation">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="2" v-on:click="newGitConnect">
+                        <span class="slds-truncate" title="Git">
+                          <i class="fab fa-git-square type-icon-medium slds-m-right_x-small"></i> Git Repository
+                        </span>
+                      </a>
+                    </li>
                   <li class="slds-dropdown__item" role="presentation">
                     <a href="javascript:void(0);" role="menuitem" tabindex="2" v-on:click="newSfdcConnect('production')">
                       <span class="slds-truncate">
@@ -155,12 +173,13 @@ Vue.component('app-connections', {
                 <div class="slds-truncate">
                 <i class="fab fa-github type-icon-medium" v-if="row.type=='github'"></i>
                 <i class="fab fa-bitbucket type-icon-medium" v-if="row.type=='bitbucket'"></i>
+                <i class="fab fa-git-square type-icon-medium" v-if="row.type=='git'"></i>
                 <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon" v-if="row.type=='sfdc'"> 
                   <svg class="slds-icon slds-icon_small" aria-hidden="true">
                     <use xlink:href="components/salesforce-lightning-design-system/assets/icons/utility-sprite/svg/symbols.svg#salesforce1"></use>
                   </svg>
                 </span>
-                &nbsp;{{ (row.type=='github'||row.type=='bitbucket') ? row.repos.full_name : row.orgType }}</div>
+                &nbsp;{{ (row.type=='git') ? 'Git' : ((row.type=='github'||row.type=='bitbucket') ? row.repos.full_name : row.orgType) }}</div>
               </td>
               <td>
                 <div class="slds-truncate">{{ row.name }}</div>
@@ -169,7 +188,8 @@ Vue.component('app-connections', {
                 <div class="slds-truncate">
                   <span class="slds-avatar slds-avatar_small slds-avatar_circle slds-m-right_x-small">
                     <span class="slds-icon_container slds-icon-standard-user">
-                      <img v-bind:src='row.avatar' />
+                      <img v-bind:src='row.avatar' v-if="row.type!='git'" />
+                      <img v-bind:src="'https://www.gravatar.com/avatar/' + CryptoJS.MD5(row.username).toString()" v-if="row.type=='git'" />
                     </span>
                   </span>
                   {{ row.username }}</div>
@@ -236,15 +256,23 @@ Vue.component('app-connections', {
                         </span>
                       </a>
                     </li>
+                    <!-- TODO Fix Bitbucket OAuth issue
                     <li class="slds-dropdown__item" role="presentation">
                       <a href="javascript:void(0);" role="menuitem" tabindex="1" v-on:click="newBitbucketConnect">
-                        <span class="slds-truncate" title="Github">
+                        <span class="slds-truncate" title="Bitbucket">
                           <i class="fab fa-bitbucket type-icon-medium slds-m-right_x-small"></i> Bitbucket
+                        </span>
+                      </a>
+                    </li> -->
+                    <li class="slds-dropdown__item" role="presentation">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="2" v-on:click="newGitConnect">
+                        <span class="slds-truncate" title="Git">
+                          <i class="fab fa-git-square type-icon-medium slds-m-right_x-small"></i> Git Repository
                         </span>
                       </a>
                     </li>
                     <li class="slds-dropdown__item" role="presentation">
-                      <a href="javascript:void(0);" role="menuitem" tabindex="2" v-on:click="newSfdcConnect('production')">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="3" v-on:click="newSfdcConnect('production')">
                         <span class="slds-truncate">
                           <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon-medium slds-m-right_x-small">
                             <svg class="slds-icon slds-icon_xx_small" aria-hidden="true">
@@ -256,7 +284,7 @@ Vue.component('app-connections', {
                       </a>
                     </li>
                     <li class="slds-dropdown__item" role="presentation">
-                      <a href="javascript:void(0);" role="menuitem" tabindex="3" v-on:click="newSfdcConnect('sandbox')">
+                      <a href="javascript:void(0);" role="menuitem" tabindex="4" v-on:click="newSfdcConnect('sandbox')">
                         <span class="slds-truncate">
                           <span class="slds-icon_container slds-icon-utility-salesforce1 type-icon-medium slds-m-right_x-small">
                             <svg class="slds-icon slds-icon_xx_small" aria-hidden="true">

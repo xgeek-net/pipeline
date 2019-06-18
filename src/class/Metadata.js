@@ -1,14 +1,13 @@
-const electron = require('electron');
 const fs = require('fs');
+const fse = require('fs-extra');
 const path = require('path');
-const makeDir = require('make-dir');
-const rimraf = require('rimraf');
 const xmlbuilder = require('xmlbuilder');
 const archiver = require('archiver');
 const sgp = require('sfdc-generate-package');
 
 const SfdcApi = require('./SfdcApi.js');
 const Connect = require('./Connect.js');
+const utils = require('./Utils');
 
 const PACKAGE_XML_FILE_NAME = 'package.xml';
 const DESTRUCTIVE_XML_FILE_NAME = 'destructiveChanges.xml';
@@ -19,9 +18,19 @@ class Metadata {
   }
 
   getPipelineFolder() {
-    const userDataPath = (electron.app || electron.remote.app).getPath('userData');
+    const userDataPath = utils.getUserDataPath();
     const pipelinePath = path.join(userDataPath, 'pipeline');
     return pipelinePath;
+  }
+
+  /**
+   * Get metadata path
+   * @param {String} pid 
+   */
+  getMetadataFolder(pid) {
+    const pipelinePath = this.getPipelineFolder();
+    let pPath = path.join(pipelinePath, pid);
+    return path.join(pPath, 'metadata');
   }
   /**
    * Mkdir pipeline cache folder : /pipeline/{pid}/metadata
@@ -30,54 +39,40 @@ class Metadata {
    */
   mkdirPipelineFolder(pid) {
     const pipelinePath = this.getPipelineFolder();
-    if(!fs.existsSync(pipelinePath)) {
-      fs.mkdirSync(pipelinePath, '0777');
+    if(!fse.pathExistsSync(pipelinePath)) {
+      fse.ensureDirSync(pipelinePath, '0777');
     }
     const pPath = path.join(pipelinePath, pid);
-    if(fs.existsSync(pPath)) {
+    if(fse.pathExistsSync(pPath)) {
       // Delete when exists
-      rimraf(pPath, function(){
-        fs.mkdirSync(pPath, '0777');
-        fs.mkdirSync(path.join(pPath, 'metadata'), '0777');
-      });
-    } else {
-      fs.mkdirSync(pPath, '0777');
-      fs.mkdirSync(path.join(pPath, 'metadata'), '0777');
+      fse.removeSync(pPath);
     }
+    fse.ensureDirSync(pPath, '0777');
+    fse.ensureDirSync(path.join(pPath, 'metadata'), '0777');
     return pPath;
   }
 
   /**
    * Remove pipeline cache folder
    * @param {String} pid - pipeline id 
-   * @param {Function} callback
    */
-  rmPipelineCache(pid, callback) {
+  rmPipelineCache(pid) {
     const pPath = this.getPipelineFolder();
     const pipelinePath = path.join(pPath, pid);
-    if(fs.existsSync(pipelinePath)) {
-      rimraf(pipelinePath, callback);
-    } else {
-      return callback(null, true);
+    if(fse.pathExistsSync(pipelinePath)) {
+      fse.removeSync(pipelinePath);
     }
   }
 
   // prepare folder for file 
   makeDir(pid, filename) {
     const self = this;
-    const userDataPath = (electron.app || electron.remote.app).getPath('userData');
+    const userDataPath = utils.getUserDataPath();
     const pipelinePath = path.join(userDataPath, 'pipeline', pid, 'metadata');
     const filePath = path.join(pipelinePath, filename);
     const filePathWithoutName = path.dirname(filePath);
-    return new Promise(function(resolve, reject) {
-      makeDir(filePathWithoutName)
-      .then(function(path) {
-        return resolve(filePath);
-      })
-      .catch(function(err) {
-        return reject(err);
-      });
-    });
+    fse.ensureDirSync(filePathWithoutName, '0777');
+    return filePath
   }
 
   // Save file from stream
@@ -102,7 +97,7 @@ class Metadata {
   createPackageXml(targetPath, opts) {
     opts = opts || {};
     const metaPath = path.join(targetPath, 'metadata', 'src');
-    if(fs.existsSync(metaPath + '/package.xml')) {
+    if(fse.pathExistsSync(metaPath + '/package.xml')) {
       return true;
     }
     return sgp({
@@ -135,7 +130,7 @@ class Metadata {
       // Remove metadata files
       fs.readdirSync(metaPath).filter(function (file) {
         if(fs.statSync(metaPath+'/'+file).isDirectory()) {
-          rimraf.sync(metaPath+'/'+file);
+          fse.ensureDirSync(metaPath+'/'+file, '0777');
         }
         return resolve();
       });

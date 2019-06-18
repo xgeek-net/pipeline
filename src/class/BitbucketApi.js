@@ -1,4 +1,4 @@
-//https://bitbucket.org/account/user/dawn8898/api
+//@deprecated Bitbuck API OAuth flow is no working
 const request = require('request');
 const async = require('async');
 const path = require('path');
@@ -29,7 +29,6 @@ class BitbucketApi {
     const url = CLIENT.BITBUCKET_END_POINT + '/authorize'
         + '?client_id=' + CLIENT.BITBUCKET_CLIENT_ID
         + '&response_type=code';
-    //console.log('>>>> getAuthUrl ', url);
     return url;
   }
 
@@ -494,31 +493,26 @@ class BitbucketApi {
       self.cacheFiles.push(filePath);
       // TODO move to metadata as a common function
       const metadata = new Metadata();
-      metadata.makeDir(self.pipeline.id, filePath)
-      .then(function(localPath) {
-        const fileContentUri = path.join('repositories', username, reposName, 'src', sha, encodeURIComponent(filePath) + '?raw');
-        self.apiCall(fileContentUri, {})
-        .on('response', function(response) {
-          if(utils.isBlank(response.statusCode) || response.statusCode != '200') {
-            self.logger('        > ' + filePath + ' (ERROR: not found)');
-            return resolve(true);
-          }
-          let contentLength = 0;
-          response.on('data', function(content) {
-            if(utils.isNotBlank(content)) contentLength += content.length;
-          });
-          metadata.saveFileStream(localPath, response, function(success) {
-            self.logger('        > ' + filePath + ' (Size: ' + contentLength + ')');
-            return resolve(success);
-          })
-        })
-        .on('error', function(err) {
-          return reject(err);
+      const localPath = metadata.makeDir(self.pipeline.id, filePath);
+      const fileContentUri = path.join('repositories', username, reposName, 'src', sha, encodeURIComponent(filePath) + '?raw');
+      self.apiCall(fileContentUri, {})
+      .on('response', function(response) {
+        if(utils.isBlank(response.statusCode) || response.statusCode != '200') {
+          self.logger('        > ' + filePath + ' (ERROR: not found)');
+          return resolve(true);
+        }
+        let contentLength = 0;
+        response.on('data', function(content) {
+          if(utils.isNotBlank(content)) contentLength += content.length;
         });
+        metadata.saveFileStream(localPath, response, function(success) {
+          self.logger('        > ' + filePath + ' (Size: ' + contentLength + ')');
+          return resolve(success);
+        })
       })
-      .catch(function(err) {
+      .on('error', function(err) {
         return reject(err);
-      }); // .metadata.makeDir
+      });
 
     });
   }
