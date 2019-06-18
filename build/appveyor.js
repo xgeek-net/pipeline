@@ -17,7 +17,7 @@ fs.writeFile(filePath, clientDecode, function(err) {
     process.exit(1);
   }
   console.log('Build client.js Done!');
-  fs.writeFile(filePath, clientDecode, function(err) {
+  fs.writeFile(tokenFilePath, mochaDecode, function(err) {
     if(err) {
       console.error(err);
       process.exit(1);

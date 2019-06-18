@@ -15,7 +15,7 @@ cache:
 env:
   - NODE_VERSION="10.8.0"
 before_install:
-  - git clone https://github.com/xgeek-net/pipeline-release.git /tmp/.nvm
+  - git clone https://github.com/xgeek-net/pipeline.git /tmp/.nvm
   - nvm install $NODE_VERSION
   - nvm use --delete-prefix $NODE_VERSION
   - node --version
