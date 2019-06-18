@@ -26,15 +26,24 @@
     "xmlbuilder": "^13.0.2"
   },
   "keywords": [
-    "Pipeline",
-    "Salesforce",
-    "Force.com",
-    "Metadata",
-    "Deploy",
-    "Changeset"
+    "pipeline",
+    "salesforce",
+    "force.com",
+    "metadata",
+    "deploy",
+    "changeset",
+    "Github",
+    "GitLab",
+    "Bitbucket",
+    "Backlog"
   ],
-  "author": "Xiaoan Lin<admin@xgeek.net>",
-  "license": "MIT",
+  "author": {
+    "name": "Xiaoan Lin",
+    "email": "admin@xgeek.net",
+    "url": "https://www.xgeek.net"
+  },
+  "license": "GPLv3",
+  "bugs": "https://github.com/xgeek-net/pipeline/issues",
   "scripts": {
     "start": "electron ./src",
     "test": "mocha --recursive",
