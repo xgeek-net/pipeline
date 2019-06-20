@@ -355,11 +355,16 @@ class GitApi {
         NodeGit.Reset.reset(repos, commit, 3, {});
       })
       .then(function (success) {
-        // Copy metadata from git folder to metadata folder
+        // Copy metadata src folder from git into metadata folder
         let gitPath = self.getGitFolder(path.join('pipeline', self.pipeline.id));
         const rootDir = self.pipeline.path;
         if(rootDir) gitPath = path.join(gitPath, rootDir);
+        gitPath = path.join(gitPath, 'src');
+        if(!fse.pathExistsSync(gitPath)) {
+          return reject(new Error('src folder is not found.'));
+        }
         let metaPath = metadata.getMetadataFolder(self.pipeline.id);
+        metaPath = path.join(metaPath, 'src');
         fse.copy(gitPath, metaPath, function(err){
           if (err) return reject(err);
           return resolve(success);
