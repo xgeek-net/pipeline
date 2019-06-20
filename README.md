@@ -1,4 +1,4 @@
-# Pipeline - [![Build Status](https://travis-ci.org/xgeek-net/pipeline.svg)](https://travis-ci.org/xgeek-net/pipeline)  [![Build status](https://ci.appveyor.com/api/projects/status/vv0meml49a4lps3y?svg=true)](https://ci.appveyor.com/project/xgeek-net/pipeline)  [![Coverage Status](https://coveralls.io/repos/github/xgeek-net/pipeline/badge.svg?branch=master)](https://coveralls.io/github/xgeek-net/pipeline?branch=master)
+# Pipeline - [![Build Status](https://travis-ci.org/xgeek-net/pipeline.svg)](https://travis-ci.org/xgeek-net/pipeline)  [![Build status](https://ci.appveyor.com/api/projects/status/github/xgeek-net/pipeline?branch=master&svg=true)](https://ci.appveyor.com/project/xgeek-net/pipeline)  [![Coverage Status](https://coveralls.io/repos/github/xgeek-net/pipeline/badge.svg?branch=master)](https://coveralls.io/github/xgeek-net/pipeline?branch=master)
 Be less busy, less mistake in Salesforce metadata deploy. 
 
 ![pipeline main - 1280](https://user-images.githubusercontent.com/5466487/59648084-ae8d0c00-91b8-11e9-8700-63b8684e591b.png)
