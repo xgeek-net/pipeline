@@ -34,7 +34,7 @@ install:
 script:
   - NODE_ENV=test npm run coveralls
 after_success:
-  - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+  - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
 before_deploy:
   - brew update
   - brew install bower

@@ -651,7 +651,9 @@ class SfdcApi {
     });
     unzipper.on('extract', function (log) {
       // console.log('[SFDC]Finished extracting' + log);
-      fse.ensureDirSync(sourceZipPath, '0777');
+      if(fse.pathExistsSync(sourceZipPath)) {
+        fse.removeSync(sourceZipPath);
+      }
       return callback(null, true);
     });
     unzipper.extract({

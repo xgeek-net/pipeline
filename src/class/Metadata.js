@@ -71,7 +71,9 @@ class Metadata {
     const pipelinePath = path.join(userDataPath, 'pipeline', pid, 'metadata');
     const filePath = path.join(pipelinePath, filename);
     const filePathWithoutName = path.dirname(filePath);
-    fse.ensureDirSync(filePathWithoutName, '0777');
+    if(!fse.pathExistsSync(filePathWithoutName)) {
+      fse.ensureDirSync(filePathWithoutName, '0777');
+    }
     return filePath
   }
 
