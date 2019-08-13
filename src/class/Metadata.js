@@ -99,7 +99,7 @@ class Metadata {
   createPackageXml(targetPath, opts) {
     opts = opts || {};
     const metaPath = path.join(targetPath, 'metadata', 'src');
-    if(fse.pathExistsSync(metaPath + '/package.xml')) {
+    if(fse.pathExistsSync(path.join(metaPath, 'package.xml'))) {
       return true;
     }
     return sgp({

@@ -288,7 +288,9 @@ class GitApi {
         let fileName = patchPath;
         if(rootDir) fileName = fileName.replace(path.join(rootDir, '/'), '');
         let filePath = metadata.makeDir(self.pipeline.id, fileName);
-        if(utils.isBlank(fileName) || !fileName.startsWith('src/') || self.cacheFiles.indexOf(fileName) >= 0) {
+        if(utils.isBlank(fileName) || 
+          (!fileName.startsWith('src/') && fileName != 'src/package.xml') || 
+          self.cacheFiles.indexOf(fileName) >= 0) {
           self.logger('        > ' + patchPath + ' (Ignored)');
           return callback(null);
         }

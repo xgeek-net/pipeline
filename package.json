@@ -1,7 +1,7 @@
 {
   "name": "pipeline",
   "description": "Be less busy, less mistake in Salesforce metadata deploy",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "private": false,
   "main": "src/main.js",
   "dependencies": {
@@ -16,7 +16,7 @@
     "github-api": "^3.2.0",
     "jsforce": "^1.9.1",
     "moment": "^2.24.0",
-    "nodegit": "^0.24.3",
+    "nodegit": "^0.25.0",
     "querystring": "^0.2.0",
     "raven": "^2.6.4",
     "request": "^2.88.0",
