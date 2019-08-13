@@ -428,6 +428,7 @@ class Pipeline {
 
     const getStatus = function(cmp) {
       let status = 'No Change';
+      if(!cmp) return status;
       if(cmp.changed == 'true') status = 'Updated';
       if(cmp.created == 'true') status = 'Created';
       if(cmp.deleted == 'true') status = 'Deleted';
@@ -452,7 +453,7 @@ class Pipeline {
         if(utils.isBlank(componentType)) continue;
         if(!componentLables.hasOwnProperty(componentType)) continue;
         deployResult.details.componentFailures[i]['componentTypeLabel'] = componentLables[componentType];
-        deployResult.details.componentSuccesses[i]['status'] = getStatus(deployResult.details.componentSuccesses[i]);
+        deployResult.details.componentFailures[i]['status'] = getStatus(deployResult.details.componentFailures[i]);
       }
     }
     fs.writeFileSync(filePath, JSON.stringify(deployResult));

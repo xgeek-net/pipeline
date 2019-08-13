@@ -403,6 +403,12 @@ class SfdcApi {
         case 'Role' :
           // Needs requestMetaLabel
           break;
+        case 'Profile' :
+          resetFunction = function(meta) {
+            meta['customName'] = decodeURIComponent(meta.fullName); 
+            return meta;
+          };
+          break;
         default : 
           break;
       }
@@ -536,6 +542,9 @@ class SfdcApi {
                 }
                 if(child.typeName == 'WorkflowAlert' && cMeta.description) cMeta['customName'] = cMeta.description;
                 if(child.typeName == 'WorkflowFieldUpdate' && cMeta.name) cMeta['customName'] = cMeta.name;
+                // URI Decode Japanese 
+                if(child.typeName == 'WorkflowRule' && !cMeta.customName) cMeta['customName'] = decodeURIComponent(cMeta.fullName);
+                if(child.typeName == 'BusinessProcess' && !cMeta.customName) cMeta['customName'] = decodeURIComponent(cMeta.fullName);
 
                 metadataMap[child.typeName].push(cMeta);
               }

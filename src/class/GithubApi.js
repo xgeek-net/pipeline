@@ -342,14 +342,17 @@ class GithubApi {
             fileNameOnly = utils.getFileName(fileNameOnly);
 
             // ignore blank file, file out of src folder, cached file
-            if(utils.isBlank(fileNameOnly) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(fileName) >= 0) {
+            if(utils.isBlank(fileNameOnly) || utils.isBlank(filedir) || 
+              (!filedir.startsWith('src/') && fileName != 'src/package.xml') || 
+              self.cacheFiles.indexOf(fileName) >= 0) {
               self.logger('        > ' + file.path + ' (Ignored)');
               return callback(null);
             }
             self.cacheFiles.push(fileName);
-
             const localPath = metadata.makeDir(self.pipeline.id, fileName)
-            const fileContentUri = path.join('repos', repos.__fullname, 'contents', file.path);
+            const filePath = file.path.replace(new RegExp(fileNameOnly,'g'), encodeURIComponent(fileNameOnly));
+            const fileContentUri = path.join('repos', repos.__fullname, 'contents', filePath);
+
             self.fileApiCall(fileContentUri, { ref : branchName })
             .then(function(response) {
               if(utils.isBlank(response.status) || response.status != 200) {
@@ -429,7 +432,9 @@ class GithubApi {
         let filedir = path.dirname(fileName);
         fileNameOnly = utils.getFileName(fileNameOnly);
         // ignore blank file, file out of src folder, cached file
-        if(utils.isBlank(fileNameOnly) || utils.isBlank(filedir) || !filedir.startsWith('src/') || self.cacheFiles.indexOf(fileName) >= 0) {
+        if(utils.isBlank(fileNameOnly) || utils.isBlank(filedir) || 
+          (!filedir.startsWith('src/') && fileName != 'src/package.xml') || 
+          self.cacheFiles.indexOf(fileName) >= 0) {
           self.logger('        > ' + file.filename + ' (Ignored)');
           return callback(null);
         }
