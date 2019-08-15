@@ -367,10 +367,13 @@ class GitApi {
         }
         let metaPath = metadata.getMetadataFolder(self.pipeline.id);
         metaPath = path.join(metaPath, 'src');
-        fse.copy(gitPath, metaPath, function(err){
-          if (err) return reject(err);
-          return resolve(success);
-        });
+        // Fix reset timing bug, not perfect!
+        setTimeout(function(){
+          fse.copy(gitPath, metaPath, function(err){
+            if (err) return reject(err);
+            return resolve(success);
+          });
+        }, 1000);
       })
       .catch(function(err){
         return reject(err);
