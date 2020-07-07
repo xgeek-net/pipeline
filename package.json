@@ -65,7 +65,7 @@
     "app-builder-lib": "^20.43.0",
     "chai": "^4.2.0",
     "coveralls": "^3.0.4",
-    "electron": "3.1.9",
+    "electron": "7.2.4",
     "electron-builder": "^20.43.0",
     "electron-builder-squirrel-windows": "^20.43.0",
     "electron-ipc-mock": "0.0.3",
