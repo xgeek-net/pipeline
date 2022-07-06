@@ -15,7 +15,7 @@
     "fs-extra": "^8.0.1",
     "github-api": "^3.2.0",
     "jsforce": "^1.9.1",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "nodegit": "^0.25.0",
     "querystring": "^0.2.0",
     "raven": "^2.6.4",
